@@ -1,0 +1,210 @@
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field, constr
+
+
+class ExerciseBase(BaseModel):
+    name: str
+    muscle_group: str
+    equipment: str
+    description: Optional[str] = None
+    image_url: Optional[str] = None
+    source_type: str = "local"
+    source_value: Optional[str] = None
+
+
+class ExerciseCreate(ExerciseBase):
+    pass
+
+
+class ExerciseRead(ExerciseBase):
+    id: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserProfileBase(BaseModel):
+    id: str
+    username: str
+    consent_to_public_share: bool
+
+
+class UserProfileCreate(UserProfileBase):
+    pass
+
+
+class UserProfileRead(UserProfileBase):
+    created_at: datetime
+    bio: Optional[str] = None
+    objective: Optional[str] = None
+    avatar_url: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ShareResponse(BaseModel):
+    share_id: str
+    owner_id: str
+    owner_username: str
+    workout_title: str
+    exercise_count: int
+    set_count: int
+    created_at: datetime
+
+
+class ShareRequest(BaseModel):
+    user_id: str
+
+
+class FollowRequest(BaseModel):
+    follower_id: str
+
+
+class CommentPreview(BaseModel):
+    id: str
+    username: str
+    content: str
+
+
+class FeedItem(BaseModel):
+    share_id: str
+    owner_id: str
+    owner_username: str
+    workout_title: str
+    exercise_count: int
+    set_count: int
+    created_at: datetime
+    like_count: int = 0
+    comment_count: int = 0
+    comments: list[CommentPreview] = []
+
+
+class FeedResponse(BaseModel):
+    items: list[FeedItem]
+    next_cursor: Optional[datetime]
+
+
+class SyncMutation(BaseModel):
+    queue_id: int
+    action: str
+    payload: dict
+    created_at: int
+
+
+class SyncPushRequest(BaseModel):
+    mutations: list[SyncMutation]
+
+
+class SyncPushAck(BaseModel):
+    queue_id: int
+    server_id: str
+
+
+class SyncPushResponse(BaseModel):
+    processed: int
+    server_time: datetime
+    results: list[SyncPushAck] = []
+
+
+class SyncEventRead(BaseModel):
+    id: str
+    action: str
+    payload: dict
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SyncPullResponse(BaseModel):
+    server_time: datetime
+    events: list[SyncEventRead]
+
+
+# Programmes structurés
+class ProgramSetBase(BaseModel):
+    exercise_slug: str
+    reps: Optional[str] = None
+    weight: Optional[float] = None
+    rpe: Optional[float] = None
+    order_index: int = 0
+    notes: Optional[str] = None
+
+
+class ProgramSessionBase(BaseModel):
+    day_index: int = 0
+    title: str
+    focus: Optional[str] = None
+    estimated_minutes: Optional[int] = None
+    sets: list[ProgramSetBase] = []
+
+
+class ProgramBase(BaseModel):
+    title: str
+    objective: Optional[str] = None
+    duration_weeks: Optional[int] = None
+    user_id: Optional[str] = None
+    sessions: list[ProgramSessionBase] = []
+
+
+class ProgramCreate(ProgramBase):
+    pass
+
+
+class ProgramSetRead(ProgramSetBase):
+    id: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ProgramSessionRead(ProgramSessionBase):
+    id: str
+    sets: list[ProgramSetRead]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ProgramRead(ProgramBase):
+    id: str
+    sessions: list[ProgramSessionRead]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Stories
+class StoryRead(BaseModel):
+    id: str
+    owner_id: str
+    owner_username: str
+    media_url: str
+    title: str
+    link: Optional[str] = None
+    created_at: datetime
+    expires_at: Optional[datetime] = None
+
+
+# Auth
+class RegisterRequest(BaseModel):
+    username: constr(min_length=3, max_length=50)
+    password: constr(min_length=6, max_length=100)
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class TokenPair(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class MeResponse(BaseModel):
+    id: str
+    username: str
+    created_at: datetime
+    consent_to_public_share: bool
+
+    model_config = ConfigDict(from_attributes=True)

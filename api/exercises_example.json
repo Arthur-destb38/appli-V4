@@ -1,0 +1,184 @@
+[
+  {
+    "name": "Squat",
+    "muscle_group": "quads",
+    "equipment": "barbell",
+    "description": "Back squat focusing on quads and glutes. Lower body until thighs are parallel to floor, then drive up through heels.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Deadlift",
+    "muscle_group": "posterior_chain",
+    "equipment": "barbell",
+    "description": "Conventional deadlift from the floor. Hinge at hips, keep back straight, drive through heels.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Bench Press",
+    "muscle_group": "chest",
+    "equipment": "barbell",
+    "description": "Flat bench press with barbell. Lower bar to chest, press up explosively.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Overhead Press",
+    "muscle_group": "shoulders",
+    "equipment": "barbell",
+    "description": "Standing press with full lockout overhead. Keep core tight, press straight up.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Bent-Over Row",
+    "muscle_group": "back",
+    "equipment": "barbell",
+    "description": "Row focusing on mid-back engagement. Hinge forward, pull bar to lower chest.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Pull-Up",
+    "muscle_group": "back",
+    "equipment": "bodyweight",
+    "description": "Pronated grip pull-up to bar. Pull until chin clears bar, lower with control.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Dip",
+    "muscle_group": "chest",
+    "equipment": "bodyweight",
+    "description": "Parallel bar dips with upright torso. Lower until shoulders below elbows, press up.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Lunge",
+    "muscle_group": "quads",
+    "equipment": "dumbbell",
+    "description": "Alternating walking lunges. Step forward, lower back knee, drive up.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Romanian Deadlift",
+    "muscle_group": "hamstrings",
+    "equipment": "barbell",
+    "description": "Hip hinge Romanian deadlift. Keep legs straight, hinge at hips, feel hamstring stretch.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Lat Pulldown",
+    "muscle_group": "back",
+    "equipment": "machine",
+    "description": "Wide grip pulldown to chest. Pull bar to upper chest, squeeze lats.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Cable Row",
+    "muscle_group": "back",
+    "equipment": "machine",
+    "description": "Seated cable row with neutral grip. Pull to lower chest, squeeze shoulder blades.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Leg Press",
+    "muscle_group": "quads",
+    "equipment": "machine",
+    "description": "45-degree sled leg press. Lower until knees at 90 degrees, press up.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Calf Raise",
+    "muscle_group": "calves",
+    "equipment": "machine",
+    "description": "Standing calf raise machine. Rise onto toes, lower slowly.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Bicep Curl",
+    "muscle_group": "arms",
+    "equipment": "dumbbell",
+    "description": "Alternating dumbbell curl. Keep elbows fixed, curl to shoulder.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Tricep Extension",
+    "muscle_group": "arms",
+    "equipment": "cable",
+    "description": "Cable rope tricep pushdown. Keep elbows at sides, extend fully.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Push-Up",
+    "muscle_group": "chest",
+    "equipment": "bodyweight",
+    "description": "Standard push-up. Lower chest to floor, press up explosively.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Plank",
+    "muscle_group": "abs",
+    "equipment": "bodyweight",
+    "description": "Forearm plank. Keep body straight, hold position.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Leg Curl",
+    "muscle_group": "hamstrings",
+    "equipment": "machine",
+    "description": "Seated or lying leg curl. Curl heels to glutes, squeeze hamstrings.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Shoulder Press",
+    "muscle_group": "shoulders",
+    "equipment": "dumbbell",
+    "description": "Seated or standing dumbbell shoulder press. Press overhead, lower with control.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  },
+  {
+    "name": "Lateral Raise",
+    "muscle_group": "shoulders",
+    "equipment": "dumbbell",
+    "description": "Standing lateral raise. Raise arms to sides until parallel to floor.",
+    "image_url": null,
+    "source_type": "external",
+    "source_value": "https://example.com"
+  }
+]
+
+

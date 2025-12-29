@@ -1,0 +1,15 @@
+line-length = 100
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+ignore = ["B008"]
+
+[lint.isort]
+combine-as-imports = true
+force-single-line = true
+
+[format]
+quote-style = "single"
+indent-style = "space"
+line-ending = "lf"

@@ -1,0 +1,38 @@
+[project]
+name = "api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Arthur-destb38", email = "arthur.destribats@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.17.1",
+    "fastapi>=0.120.1",
+    "httpx>=0.28.1",
+    "python-dotenv>=1.2.1",
+    "sqlmodel>=0.0.27",
+    "uvicorn[standard]>=0.38.0",
+]
+
+[project.scripts]
+api = "api:main"
+
+[build-system]
+requires = ["uv_build>=0.9.2,<0.10.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mypy>=1.18.2",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.2",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "scripts"]
+addopts = "-q"

@@ -1,0 +1,51 @@
+# Node
+node_modules/
+app/.expo/
+app/dist/
+app/.next/
+app/.expo-shared/
+*.apk
+*.aab
+
+# Python
+api/.venv/
+.venv/
+__pycache__/
+*.pyc
+.coverage
+*.egg-info/
+
+# Virtual environments (divers noms)
+api/python/
+api/python3.11/
+api/3.13/
+api/par/
+api/si/
+api/tu/
+api/remplace/
+api/l'as/
+api/#/
+
+# SQLite database
+*.db
+
+# Env/config
+.env
+.env.*
+
+# OS/Editor
+.DS_Store
+.vscode/
+.idea/
+*.log
+pnpm-debug.log*
+npm-debug.log*
+
+# Dossiers temporaires/archives
+tmp_copy/
+V1/
+.local_node/
+
+# Android/iOS builds (générés)
+app/android/
+app/ios/

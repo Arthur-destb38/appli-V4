@@ -1,0 +1,5370 @@
+[
+  {
+    "name": "Guillotine Press",
+    "category": "Chest",
+    "primary_muscle": "Upper Pectorals",
+    "secondary_muscles": [
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Barbell",
+      "Bench"
+    ],
+    "difficulty": "Advanced",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Bar to neck; light load; control",
+    "common_errors": "Too heavy; shoulder strain",
+    "progression": "Heavier slowly",
+    "regression": "Incline Press",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Épaules": 2,
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Incline Dumbbell Press",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Crossover Low to High",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Guillotine Press cible principalement les pectoraux. Matériel suggéré : Barbell, Bench. Consignes : Bar to neck; light load; control."
+  },
+  {
+    "name": "Plyometric Push-Up",
+    "category": "Chest",
+    "primary_muscle": "Pectorals",
+    "secondary_muscles": [
+      "Triceps",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Bodyweight"
+    ],
+    "difficulty": "Advanced",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Explosive",
+    "cues": "Explode off ground; soft landing",
+    "common_errors": "Poor control; fatigue fast",
+    "progression": "Clap Push-Ups",
+    "regression": "Normal Push-Ups",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 1
+    },
+    "alternatives": [
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Ring Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Dumbbell Fly",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Plyometric Push-Up cible principalement les pectoraux. Matériel suggéré : Bodyweight. Consignes : Explode off ground; soft landing."
+  },
+  {
+    "name": "Ring Push-Up",
+    "category": "Chest",
+    "primary_muscle": "Pectorals",
+    "secondary_muscles": [
+      "Triceps",
+      "Core",
+      "Shoulders"
+    ],
+    "equipment": [
+      "Gymnastic Rings"
+    ],
+    "difficulty": "Advanced",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Rings inward; full ROM; core tight",
+    "common_errors": "Rings unstable; elbows flare",
+    "progression": "Weighted Ring Push-Up",
+    "regression": "Incline Ring Push-Up",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 1,
+      "Colonne": 1,
+      "Hanches": 1
+    },
+    "alternatives": [
+      {
+        "name": "Plyometric Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pec Deck Machine",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Ring Push-Up cible principalement les pectoraux. Matériel suggéré : Gymnastic Rings. Consignes : Rings inward; full ROM; core tight."
+  },
+  {
+    "name": "Bench Dip",
+    "category": "Triceps",
+    "primary_muscle": "Triceps",
+    "secondary_muscles": [
+      "Pectorals",
+      "Delts"
+    ],
+    "equipment": [
+      "Bench",
+      "Bodyweight"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Compound",
+    "cues": "Hips close; elbows 90°",
+    "common_errors": "Shoulders shrug; too deep",
+    "progression": "Weighted Bench Dip",
+    "regression": "Assisted Bench Dip",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {
+      "Coudes": 3,
+      "Épaules": 3
+    },
+    "alternatives": [
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Dumbbell Skull Crusher",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Triceps Rope Pushdown",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Bench Dip cible principalement les pectoraux. Matériel suggéré : Bench, Bodyweight. Consignes : Hips close; elbows 90°."
+  },
+  {
+    "name": "Cable Crossover High to Low",
+    "category": "Chest",
+    "primary_muscle": "Lower Pectorals",
+    "secondary_muscles": [
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Cables"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Step forward; palms down; cross below chest",
+    "common_errors": "Short range; momentum",
+    "progression": "Heavier load",
+    "regression": "Band Fly",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Decline Dumbbell Press",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Barbell Bench Press",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Dips (Chest Leaning)",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Cable Crossover High to Low cible principalement les pectoraux. Matériel suggéré : Cables. Consignes : Step forward; palms down; cross below chest."
+  },
+  {
+    "name": "Cable Crossover Low to High",
+    "category": "Chest",
+    "primary_muscle": "Upper Pectorals",
+    "secondary_muscles": [
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Cables"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Cross above chest; elbows soft",
+    "common_errors": "Shrugging; too heavy",
+    "progression": "Heavier load",
+    "regression": "Band Fly",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Incline Dumbbell Press",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Incline Dumbbell Fly",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Cable Crossover Low to High cible principalement les pectoraux. Matériel suggéré : Cables. Consignes : Cross above chest; elbows soft."
+  },
+  {
+    "name": "Cable Crossover Mid",
+    "category": "Chest",
+    "primary_muscle": "Mid Pectorals",
+    "secondary_muscles": [
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Cables"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Palms together; squeeze midline",
+    "common_errors": "Bent wrists; arching",
+    "progression": "1-arm fly",
+    "regression": "Pec Deck",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Cable Crossover Mid cible principalement les pectoraux. Matériel suggéré : Cables. Consignes : Palms together; squeeze midline."
+  },
+  {
+    "name": "Cable Front Raise",
+    "category": "Shoulders",
+    "primary_muscle": "Anterior Deltoids",
+    "secondary_muscles": [
+      "Upper Chest"
+    ],
+    "equipment": [
+      "Cable",
+      "Single Handle"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Palms down or neutral; slow tempo",
+    "common_errors": "Jerking; short ROM",
+    "progression": "Heavier load",
+    "regression": "DB Front Raise",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Cable Front Raise cible principalement les épaules. Matériel suggéré : Cable, Single Handle. Consignes : Palms down or neutral; slow tempo."
+  },
+  {
+    "name": "Decline Push-Up",
+    "category": "Chest",
+    "primary_muscle": "Upper Pectorals",
+    "secondary_muscles": [
+      "Triceps",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Bodyweight",
+      "Box"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Feet elevated; chest to floor",
+    "common_errors": "ROM cut short",
+    "progression": "Weighted Decline",
+    "regression": "Incline Push-Up",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 1
+    },
+    "alternatives": [
+      {
+        "name": "Incline Dumbbell Fly",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Crossover Low to High",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Incline Dumbbell Press",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-20e-feet-elevated-push-up-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/decline-push-up",
+    "muscle_group_fr": "Pectoraux",
+    "equipment_label": "Body Only",
+    "equipment_fr": "Poids du corps",
+    "description_fr": "Decline Push-Up cible principalement les pectoraux. Équipement suggéré : poids du corps. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Diamond Push-Up",
+    "category": "Triceps",
+    "primary_muscle": "Triceps",
+    "secondary_muscles": [
+      "Pectorals",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Bodyweight"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Hands close; elbows tucked",
+    "common_errors": "Hips sag; elbows flare",
+    "progression": "Weighted Diamond Push-Up",
+    "regression": "Knee Diamond Push-Up",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Kickback",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "V-Bar Pushdown",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Diamond Push-Up cible principalement les pectoraux. Matériel suggéré : Bodyweight. Consignes : Hands close; elbows tucked."
+  },
+  {
+    "name": "Dumbbell Fly",
+    "category": "Chest",
+    "primary_muscle": "Pectorals",
+    "secondary_muscles": [
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Bench"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Slight elbow bend; hug motion",
+    "common_errors": "Locked elbows; too deep",
+    "progression": "Incline Fly, Heavier DBs",
+    "regression": "Cable Fly",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plyometric Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pec Deck Machine",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Dumbbell Fly cible principalement les pectoraux. Matériel suggéré : Dumbbells, Bench. Consignes : Slight elbow bend; hug motion."
+  },
+  {
+    "name": "Dumbbell Front Raise",
+    "category": "Shoulders",
+    "primary_muscle": "Anterior Deltoids",
+    "secondary_muscles": [
+      "Upper Chest"
+    ],
+    "equipment": [
+      "Dumbbells"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Palms down; control up & down",
+    "common_errors": "Swinging; using traps",
+    "progression": "Heavier load, plate raise",
+    "regression": "Band Front Raise",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-13d-dumbbell-front-raise-m2-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/front-two-dumbbell-raise",
+    "muscle_group_fr": "Épaules",
+    "equipment_label": "Dumbbell",
+    "equipment_fr": "Haltère",
+    "description_fr": "Dumbbell Front Raise cible principalement les épaules. Équipement suggéré : haltère. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Flat Dumbbell Press",
+    "category": "Chest",
+    "primary_muscle": "Pectorals (Sternal Head)",
+    "secondary_muscles": [
+      "Triceps",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Bench"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Wrists neutral; DBs slightly angled",
+    "common_errors": "Short ROM; elbows flare",
+    "progression": "Heavier DBs",
+    "regression": "Floor Press",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 2,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Flat Dumbbell Press cible principalement les pectoraux. Matériel suggéré : Dumbbells, Bench. Consignes : Wrists neutral; DBs slightly angled."
+  },
+  {
+    "name": "Incline Dumbbell Fly",
+    "category": "Chest",
+    "primary_muscle": "Upper Pectorals",
+    "secondary_muscles": [
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Bench Incline"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Arc path; elbows soft",
+    "common_errors": "Overstretch; jerking",
+    "progression": "Weighted, Pause top",
+    "regression": "Cable Fly Incline",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Crossover Low to High",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Guillotine Press",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Incline Dumbbell Fly cible principalement les pectoraux. Matériel suggéré : Dumbbells, Bench Incline. Consignes : Arc path; elbows soft."
+  },
+  {
+    "name": "Incline Dumbbell Press",
+    "category": "Chest",
+    "primary_muscle": "Upper Pectorals",
+    "secondary_muscles": [
+      "Triceps",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Bench Incline"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "DBs at 45°; controlled descent",
+    "common_errors": "ROM too short",
+    "progression": "Heavier DBs",
+    "regression": "Machine Incline Press",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 2,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Crossover Low to High",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Incline Dumbbell Fly",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Incline Dumbbell Press cible principalement les pectoraux. Matériel suggéré : Dumbbells, Bench Incline. Consignes : DBs at 45°; controlled descent."
+  },
+  {
+    "name": "Pec Deck Machine",
+    "category": "Chest",
+    "primary_muscle": "Pectorals",
+    "secondary_muscles": [
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Elbows at 90°; squeeze midline",
+    "common_errors": "Partial ROM",
+    "progression": "Heavier load",
+    "regression": "Lighter load",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plyometric Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Dumbbell Fly",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Pec Deck Machine cible principalement les pectoraux. Matériel suggéré : Machine. Consignes : Elbows at 90°; squeeze midline."
+  },
+  {
+    "name": "Push-Up",
+    "category": "Chest",
+    "primary_muscle": "Pectorals",
+    "secondary_muscles": [
+      "Triceps",
+      "Anterior Delts",
+      "Core"
+    ],
+    "equipment": [
+      "Bodyweight"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Full body tight; chest to floor",
+    "common_errors": "Sagging hips; nose dips",
+    "progression": "Weighted Push-Up",
+    "regression": "Knee Push-Up",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 1,
+      "Colonne": 1,
+      "Hanches": 1
+    },
+    "alternatives": [
+      {
+        "name": "Plyometric Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pec Deck Machine",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Dumbbell Fly",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Push-Up cible principalement les pectoraux. Matériel suggéré : Bodyweight. Consignes : Full body tight; chest to floor."
+  },
+  {
+    "name": "Seated Dumbbell Press",
+    "category": "Shoulders",
+    "primary_muscle": "Deltoids (Anterior, Medial)",
+    "secondary_muscles": [
+      "Triceps",
+      "Upper Chest"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Bench Upright"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Vertical Press",
+    "mechanics": "Compound",
+    "cues": "Wrists stacked; control descent",
+    "common_errors": "Arching back; ROM too short",
+    "progression": "Heavier DBs, Arnold Press",
+    "regression": "Machine Shoulder Press",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {
+      "Coudes": 2,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-50e-seated-dumbbell-shoulder-press-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/seated-dumbbell-press",
+    "muscle_group_fr": "Épaules",
+    "equipment_label": "Dumbbell",
+    "equipment_fr": "Haltère",
+    "description_fr": "Seated Dumbbell Press cible principalement les épaules. Équipement suggéré : haltère. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Arnold Press",
+    "category": "Shoulders",
+    "primary_muscle": "Deltoids (Anterior, Medial)",
+    "secondary_muscles": [
+      "Triceps",
+      "Upper Chest"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Bench Upright"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Vertical Press + Rotation",
+    "mechanics": "Compound",
+    "cues": "Palms in → rotate out; control path",
+    "common_errors": "Swinging; rushing movement",
+    "progression": "Heavier load",
+    "regression": "Seated DB Press",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {
+      "Coudes": 2,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "source_url": "https://www.bodybuilding.com/exercises/arnold-dumbbell-press",
+    "muscle_group_fr": "Épaules",
+    "equipment_label": "Dumbbell",
+    "equipment_fr": "Haltère",
+    "description_fr": "Arnold Press cible principalement les épaules. Équipement suggéré : haltère. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Close-Grip Bench Press",
+    "category": "Triceps",
+    "primary_muscle": "Triceps (Medial, Lateral)",
+    "secondary_muscles": [
+      "Pectorals",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Barbell",
+      "Bench"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Grip shoulder-width; elbows tucked; full lockout",
+    "common_errors": "Elbows flare; bouncing bar",
+    "progression": "Heavier load, pause reps",
+    "regression": "Diamond Push-Ups",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {
+      "Épaules": 2,
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plyometric Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-82e-close-grip-bench-press-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/close-grip-barbell-bench-press",
+    "muscle_group_fr": "Pectoraux",
+    "equipment_label": "Barbell",
+    "equipment_fr": "Barre",
+    "description_fr": "Close-Grip Bench Press cible principalement les pectoraux. Équipement suggéré : barre. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Decline Barbell Bench Press",
+    "category": "Chest",
+    "primary_muscle": "Lower Pectorals",
+    "secondary_muscles": [
+      "Triceps",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Barbell",
+      "Bench (Decline)"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Bar to lower chest; controlled descent",
+    "common_errors": "Butt lifts; bouncing",
+    "progression": "Weighted, Pauses",
+    "regression": "Decline Push-Up",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 2,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Dips (Chest Leaning)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Dumbbell Press",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Crossover High to Low",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-34n-decline-barbell-bench-press-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/decline-barbell-bench-press",
+    "muscle_group_fr": "Pectoraux",
+    "equipment_label": "Barbell",
+    "equipment_fr": "Barre",
+    "description_fr": "Decline Barbell Bench Press cible principalement les pectoraux. Équipement suggéré : barre. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Decline Dumbbell Press",
+    "category": "Chest",
+    "primary_muscle": "Lower Pectorals",
+    "secondary_muscles": [
+      "Triceps",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Bench Decline"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Lower DBs to chest line",
+    "common_errors": "Loss of control; poor ROM",
+    "progression": "Heavier DBs",
+    "regression": "Decline Push-Up",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 2,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Dips (Chest Leaning)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Barbell Bench Press",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Crossover High to Low",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Decline Dumbbell Press cible principalement les pectoraux. Matériel suggéré : Dumbbells, Bench Decline. Consignes : Lower DBs to chest line."
+  },
+  {
+    "name": "Dips (Chest Leaning)",
+    "category": "Chest",
+    "primary_muscle": "Lower Pectorals",
+    "secondary_muscles": [
+      "Triceps",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Dip Bars"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Vertical Press",
+    "mechanics": "Compound",
+    "cues": "Lean forward; elbows flare slightly",
+    "common_errors": "Too upright; short depth",
+    "progression": "Weighted dips",
+    "regression": "Assisted dips",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 3,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Decline Dumbbell Press",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Barbell Bench Press",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Crossover High to Low",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Dips (Chest Leaning) cible principalement les pectoraux. Matériel suggéré : Dip Bars. Consignes : Lean forward; elbows flare slightly."
+  },
+  {
+    "name": "Dumbbell Pullover",
+    "category": "Chest/Back",
+    "primary_muscle": "Pectorals",
+    "secondary_muscles": [
+      "Lats",
+      "Serratus"
+    ],
+    "equipment": [
+      "Dumbbell",
+      "Bench"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Hybrid",
+    "mechanics": "Compound",
+    "cues": "Elbows soft; big stretch; hips stable",
+    "common_errors": "Excessive elbow bend",
+    "progression": "Heavier DB",
+    "regression": "Floor Pullover",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plyometric Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pec Deck Machine",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Dumbbell Pullover cible principalement les pectoraux. Matériel suggéré : Dumbbell, Bench. Consignes : Elbows soft; big stretch; hips stable."
+  },
+  {
+    "name": "Flat Barbell Bench Press",
+    "category": "Chest",
+    "primary_muscle": "Pectorals (Sternal Head)",
+    "secondary_muscles": [
+      "Triceps",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Barbell",
+      "Bench"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Shoulders packed; slight arch; full ROM",
+    "common_errors": "Elbows flare; bouncing bar",
+    "progression": "Pause Bench, Weighted",
+    "regression": "Push-Ups",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 2,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plyometric Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Flat Barbell Bench Press cible principalement les pectoraux. Matériel suggéré : Barbell, Bench. Consignes : Shoulders packed; slight arch; full ROM."
+  },
+  {
+    "name": "Incline Barbell Bench Press",
+    "category": "Chest",
+    "primary_muscle": "Pectorals (Clavicular Head)",
+    "secondary_muscles": [
+      "Triceps",
+      "Anterior Delts"
+    ],
+    "equipment": [
+      "Barbell",
+      "Bench (Incline)"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Horizontal Press",
+    "mechanics": "Compound",
+    "cues": "Elbows 45°; bar to upper chest",
+    "common_errors": "Excessive arch; short ROM",
+    "progression": "Heavier load, Tempo reps",
+    "regression": "Incline DB Press",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_pectoraux_enrichis.json",
+    "joints": {
+      "Coudes": 2,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pistol Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plyometric Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Incline Barbell Bench Press cible principalement les pectoraux. Matériel suggéré : Barbell, Bench (Incline). Consignes : Elbows 45°; bar to upper chest."
+  },
+  {
+    "name": "Overhead Press (Barbell)",
+    "category": "Shoulders",
+    "primary_muscle": "Deltoids (Anterior, Medial)",
+    "secondary_muscles": [
+      "Triceps",
+      "Upper Chest",
+      "Core"
+    ],
+    "equipment": [
+      "Barbell"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Vertical Press",
+    "mechanics": "Compound",
+    "cues": "Glutes tight; bar path straight; head through",
+    "common_errors": "Overarching; bar drifting forward",
+    "progression": "Push Press, Heavier load",
+    "regression": "Seated DB Press",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {
+      "Coudes": 2,
+      "Colonne": 1,
+      "Hanches": 1,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Copenhagen Plank",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Overhead Press (Barbell) cible principalement les épaules. Matériel suggéré : Barbell. Consignes : Glutes tight; bar path straight; head through."
+  },
+  {
+    "name": "Parallel Bar Dip (Triceps Focus)",
+    "category": "Triceps",
+    "primary_muscle": "Triceps",
+    "secondary_muscles": [
+      "Pectorals",
+      "Delts"
+    ],
+    "equipment": [
+      "Dip Bars"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Vertical Press",
+    "mechanics": "Compound",
+    "cues": "Torso upright; elbows tucked",
+    "common_errors": "Leaning forward (pecs takeover)",
+    "progression": "Weighted Triceps Dip",
+    "regression": "Assisted Dip",
+    "group": "Pectoraux",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {
+      "Coudes": 3,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Machine Triceps Extension",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Parallel Bar Dip (Triceps Focus) cible principalement les pectoraux. Matériel suggéré : Dip Bars. Consignes : Torso upright; elbows tucked."
+  },
+  {
+    "name": "Barbell Shrugs",
+    "category": "Back/Traps",
+    "primary_muscle": "Upper Trapezius",
+    "secondary_muscles": [
+      "Levator Scapulae"
+    ],
+    "equipment": [
+      "Barbell"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Shrug",
+    "mechanics": "Isolation",
+    "cues": "Straight arms; elevate shoulders",
+    "common_errors": "Rolling shoulders; jerking",
+    "progression": "Heavier load",
+    "regression": "DB Shrugs",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Barbell Shrugs cible principalement les dos. Matériel suggéré : Barbell. Consignes : Straight arms; elevate shoulders."
+  },
+  {
+    "name": "Cable Lateral Raise",
+    "category": "Shoulders",
+    "primary_muscle": "Lateral Deltoids",
+    "secondary_muscles": [
+      "Supraspinatus"
+    ],
+    "equipment": [
+      "Cable",
+      "Single Handle"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Low to high arc; steady tension",
+    "common_errors": "Leaning; momentum",
+    "progression": "Heavier load",
+    "regression": "Band Lateral Raise",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Cable Lateral Raise cible principalement les épaules. Matériel suggéré : Cable, Single Handle. Consignes : Low to high arc; steady tension."
+  },
+  {
+    "name": "Dumbbell Kickback",
+    "category": "Triceps",
+    "primary_muscle": "Triceps (Lateral Head)",
+    "secondary_muscles": [
+      "Triceps (Long",
+      "Medial)"
+    ],
+    "equipment": [
+      "Dumbbells"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Isolation",
+    "cues": "Upper arm parallel; extend fully",
+    "common_errors": "Swinging DB; short ROM",
+    "progression": "Heavier DBs, pause reps",
+    "regression": "Cable Kickback",
+    "group": "Dos",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Dumbbell Kickback cible principalement les dos. Matériel suggéré : Dumbbells. Consignes : Upper arm parallel; extend fully."
+  },
+  {
+    "name": "Dumbbell Lateral Raise",
+    "category": "Shoulders",
+    "primary_muscle": "Lateral Deltoids",
+    "secondary_muscles": [
+      "Supraspinatus"
+    ],
+    "equipment": [
+      "Dumbbells"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Soft elbows; lead with elbows; control top",
+    "common_errors": "Shrugging; swinging",
+    "progression": "Drop sets, tempo reps",
+    "regression": "Cable Lateral Raise",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Dumbbell Lateral Raise cible principalement les épaules. Matériel suggéré : Dumbbells. Consignes : Soft elbows; lead with elbows; control top."
+  },
+  {
+    "name": "Dumbbell Reverse Fly",
+    "category": "Shoulders",
+    "primary_muscle": "Posterior Deltoids",
+    "secondary_muscles": [
+      "Rhomboids",
+      "Traps"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Bench (Incline)"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Hinge at hips; arms arc out",
+    "common_errors": "Shrugging; swinging",
+    "progression": "Heavier DBs, slow negatives",
+    "regression": "Band Reverse Fly",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Dumbbell Reverse Fly cible principalement les épaules. Matériel suggéré : Dumbbells, Bench (Incline). Consignes : Hinge at hips; arms arc out."
+  },
+  {
+    "name": "Dumbbell Row (One Arm)",
+    "category": "Back",
+    "primary_muscle": "Lats",
+    "secondary_muscles": [
+      "Mid Back",
+      "Biceps",
+      "Core"
+    ],
+    "equipment": [
+      "Dumbbell",
+      "Bench"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Horizontal Pull",
+    "mechanics": "Compound",
+    "cues": "Flat back; elbow drives back",
+    "common_errors": "Torso rotation; short ROM",
+    "progression": "Heavier DBs",
+    "regression": "Band Row",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Coudes": 1,
+      "Colonne": 2,
+      "Hanches": 1,
+      "Épaules": 1
+    },
+    "alternatives": [
+      {
+        "name": "Lat Pulldown (Wide Grip)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Straight Arm Pulldown",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Chin-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Dumbbell Row (One Arm) cible principalement les dos. Matériel suggéré : Dumbbell, Bench. Consignes : Flat back; elbow drives back."
+  },
+  {
+    "name": "Dumbbell Shrugs",
+    "category": "Shoulders/Traps",
+    "primary_muscle": "Trapezius (Upper)",
+    "secondary_muscles": [
+      "Levator Scapulae"
+    ],
+    "equipment": [
+      "Dumbbells"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Shrug",
+    "mechanics": "Isolation",
+    "cues": "Straight arms; elevate shoulders",
+    "common_errors": "Rolling shoulders; jerking",
+    "progression": "Heavier DBs",
+    "regression": "Band Shrugs",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Dumbbell Shrugs cible principalement les épaules. Matériel suggéré : Dumbbells. Consignes : Straight arms; elevate shoulders."
+  },
+  {
+    "name": "Face Pull",
+    "category": "Shoulders",
+    "primary_muscle": "Rear Deltoids",
+    "secondary_muscles": [
+      "Traps",
+      "External Rotators"
+    ],
+    "equipment": [
+      "Cable",
+      "Rope"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Horizontal Pull",
+    "mechanics": "Isolation",
+    "cues": "Elbows high; pull to nose",
+    "common_errors": "Elbows drop; leaning back",
+    "progression": "Heavier rope, slow reps",
+    "regression": "Band Face Pull",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Face Pull cible principalement les épaules. Matériel suggéré : Cable, Rope. Consignes : Elbows high; pull to nose."
+  },
+  {
+    "name": "Farmer's Carry",
+    "category": "Back/Full Body",
+    "primary_muscle": "Grip,Traps,Core",
+    "secondary_muscles": [
+      "Glutes",
+      "Calves"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Kettlebells",
+      "Trap Bar"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Carry",
+    "mechanics": "Compound",
+    "cues": "Tall posture; quick steps; shoulders packed",
+    "common_errors": "Leaning sideways; loose grip",
+    "progression": "Heavier weights, longer distance",
+    "regression": "Lighter load",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Hanches": 1,
+      "Chevilles": 1
+    },
+    "alternatives": [
+      {
+        "name": "Plank",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Farmer's Carry cible principalement les dos. Matériel suggéré : Dumbbells, Kettlebells, Trap Bar. Consignes : Tall posture; quick steps; shoulders packed."
+  },
+  {
+    "name": "Lat Pulldown (Wide Grip)",
+    "category": "Back",
+    "primary_muscle": "Lats",
+    "secondary_muscles": [
+      "Biceps",
+      "Mid Back"
+    ],
+    "equipment": [
+      "Lat Pulldown Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Vertical Pull",
+    "mechanics": "Compound",
+    "cues": "Pull to chest; slight lean back",
+    "common_errors": "Pulling behind neck; too much momentum",
+    "progression": "Heavier weight",
+    "regression": "Band Lat Pulldown",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Coudes": 1
+    },
+    "alternatives": [
+      {
+        "name": "Straight Arm Pulldown",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Dumbbell Row (One Arm)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pull-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Lat Pulldown (Wide Grip) cible principalement les dos. Matériel suggéré : Lat Pulldown Machine. Consignes : Pull to chest; slight lean back."
+  },
+  {
+    "name": "Machine Lateral Raise",
+    "category": "Shoulders",
+    "primary_muscle": "Lateral Deltoids",
+    "secondary_muscles": [
+      "Supraspinatus"
+    ],
+    "equipment": [
+      "Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Seat adjusted; elbows lead",
+    "common_errors": "Partial ROM",
+    "progression": "Heavier plates",
+    "regression": "Lighter load",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Machine Lateral Raise cible principalement les épaules. Matériel suggéré : Machine. Consignes : Seat adjusted; elbows lead."
+  },
+  {
+    "name": "Overhead Dumbbell Extension",
+    "category": "Triceps",
+    "primary_muscle": "Triceps (Long Head)",
+    "secondary_muscles": [
+      "Triceps (Medial",
+      "Lateral)"
+    ],
+    "equipment": [
+      "Dumbbell(s)"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Isolation",
+    "cues": "Elbows close; extend overhead",
+    "common_errors": "Elbows flare; arching back",
+    "progression": "Heavier DB, single-arm",
+    "regression": "Band Overhead Extension",
+    "group": "Dos",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "EZ-Bar Skull Crusher",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Overhead EZ-Bar Extension",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Overhead Rope Extension",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Overhead Dumbbell Extension cible principalement les dos. Matériel suggéré : Dumbbell(s). Consignes : Elbows close; extend overhead."
+  },
+  {
+    "name": "Reverse Pec Deck Fly",
+    "category": "Shoulders",
+    "primary_muscle": "Posterior Deltoids",
+    "secondary_muscles": [
+      "Rhomboids",
+      "Traps"
+    ],
+    "equipment": [
+      "Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Elbows high; arc back; squeeze rear delts",
+    "common_errors": "Shrugging; momentum",
+    "progression": "Heavier plates, slower tempo",
+    "regression": "Band Pull Apart",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Reverse Pec Deck Fly cible principalement les épaules. Matériel suggéré : Machine. Consignes : Elbows high; arc back; squeeze rear delts."
+  },
+  {
+    "name": "Seated Cable Row",
+    "category": "Back",
+    "primary_muscle": "Mid Back",
+    "secondary_muscles": [
+      "Lats",
+      "Biceps",
+      "Rear Delts"
+    ],
+    "equipment": [
+      "Cable"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Horizontal Pull",
+    "mechanics": "Compound",
+    "cues": "Neutral spine; pull to belly button",
+    "common_errors": "Leaning back; short ROM",
+    "progression": "Slower tempo, heavier load",
+    "regression": "Lighter load, higher reps",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Coudes": 1,
+      "Colonne": 2,
+      "Épaules": 1
+    },
+    "alternatives": [
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Seated Cable Row cible principalement les dos. Matériel suggéré : Cable. Consignes : Neutral spine; pull to belly button."
+  },
+  {
+    "name": "Straight Arm Pulldown",
+    "category": "Back",
+    "primary_muscle": "Lats",
+    "secondary_muscles": [
+      "Teres Major",
+      "Core"
+    ],
+    "equipment": [
+      "Cable"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Isolation",
+    "mechanics": "Isolation",
+    "cues": "Arms straight; hinge slightly",
+    "common_errors": "Bending elbows; arching back",
+    "progression": "Heavier load, pauses",
+    "regression": "Band straight arm pulldown",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Colonne": 1,
+      "Hanches": 1
+    },
+    "alternatives": [
+      {
+        "name": "Dumbbell Row (One Arm)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Lat Pulldown (Wide Grip)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pull-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/2019-xdb-104c-straight-arm-bar-pull-down-m1-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/straight-arm-pulldown",
+    "muscle_group_fr": "Grand dorsal",
+    "equipment_label": "Cable",
+    "equipment_fr": "Poulie",
+    "description_fr": "Straight Arm Pulldown cible principalement les grand dorsal. Équipement suggéré : poulie. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Suitcase Carry",
+    "category": "Back/Obliques",
+    "primary_muscle": "Obliques",
+    "secondary_muscles": [
+      "Traps",
+      "Core",
+      "Forearms"
+    ],
+    "equipment": [
+      "Dumbbell",
+      "Kettlebell"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Carry",
+    "mechanics": "Compound",
+    "cues": "Stay upright; ribs down; smooth walk",
+    "common_errors": "Tilting toward weight",
+    "progression": "Heavier bell",
+    "regression": "Shorter distance",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Colonne": 1,
+      "Hanches": 1
+    },
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Suitcase Carry cible principalement les dos. Matériel suggéré : Dumbbell, Kettlebell. Consignes : Stay upright; ribs down; smooth walk."
+  },
+  {
+    "name": "Ab Wheel Rollout",
+    "category": "Abs/Core",
+    "primary_muscle": "Rectus Abdominis",
+    "secondary_muscles": [
+      "Obliques",
+      "Shoulders",
+      "Lats"
+    ],
+    "equipment": [
+      "Ab Wheel",
+      "Barbell"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Anti-Extension",
+    "mechanics": "Dynamic",
+    "cues": "Brace core; roll slow; hips stable",
+    "common_errors": "Arching back; going too far",
+    "progression": "Standing Rollout",
+    "regression": "Partial Rollout",
+    "group": "Dos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Hollow Body Hold",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plank",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Ab Wheel Rollout cible principalement les dos. Matériel suggéré : Ab Wheel, Barbell. Consignes : Brace core; roll slow; hips stable."
+  },
+  {
+    "name": "Barbell Bent Over Row",
+    "category": "Back",
+    "primary_muscle": "Mid Back",
+    "secondary_muscles": [
+      "Lats",
+      "Rear Delts",
+      "Biceps"
+    ],
+    "equipment": [
+      "Barbell"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Horizontal Pull",
+    "mechanics": "Compound",
+    "cues": "Hinge forward; pull bar to sternum",
+    "common_errors": "Rounded back; jerking motion",
+    "progression": "Pendlay Row",
+    "regression": "Chest-Supported Row",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Coudes": 1,
+      "Colonne": 2,
+      "Épaules": 1
+    },
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Barbell Bent Over Row cible principalement les dos. Matériel suggéré : Barbell. Consignes : Hinge forward; pull bar to sternum."
+  },
+  {
+    "name": "Barbell Upright Row",
+    "category": "Shoulders/Traps",
+    "primary_muscle": "Deltoids (Lateral, Posterior)",
+    "secondary_muscles": [
+      "Trapezius",
+      "Biceps"
+    ],
+    "equipment": [
+      "Barbell"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Vertical Pull",
+    "mechanics": "Compound",
+    "cues": "Grip shoulder-width; elbows high",
+    "common_errors": "Too close grip; shoulder impingement",
+    "progression": "Heavier bar",
+    "regression": "DB Upright Row",
+    "group": "Épaules",
+    "source": "json_exos/exercices_epaules_enrichis.json",
+    "joints": {
+      "Coudes": 1,
+      "Colonne": 2,
+      "Épaules": 1
+    },
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "source_url": "https://www.bodybuilding.com/exercises/upright-barbell-row",
+    "muscle_group_fr": "Épaules",
+    "equipment_label": "Barbell",
+    "equipment_fr": "Barre",
+    "description_fr": "Barbell Upright Row cible principalement les épaules. Équipement suggéré : barre. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Chin-Up",
+    "category": "Back",
+    "primary_muscle": "Lats",
+    "secondary_muscles": [
+      "Biceps",
+      "Lower Traps",
+      "Core"
+    ],
+    "equipment": [
+      "Pull-Up Bar"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Vertical Pull",
+    "mechanics": "Compound",
+    "cues": "Supinated grip; drive elbows down",
+    "common_errors": "Forward head; using momentum",
+    "progression": "Weighted Chin-Ups",
+    "regression": "Band-Assisted Chin-Up",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Coudes": 1,
+      "Colonne": 1,
+      "Hanches": 1
+    },
+    "alternatives": [
+      {
+        "name": "Dumbbell Row (One Arm)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Neutral Grip Pull-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Lat Pulldown (Wide Grip)",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Chin-Up cible principalement les dos. Matériel suggéré : Pull-Up Bar. Consignes : Supinated grip; drive elbows down."
+  },
+  {
+    "name": "Conventional Deadlift",
+    "category": "Back/Posterior Chain",
+    "primary_muscle": "Glutes,Hamstrings",
+    "secondary_muscles": [
+      "Lats",
+      "Spinal Erectors",
+      "Traps"
+    ],
+    "equipment": [
+      "Barbell"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Hinge",
+    "mechanics": "Compound",
+    "cues": "Brace core; push floor away; lats tight",
+    "common_errors": "Rounded back; hips rise early",
+    "progression": "Deficit Deadlift, Pause Deadlift",
+    "regression": "Rack Pull",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Hanches": 2,
+      "Colonne": 2
+    },
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pistol Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Conventional Deadlift cible principalement les dos. Matériel suggéré : Barbell. Consignes : Brace core; push floor away; lats tight."
+  },
+  {
+    "name": "EZ-Bar Skull Crusher",
+    "category": "Triceps",
+    "primary_muscle": "Triceps (Long Head)",
+    "secondary_muscles": [
+      "Triceps (Lateral",
+      "Medial)"
+    ],
+    "equipment": [
+      "EZ Bar",
+      "Bench"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Isolation",
+    "cues": "Elbows steady; bar to forehead",
+    "common_errors": "Elbows drift; moving shoulders",
+    "progression": "Heavier load, slow eccentric",
+    "regression": "Dumbbell Skull Crusher",
+    "group": "Dos",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Overhead Rope Extension",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Overhead EZ-Bar Extension",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Overhead Dumbbell Extension",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "EZ-Bar Skull Crusher cible principalement les dos. Matériel suggéré : EZ Bar, Bench. Consignes : Elbows steady; bar to forehead."
+  },
+  {
+    "name": "Front Squat",
+    "category": "Legs/Quads",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes",
+      "Core",
+      "Upper Back"
+    ],
+    "equipment": [
+      "Barbell",
+      "Rack"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Squat",
+    "mechanics": "Compound",
+    "cues": "Elbows high; torso upright",
+    "common_errors": "Elbows drop",
+    "progression": "Heavier load",
+    "regression": "Goblet Squat",
+    "group": "Dos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 3,
+      "Colonne": 1
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pistol Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bulgarian Split Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Front Squat cible principalement les dos. Matériel suggéré : Barbell, Rack. Consignes : Elbows high; torso upright."
+  },
+  {
+    "name": "Kettlebell Swing",
+    "category": "Legs/Glutes-Hamstrings",
+    "primary_muscle": "Glutes,Hamstrings",
+    "secondary_muscles": [
+      "Core",
+      "Back"
+    ],
+    "equipment": [
+      "Kettlebell"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Hinge",
+    "mechanics": "Explosive",
+    "cues": "Hips snap; arms relaxed",
+    "common_errors": "Squatting movement",
+    "progression": "Heavier KB",
+    "regression": "Hip Hinge drill",
+    "group": "Dos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Colonne": 2,
+      "Hanches": 1,
+      "Épaules": 1
+    },
+    "alternatives": [
+      {
+        "name": "Jump Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Copenhagen Plank",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Kettlebell Swing cible principalement les dos. Matériel suggéré : Kettlebell. Consignes : Hips snap; arms relaxed."
+  },
+  {
+    "name": "Neutral Grip Pull-Up",
+    "category": "Back",
+    "primary_muscle": "Lats",
+    "secondary_muscles": [
+      "Biceps",
+      "Forearms",
+      "Core"
+    ],
+    "equipment": [
+      "Pull-Up Bar"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Vertical Pull",
+    "mechanics": "Compound",
+    "cues": "Neutral grip; pull chest up",
+    "common_errors": "Shrugging shoulders; partial ROM",
+    "progression": "Weighted Neutral Pull-Ups",
+    "regression": "Assisted Neutral Pull-Up",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Coudes": 1,
+      "Colonne": 2,
+      "Hanches": 1,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Chin-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Dumbbell Row (One Arm)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pull-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Neutral Grip Pull-Up cible principalement les dos. Matériel suggéré : Pull-Up Bar. Consignes : Neutral grip; pull chest up."
+  },
+  {
+    "name": "Overhead EZ-Bar Extension",
+    "category": "Triceps",
+    "primary_muscle": "Triceps (Long Head)",
+    "secondary_muscles": [
+      "Triceps (Lateral",
+      "Medial)"
+    ],
+    "equipment": [
+      "EZ Bar"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Isolation",
+    "cues": "Arms overhead; elbows close",
+    "common_errors": "Flaring elbows; arching back",
+    "progression": "Heavier bar",
+    "regression": "Dumbbell Overhead Extension",
+    "group": "Dos",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Overhead Rope Extension",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "EZ-Bar Skull Crusher",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Overhead Dumbbell Extension",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Overhead EZ-Bar Extension cible principalement les dos. Matériel suggéré : EZ Bar. Consignes : Arms overhead; elbows close."
+  },
+  {
+    "name": "Overhead Rope Extension",
+    "category": "Triceps",
+    "primary_muscle": "Triceps (Long Head)",
+    "secondary_muscles": [
+      "Triceps (Lateral",
+      "Medial)"
+    ],
+    "equipment": [
+      "Cable",
+      "Rope"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Isolation",
+    "cues": "Step forward; elbows tight overhead",
+    "common_errors": "Arching back; elbows flare",
+    "progression": "Heavier load, slower reps",
+    "regression": "Band Overhead Extension",
+    "group": "Dos",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Overhead EZ-Bar Extension",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "EZ-Bar Skull Crusher",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Overhead Dumbbell Extension",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Overhead Rope Extension cible principalement les dos. Matériel suggéré : Cable, Rope. Consignes : Step forward; elbows tight overhead."
+  },
+  {
+    "name": "Pull-Up",
+    "category": "Back",
+    "primary_muscle": "Lats",
+    "secondary_muscles": [
+      "Biceps",
+      "Mid Back",
+      "Core"
+    ],
+    "equipment": [
+      "Pull-Up Bar"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Vertical Pull",
+    "mechanics": "Compound",
+    "cues": "Chest to bar; full hang; scapula engaged",
+    "common_errors": "Half reps; kipping without control",
+    "progression": "Weighted Pull-Ups",
+    "regression": "Assisted Pull-Ups",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Coudes": 1,
+      "Colonne": 2,
+      "Hanches": 1,
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Chin-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Straight Arm Pulldown",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Lat Pulldown (Wide Grip)",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-92c-pull-up-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/wide-grip-pull-up",
+    "muscle_group_fr": "Grand dorsal",
+    "equipment_label": "Body Only",
+    "equipment_fr": "Poids du corps",
+    "description_fr": "Pull-Up cible principalement les grand dorsal. Équipement suggéré : poids du corps. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Reverse Hyperextension",
+    "category": "Legs/Glutes",
+    "primary_muscle": "Glutes,Hamstrings",
+    "secondary_muscles": [
+      "Lower Back"
+    ],
+    "equipment": [
+      "Reverse Hyper Machine"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Hip Extension",
+    "mechanics": "Isolation",
+    "cues": "Control up and down",
+    "common_errors": "Swinging legs",
+    "progression": "Weighted",
+    "regression": "Floor Glute Raise",
+    "group": "Dos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Nordic Hamstring Curl",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Reverse Hyperextension cible principalement les dos. Matériel suggéré : Reverse Hyper Machine. Consignes : Control up and down."
+  },
+  {
+    "name": "T-Bar Row",
+    "category": "Back",
+    "primary_muscle": "Mid Back",
+    "secondary_muscles": [
+      "Lats",
+      "Biceps",
+      "Rear Delts"
+    ],
+    "equipment": [
+      "T-Bar",
+      "Landmine"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Horizontal Pull",
+    "mechanics": "Compound",
+    "cues": "Chest up; elbows drive back",
+    "common_errors": "Shrugging; bouncing reps",
+    "progression": "Heavier plates, pause reps",
+    "regression": "Chest-Supported T-Bar Row",
+    "group": "Dos",
+    "source": "json_exos/exercices_dos_enrichis.json",
+    "joints": {
+      "Coudes": 1,
+      "Colonne": 2,
+      "Épaules": 1
+    },
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/3381_1.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/t-bar-row",
+    "muscle_group_fr": "Milieu du dos",
+    "equipment_label": "Other",
+    "equipment_fr": "Autre",
+    "description_fr": "T-Bar Row cible principalement les milieu du dos. Équipement suggéré : autre. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Mountain Climbers",
+    "category": "Abs/Cardio",
+    "primary_muscle": "Rectus Abdominis",
+    "secondary_muscles": [
+      "Obliques",
+      "Hip Flexors",
+      "Delts"
+    ],
+    "equipment": [
+      "Bodyweight"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Dynamic Core",
+    "mechanics": "Dynamic",
+    "cues": "Drive knees; brace core",
+    "common_errors": "Hips too high; rushing",
+    "progression": "Weighted Vest",
+    "regression": "Slower tempo",
+    "group": "Épaules",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plank",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Mountain Climbers cible principalement les épaules. Matériel suggéré : Bodyweight. Consignes : Drive knees; brace core."
+  },
+  {
+    "name": "Stability Ball Rollout",
+    "category": "Abs/Core",
+    "primary_muscle": "Rectus Abdominis",
+    "secondary_muscles": [
+      "Obliques",
+      "Shoulders"
+    ],
+    "equipment": [
+      "Stability Ball"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Anti-Extension",
+    "mechanics": "Dynamic",
+    "cues": "Elbows on ball; roll slow",
+    "common_errors": "Sagging hips; bouncing",
+    "progression": "Further ROM",
+    "regression": "Closer stance",
+    "group": "Épaules",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Plank",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Mountain Climbers",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Stability Ball Rollout cible principalement les épaules. Matériel suggéré : Stability Ball. Consignes : Elbows on ball; roll slow."
+  },
+  {
+    "name": "Zercher Squat",
+    "category": "Legs/Quads",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes",
+      "Core",
+      "Biceps"
+    ],
+    "equipment": [
+      "Barbell"
+    ],
+    "difficulty": "Advanced",
+    "movement_pattern": "Squat",
+    "mechanics": "Compound",
+    "cues": "Bar in elbows; upright chest",
+    "common_errors": "Rounding back",
+    "progression": "Heavier load",
+    "regression": "Goblet Squat",
+    "group": "Bras",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 3,
+      "Colonne": 1,
+      "Coudes": 1
+    },
+    "alternatives": [
+      {
+        "name": "Pistol Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bulgarian Split Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Zercher Squat cible principalement les bras. Matériel suggéré : Barbell. Consignes : Bar in elbows; upright chest."
+  },
+  {
+    "name": "Barbell Curl",
+    "category": "Biceps",
+    "primary_muscle": "Biceps Brachii",
+    "secondary_muscles": [
+      "Forearms",
+      "Brachialis"
+    ],
+    "equipment": [
+      "Barbell"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Elbows tucked; full ROM; squeeze top",
+    "common_errors": "Swinging; half reps",
+    "progression": "Heavier load, tempo reps",
+    "regression": "Band Curls",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "EZ-Bar Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Dumbbell Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Concentration Curl",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "source_url": "https://www.bodybuilding.com/exercises/barbell-curl",
+    "muscle_group_fr": "Biceps",
+    "equipment_label": "Barbell",
+    "equipment_fr": "Barre",
+    "description_fr": "Barbell Curl cible principalement les biceps. Équipement suggéré : barre. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Cable Curl",
+    "category": "Biceps",
+    "primary_muscle": "Biceps Brachii",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Cable",
+      "Bar Attachment"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Constant tension; elbows tucked",
+    "common_errors": "Elbows drift forward",
+    "progression": "Heavier load, rope curls",
+    "regression": "Band Curls",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Barbell Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "EZ-Bar Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Machine Biceps Curl",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Cable Curl cible principalement les bras. Matériel suggéré : Cable, Bar Attachment. Consignes : Constant tension; elbows tucked."
+  },
+  {
+    "name": "Cable Kickback",
+    "category": "Triceps",
+    "primary_muscle": "Triceps",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Cable",
+      "Single Handle"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Isolation",
+    "cues": "Elbow fixed; extend fully",
+    "common_errors": "Swinging cable; short ROM",
+    "progression": "Heavier load",
+    "regression": "DB Kickback",
+    "group": "Bras",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Dumbbell Skull Crusher",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Cable Kickback cible principalement les bras. Matériel suggéré : Cable, Single Handle. Consignes : Elbow fixed; extend fully."
+  },
+  {
+    "name": "Concentration Curl",
+    "category": "Biceps",
+    "primary_muscle": "Biceps Brachii",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Dumbbell",
+      "Bench"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Elbow on thigh; full ROM",
+    "common_errors": "Swinging DB; rushing",
+    "progression": "Heavier DBs, slower tempo",
+    "regression": "Cable Concentration Curl",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Cable Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Barbell Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Dumbbell Curl",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-8e-concentration-curl-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/concentration-curls",
+    "muscle_group_fr": "Biceps",
+    "equipment_label": "Dumbbell",
+    "equipment_fr": "Haltère",
+    "description_fr": "Concentration Curl cible principalement les biceps. Équipement suggéré : haltère. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Dumbbell Curl",
+    "category": "Biceps",
+    "primary_muscle": "Biceps Brachii",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Dumbbells"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Palms up; slow tempo; shoulders still",
+    "common_errors": "Swinging; elbows move forward",
+    "progression": "Heavier DBs",
+    "regression": "Incline DB Curl",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "EZ-Bar Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Concentration Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Curl",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Dumbbell Curl cible principalement les bras. Matériel suggéré : Dumbbells. Consignes : Palms up; slow tempo; shoulders still."
+  },
+  {
+    "name": "Dumbbell Skull Crusher",
+    "category": "Triceps",
+    "primary_muscle": "Triceps",
+    "secondary_muscles": [
+      "None"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Bench"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Isolation",
+    "cues": "Elbows steady; DBs to temples",
+    "common_errors": "Moving elbows; poor ROM",
+    "progression": "Heavier DBs",
+    "regression": "Lighter load",
+    "group": "Bras",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "V-Bar Pushdown",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Dumbbell Skull Crusher cible principalement les bras. Matériel suggéré : Dumbbells, Bench. Consignes : Elbows steady; DBs to temples."
+  },
+  {
+    "name": "EZ-Bar Curl",
+    "category": "Biceps",
+    "primary_muscle": "Biceps Brachii",
+    "secondary_muscles": [
+      "Forearms",
+      "Brachialis"
+    ],
+    "equipment": [
+      "EZ Bar"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Neutral wrists; elbows still",
+    "common_errors": "Shrugging; ROM cut",
+    "progression": "Weighted EZ Curl",
+    "regression": "Cable Curl",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Cable Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Machine Biceps Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Barbell Curl",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/2020-xdb-46s-standing-ez-bar-curl-m1-crop-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/ez-bar-curl",
+    "muscle_group_fr": "Biceps",
+    "equipment_label": "E-Z Curl Bar",
+    "equipment_fr": "Barre EZ",
+    "description_fr": "EZ-Bar Curl cible principalement les biceps. Équipement suggéré : barre ez. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Hammer Curl",
+    "category": "Biceps/Forearms",
+    "primary_muscle": "Brachialis",
+    "secondary_muscles": [
+      "Forearms",
+      "Biceps"
+    ],
+    "equipment": [
+      "Dumbbells"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Neutral grip; full range; steady tempo",
+    "common_errors": "Shrugging; swinging",
+    "progression": "Heavier load, rope hammer curls",
+    "regression": "Band hammer curl",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 3
+    },
+    "alternatives": [
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Hammer Curl cible principalement les bras. Matériel suggéré : Dumbbells. Consignes : Neutral grip; full range; steady tempo."
+  },
+  {
+    "name": "Incline Dumbbell Curl",
+    "category": "Biceps",
+    "primary_muscle": "Biceps (Long Head)",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Bench"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Elbows behind body; big stretch",
+    "common_errors": "Rolling shoulders; short ROM",
+    "progression": "Heavier DBs, slow negatives",
+    "regression": "Cable Curl",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Incline Dumbbell Curl cible principalement les bras. Matériel suggéré : Dumbbells, Bench. Consignes : Elbows behind body; big stretch."
+  },
+  {
+    "name": "Machine Biceps Curl",
+    "category": "Biceps",
+    "primary_muscle": "Biceps Brachii",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Biceps Curl Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Seat adjusted; squeeze peak",
+    "common_errors": "Rushed reps; short ROM",
+    "progression": "Heavier plates",
+    "regression": "Lighter load",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Cable Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Barbell Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "EZ-Bar Curl",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Machine Biceps Curl cible principalement les bras. Matériel suggéré : Biceps Curl Machine. Consignes : Seat adjusted; squeeze peak."
+  },
+  {
+    "name": "Machine Triceps Extension",
+    "category": "Triceps",
+    "primary_muscle": "Triceps",
+    "secondary_muscles": [
+      "None"
+    ],
+    "equipment": [
+      "Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Isolation",
+    "cues": "Seat adjusted; elbows fixed",
+    "common_errors": "Short ROM; rushing reps",
+    "progression": "Heavier load",
+    "regression": "Lighter load",
+    "group": "Bras",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Kickback",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Machine Triceps Extension cible principalement les bras. Matériel suggéré : Machine. Consignes : Seat adjusted; elbows fixed."
+  },
+  {
+    "name": "Preacher Curl (EZ Bar)",
+    "category": "Biceps",
+    "primary_muscle": "Biceps (Short Head)",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "EZ Bar",
+      "Preacher Bench"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Elbows fixed; squeeze top; slow eccentric",
+    "common_errors": "Partial ROM; lifting elbows",
+    "progression": "Heavier bar",
+    "regression": "DB Preacher Curl",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Preacher Curl (EZ Bar) cible principalement les bras. Matériel suggéré : EZ Bar, Preacher Bench. Consignes : Elbows fixed; squeeze top; slow eccentric."
+  },
+  {
+    "name": "Triceps Rope Pushdown",
+    "category": "Triceps",
+    "primary_muscle": "Triceps",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Cable",
+      "Rope"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Isolation",
+    "cues": "Elbows pinned; split rope at bottom",
+    "common_errors": "Elbows drift; half reps",
+    "progression": "Heavier load, rest-pause",
+    "regression": "Band Pushdown",
+    "group": "Bras",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Machine Triceps Extension",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Triceps Rope Pushdown cible principalement les bras. Matériel suggéré : Cable, Rope. Consignes : Elbows pinned; split rope at bottom."
+  },
+  {
+    "name": "V-Bar Pushdown",
+    "category": "Triceps",
+    "primary_muscle": "Triceps",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Cable",
+      "V-Bar"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Elbow Extension",
+    "mechanics": "Isolation",
+    "cues": "Elbows tucked; full lockout",
+    "common_errors": "Shrugging; partial ROM",
+    "progression": "Heavier load",
+    "regression": "Rope Pushdown",
+    "group": "Bras",
+    "source": "json_exos/exercices_triceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Diamond Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Triceps Rope Pushdown",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "V-Bar Pushdown cible principalement les bras. Matériel suggéré : Cable, V-Bar. Consignes : Elbows tucked; full lockout."
+  },
+  {
+    "name": "Bayesian Cable Curl",
+    "category": "Biceps",
+    "primary_muscle": "Biceps (Long Head)",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Cable",
+      "Single Handle"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Step forward; arm behind body; slow ROM",
+    "common_errors": "Torso rotation; cheating",
+    "progression": "Heavier load, longer holds",
+    "regression": "Incline DB Curl",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Bayesian Cable Curl cible principalement les bras. Matériel suggéré : Cable, Single Handle. Consignes : Step forward; arm behind body; slow ROM."
+  },
+  {
+    "name": "Drag Curl",
+    "category": "Biceps",
+    "primary_muscle": "Biceps (Long Head)",
+    "secondary_muscles": [
+      "Forearms",
+      "Brachialis"
+    ],
+    "equipment": [
+      "Barbell",
+      "EZ Bar"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Bar drags along torso; elbows back",
+    "common_errors": "Swinging bar; using momentum",
+    "progression": "Heavier load",
+    "regression": "Light DB Drag Curl",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "source_url": "https://www.bodybuilding.com/exercises/drag-curl",
+    "muscle_group_fr": "Biceps",
+    "equipment_label": "Barbell",
+    "equipment_fr": "Barre",
+    "description_fr": "Drag Curl cible principalement les biceps. Équipement suggéré : barre. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Spider Curl",
+    "category": "Biceps",
+    "primary_muscle": "Biceps (Short Head)",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Barbell",
+      "EZ Bar",
+      "Dumbbells",
+      "Bench"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Elbow Flexion",
+    "mechanics": "Isolation",
+    "cues": "Chest on bench; elbows in front",
+    "common_errors": "Partial ROM; lifting chest",
+    "progression": "Heavier load, slower tempo",
+    "regression": "Incline DB Curl",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Spider Curl cible principalement les bras. Matériel suggéré : Barbell, EZ Bar, Dumbbells, Bench. Consignes : Chest on bench; elbows in front."
+  },
+  {
+    "name": "Zottman Curl",
+    "category": "Biceps/Forearms",
+    "primary_muscle": "Biceps Brachii",
+    "secondary_muscles": [
+      "Forearms"
+    ],
+    "equipment": [
+      "Dumbbells"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Elbow Flexion + Supination/Pronation",
+    "mechanics": "Isolation",
+    "cues": "Supinate up, pronate down",
+    "common_errors": "Rushed tempo; cheating",
+    "progression": "Slower negatives, heavier DBs",
+    "regression": "Standard DB Curl",
+    "group": "Bras",
+    "source": "json_exos/exercices_biceps_enrichis.json",
+    "joints": {
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Barbell Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cable Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Concentration Curl",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "source_url": "https://www.bodybuilding.com/exercises/zottman-curl",
+    "muscle_group_fr": "Biceps",
+    "description_fr": "Zottman Curl cible principalement les biceps. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Pistol Squat",
+    "category": "Legs/Quads-Glutes",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes",
+      "Hamstrings",
+      "Core"
+    ],
+    "equipment": [
+      "Bodyweight"
+    ],
+    "difficulty": "Advanced",
+    "movement_pattern": "Squat (Unilateral)",
+    "mechanics": "Compound",
+    "cues": "Balance; control depth",
+    "common_errors": "Falling back",
+    "progression": "Weighted pistol",
+    "regression": "Assisted pistol",
+    "group": "Abdos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 3,
+      "Colonne": 1
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Zercher Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Cyclist Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Pistol Squat cible principalement les abdos. Matériel suggéré : Bodyweight. Consignes : Balance; control depth."
+  },
+  {
+    "name": "Captain's Chair Knee Raise",
+    "category": "Abs",
+    "primary_muscle": "Lower Abs",
+    "secondary_muscles": [
+      "Hip Flexors",
+      "Obliques"
+    ],
+    "equipment": [
+      "Captain's Chair"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Hip Flexion",
+    "mechanics": "Isolation",
+    "cues": "Slow raise; no swing",
+    "common_errors": "Legs swinging; short ROM",
+    "progression": "Straight-Leg Raise",
+    "regression": "Partial Raises",
+    "group": "Abdos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Plank",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Mountain Climbers",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-5m-captains-chair-knee-raise-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/kneehip-raise-on-parallel-bars",
+    "muscle_group_fr": "Abdominaux",
+    "equipment_label": "Other",
+    "equipment_fr": "Autre",
+    "description_fr": "Captain's Chair Knee Raise cible principalement les abdominaux. Équipement suggéré : autre. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Crunch",
+    "category": "Abs",
+    "primary_muscle": "Rectus Abdominis",
+    "secondary_muscles": [
+      "Obliques"
+    ],
+    "equipment": [
+      "Bodyweight",
+      "Mat"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Spinal Flexion",
+    "mechanics": "Isolation",
+    "cues": "Lift shoulders; ribs to pelvis",
+    "common_errors": "Pulling neck; jerking",
+    "progression": "Weighted Crunch",
+    "regression": "Partial Crunch",
+    "group": "Abdos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Mountain Climbers",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plank",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Crunch cible principalement les abdos. Matériel suggéré : Bodyweight, Mat. Consignes : Lift shoulders; ribs to pelvis."
+  },
+  {
+    "name": "Lying Leg Raise",
+    "category": "Abs",
+    "primary_muscle": "Lower Abs",
+    "secondary_muscles": [
+      "Hip Flexors"
+    ],
+    "equipment": [
+      "Mat"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Hip Flexion",
+    "mechanics": "Isolation",
+    "cues": "Lower slow; press low back to floor",
+    "common_errors": "Arching back; momentum",
+    "progression": "Weighted Leg Raise",
+    "regression": "Bent-Knee Raises",
+    "group": "Abdos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Mountain Climbers",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Lying Leg Raise cible principalement les abdos. Matériel suggéré : Mat. Consignes : Lower slow; press low back to floor."
+  },
+  {
+    "name": "Monster Walk",
+    "category": "Legs/Abductors",
+    "primary_muscle": "Gluteus Medius",
+    "secondary_muscles": [
+      "TFL"
+    ],
+    "equipment": [
+      "Band"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Hip Abduction",
+    "mechanics": "Dynamic",
+    "cues": "Stay low; steps wide",
+    "common_errors": "Standing tall",
+    "progression": "Stronger band",
+    "regression": "Bodyweight only",
+    "group": "Abdos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Mountain Climbers",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plank",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Monster Walk cible principalement les abdos. Matériel suggéré : Band. Consignes : Stay low; steps wide."
+  },
+  {
+    "name": "Plank",
+    "category": "Abs/Core",
+    "primary_muscle": "Rectus Abdominis",
+    "secondary_muscles": [
+      "Transverse Abdominis",
+      "Obliques",
+      "Glutes"
+    ],
+    "equipment": [
+      "Bodyweight",
+      "Mat"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Anti-Extension",
+    "mechanics": "Isometric",
+    "cues": "Ribs down; glutes tight; neutral neck",
+    "common_errors": "Sagging hips; butt high",
+    "progression": "Weighted Plank",
+    "regression": "Knee Plank",
+    "group": "Abdos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {
+      "Hanches": 1
+    },
+    "alternatives": [
+      {
+        "name": "Mountain Climbers",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Plank cible principalement les abdos. Matériel suggéré : Bodyweight, Mat. Consignes : Ribs down; glutes tight; neutral neck."
+  },
+  {
+    "name": "Russian Twist",
+    "category": "Abs/Obliques",
+    "primary_muscle": "Obliques",
+    "secondary_muscles": [
+      "Rectus Abdominis",
+      "Hip Flexors"
+    ],
+    "equipment": [
+      "Bodyweight",
+      "Medicine Ball"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Rotation",
+    "mechanics": "Isolation",
+    "cues": "Lean back; rotate torso; heels off floor",
+    "common_errors": "Swinging arms only",
+    "progression": "Weighted Russian Twist",
+    "regression": "Feet on ground",
+    "group": "Abdos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Mountain Climbers",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plank",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/2019-xdb-262a-russian-twist-m1-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/russian-twist",
+    "muscle_group_fr": "Abdominaux",
+    "equipment_label": "Body Only",
+    "equipment_fr": "Poids du corps",
+    "description_fr": "Russian Twist cible principalement les abdominaux. Équipement suggéré : poids du corps. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Stability Ball Hamstring Curl",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Glutes",
+      "Core"
+    ],
+    "equipment": [
+      "Stability Ball"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Knee Flexion + Bridge",
+    "mechanics": "Compound",
+    "cues": "Hips high; slow roll",
+    "common_errors": "Dropping hips",
+    "progression": "Single-leg version",
+    "regression": "Partial ROM",
+    "group": "Abdos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Hanches": 3,
+      "Genoux": 2,
+      "Colonne": 1,
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Nordic Hamstring Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Leg Curl (Machine Seated)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Lying Leg Curl (Machine)",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Stability Ball Hamstring Curl cible principalement les abdos. Matériel suggéré : Stability Ball. Consignes : Hips high; slow roll."
+  },
+  {
+    "name": "Barbell Back Squat",
+    "category": "Legs/Quads",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes",
+      "Hamstrings",
+      "Core"
+    ],
+    "equipment": [
+      "Barbell",
+      "Rack"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Squat",
+    "mechanics": "Compound",
+    "cues": "Chest up; knees track toes",
+    "common_errors": "Butt wink; knees cave",
+    "progression": "Pause Squat",
+    "regression": "Goblet Squat",
+    "group": "Abdos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 3,
+      "Colonne": 1
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pistol Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bulgarian Split Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Barbell Back Squat cible principalement les abdos. Matériel suggéré : Barbell, Rack. Consignes : Chest up; knees track toes."
+  },
+  {
+    "name": "Cable Crunch",
+    "category": "Abs",
+    "primary_muscle": "Rectus Abdominis",
+    "secondary_muscles": [
+      "Obliques"
+    ],
+    "equipment": [
+      "Cable",
+      "Rope"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Spinal Flexion",
+    "mechanics": "Isolation",
+    "cues": "Kneeling; pull rope down with abs",
+    "common_errors": "Pulling with arms; short ROM",
+    "progression": "Heavier weight",
+    "regression": "Bodyweight Crunch",
+    "group": "Abdos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Hollow Body Hold",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plank",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Cable Crunch cible principalement les abdos. Matériel suggéré : Cable, Rope. Consignes : Kneeling; pull rope down with abs."
+  },
+  {
+    "name": "Copenhagen Plank",
+    "category": "Legs/Adductors",
+    "primary_muscle": "Adductors",
+    "secondary_muscles": [
+      "Obliques",
+      "Core"
+    ],
+    "equipment": [
+      "Bodyweight",
+      "Bench"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Isometric",
+    "mechanics": "Isometric",
+    "cues": "Hips high; squeeze adductors",
+    "common_errors": "Hips drop",
+    "progression": "Weighted Copenhagen",
+    "regression": "Knee on bench",
+    "group": "Abdos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Colonne": 1,
+      "Hanches": 1
+    },
+    "alternatives": [
+      {
+        "name": "Hollow Body Hold",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Copenhagen Plank cible principalement les abdos. Matériel suggéré : Bodyweight, Bench. Consignes : Hips high; squeeze adductors."
+  },
+  {
+    "name": "Hanging Leg Raise",
+    "category": "Abs",
+    "primary_muscle": "Lower Abs",
+    "secondary_muscles": [
+      "Hip Flexors",
+      "Obliques"
+    ],
+    "equipment": [
+      "Pull-Up Bar"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Hip Flexion",
+    "mechanics": "Isolation",
+    "cues": "Posterior tilt; no swing",
+    "common_errors": "Swinging; lumbar arch",
+    "progression": "Toes-to-Bar",
+    "regression": "Hanging Knee Raise",
+    "group": "Abdos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Hollow Body Hold",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Copenhagen Plank",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-9m-hanging-leg-raise-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/hanging-leg-raise",
+    "muscle_group_fr": "Abdominaux",
+    "equipment_label": "Body Only",
+    "equipment_fr": "Poids du corps",
+    "description_fr": "Hanging Leg Raise cible principalement les abdominaux. Équipement suggéré : poids du corps. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Hollow Body Hold",
+    "category": "Abs/Core",
+    "primary_muscle": "Rectus Abdominis",
+    "secondary_muscles": [
+      "Obliques",
+      "Transverse Abdominis"
+    ],
+    "equipment": [
+      "Bodyweight",
+      "Mat"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Anti-Extension",
+    "mechanics": "Isometric",
+    "cues": "Low back pressed; arms/legs extended",
+    "common_errors": "Arching back; arms drop",
+    "progression": "Weighted Hollow Hold",
+    "regression": "Tucked Hold",
+    "group": "Abdos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Mountain Climbers",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Hollow Body Hold cible principalement les abdos. Matériel suggéré : Bodyweight, Mat. Consignes : Low back pressed; arms/legs extended."
+  },
+  {
+    "name": "Side Plank with Hip Dip",
+    "category": "Abs/Obliques",
+    "primary_muscle": "Obliques",
+    "secondary_muscles": [
+      "Transverse Abdominis",
+      "Glutes"
+    ],
+    "equipment": [
+      "Mat"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Anti-Lateral Flexion",
+    "mechanics": "Isometric + Dynamic",
+    "cues": "Elbow under shoulder; hips high",
+    "common_errors": "Sagging hips",
+    "progression": "Weighted Side Plank Dip",
+    "regression": "Knee Side Plank",
+    "group": "Abdos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {
+      "Hanches": 1,
+      "Épaules": 2,
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Hollow Body Hold",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Side Plank with Hip Dip cible principalement les abdos. Matériel suggéré : Mat. Consignes : Elbow under shoulder; hips high."
+  },
+  {
+    "name": "Single-Leg Hip Thrust",
+    "category": "Legs/Glutes",
+    "primary_muscle": "Glutes",
+    "secondary_muscles": [
+      "Hamstrings",
+      "Core"
+    ],
+    "equipment": [
+      "Bench"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Bridge",
+    "mechanics": "Compound",
+    "cues": "Hips square; control descent",
+    "common_errors": "Hips drop",
+    "progression": "Weighted",
+    "regression": "Two-Leg Hip Thrust",
+    "group": "Abdos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Hanches": 3,
+      "Genoux": 1,
+      "Colonne": 1
+    },
+    "alternatives": [
+      {
+        "name": "Jump Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Hollow Body Hold",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Single-Leg Hip Thrust cible principalement les abdos. Matériel suggéré : Bench. Consignes : Hips square; control descent."
+  },
+  {
+    "name": "Sissy Squat",
+    "category": "Legs/Quads",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Core"
+    ],
+    "equipment": [
+      "Bodyweight",
+      "Machine"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Squat",
+    "mechanics": "Isolation",
+    "cues": "Lean back; full knee bend",
+    "common_errors": "Partial ROM",
+    "progression": "Weighted Sissy",
+    "regression": "Assisted Sissy",
+    "group": "Abdos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 3,
+      "Colonne": 1
+    },
+    "alternatives": [
+      {
+        "name": "Pistol Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bulgarian Split Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Barbell Back Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Sissy Squat cible principalement les abdos. Matériel suggéré : Bodyweight, Machine. Consignes : Lean back; full knee bend."
+  },
+  {
+    "name": "V-Up",
+    "category": "Abs",
+    "primary_muscle": "Rectus Abdominis",
+    "secondary_muscles": [
+      "Obliques",
+      "Hip Flexors"
+    ],
+    "equipment": [
+      "Bodyweight",
+      "Mat"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Spinal Flexion + Hip Flexion",
+    "mechanics": "Compound",
+    "cues": "Arms & legs together; reach toes",
+    "common_errors": "Rounded back; momentum",
+    "progression": "Weighted V-Up",
+    "regression": "Crunch or Leg Raise",
+    "group": "Abdos",
+    "source": "json_exos/exercices_abdos_enrichis.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Mountain Climbers",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Hollow Body Hold",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plank",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "upper",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-76a-v-up-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/jackknife-sit-up",
+    "muscle_group_fr": "Abdominaux",
+    "equipment_label": "Body Only",
+    "equipment_fr": "Poids du corps",
+    "description_fr": "V-Up cible principalement les abdominaux. Équipement suggéré : poids du corps. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Walking Lunge",
+    "category": "Legs/Quads-Glutes",
+    "primary_muscle": "Glutes",
+    "secondary_muscles": [
+      "Quadriceps",
+      "Hamstrings",
+      "Core"
+    ],
+    "equipment": [
+      "Dumbbells",
+      "Barbell"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Lunge",
+    "mechanics": "Compound",
+    "cues": "Long stride; upright chest",
+    "common_errors": "Short stride",
+    "progression": "Overhead Lunge",
+    "regression": "Static Lunge",
+    "group": "Abdos",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Hanches": 3,
+      "Genoux": 3,
+      "Colonne": 1
+    },
+    "alternatives": [
+      {
+        "name": "V-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Copenhagen Plank",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Hollow Body Hold",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Walking Lunge cible principalement les abdos. Matériel suggéré : Dumbbells, Barbell. Consignes : Long stride; upright chest."
+  },
+  {
+    "name": "Nordic Hamstring Curl",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Glutes",
+      "Calves"
+    ],
+    "equipment": [
+      "Bodyweight",
+      "Partner",
+      "Machine"
+    ],
+    "difficulty": "Advanced",
+    "movement_pattern": "Knee Flexion",
+    "mechanics": "Isolation",
+    "cues": "Control down; resist fall",
+    "common_errors": "Dropping uncontrolled",
+    "progression": "Weighted Nordic",
+    "regression": "Partial ROM",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Hanches": 3,
+      "Genoux": 2,
+      "Chevilles": 1,
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Stability Ball Hamstring Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Leg Curl (Machine Seated)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Romanian Deadlift",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Nordic Hamstring Curl cible principalement les quadris. Matériel suggéré : Bodyweight, Partner, Machine. Consignes : Control down; resist fall."
+  },
+  {
+    "name": "Hip Thrust (Barbell)",
+    "category": "Legs/Glutes",
+    "primary_muscle": "Glutes",
+    "secondary_muscles": [
+      "Hamstrings"
+    ],
+    "equipment": [
+      "Barbell",
+      "Bench"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Bridge",
+    "mechanics": "Compound",
+    "cues": "Shins vertical; squeeze top",
+    "common_errors": "Arching back",
+    "progression": "Heavier load",
+    "regression": "Bodyweight Glute Bridge",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Hanches": 3,
+      "Genoux": 1
+    },
+    "alternatives": [
+      {
+        "name": "Decline Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bench Dip",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Hip Thrust (Barbell) cible principalement les quadris. Matériel suggéré : Barbell, Bench. Consignes : Shins vertical; squeeze top."
+  },
+  {
+    "name": "Leg Curl (Machine Seated)",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Calves"
+    ],
+    "equipment": [
+      "Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Knee Flexion",
+    "mechanics": "Isolation",
+    "cues": "Full ROM; control eccentric",
+    "common_errors": "Bouncing weight",
+    "progression": "Heavier plates",
+    "regression": "Band Leg Curl",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Hanches": 2,
+      "Genoux": 2,
+      "Chevilles": 1,
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Nordic Hamstring Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Stability Ball Hamstring Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Romanian Deadlift",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Leg Curl (Machine Seated) cible principalement les quadris. Matériel suggéré : Machine. Consignes : Full ROM; control eccentric."
+  },
+  {
+    "name": "Lying Leg Curl (Machine)",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Glutes"
+    ],
+    "equipment": [
+      "Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Knee Flexion",
+    "mechanics": "Isolation",
+    "cues": "Hips down; curl smooth",
+    "common_errors": "Arching hips",
+    "progression": "Heavier plates",
+    "regression": "Band Leg Curl",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Hanches": 3,
+      "Genoux": 2,
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Nordic Hamstring Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Stability Ball Hamstring Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Romanian Deadlift",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Lying Leg Curl (Machine) cible principalement les quadris. Matériel suggéré : Machine. Consignes : Hips down; curl smooth."
+  },
+  {
+    "name": "Seated Calf Raise",
+    "category": "Legs/Calves",
+    "primary_muscle": "Soleus",
+    "secondary_muscles": [
+      "Gastrocnemius"
+    ],
+    "equipment": [
+      "Machine",
+      "Barbell"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Plantarflexion",
+    "mechanics": "Isolation",
+    "cues": "Knees bent; full stretch",
+    "common_errors": "Partial ROM",
+    "progression": "Heavier load",
+    "regression": "Bodyweight seated",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-13m-machine-seated-calf-raise-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/seated-calf-raise",
+    "muscle_group_fr": "Mollets",
+    "equipment_label": "Machine",
+    "equipment_fr": "Machine guidée",
+    "description_fr": "Seated Calf Raise cible principalement les mollets. Équipement suggéré : machine guidée. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Standing Calf Raise",
+    "category": "Legs/Calves",
+    "primary_muscle": "Gastrocnemius",
+    "secondary_muscles": [
+      "Soleus"
+    ],
+    "equipment": [
+      "Machine",
+      "Dumbbells"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Plantarflexion",
+    "mechanics": "Isolation",
+    "cues": "Stretch bottom; pause top",
+    "common_errors": "Bouncing",
+    "progression": "Single-leg",
+    "regression": "Bodyweight only",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Standing Calf Raise cible principalement les quadris. Matériel suggéré : Machine, Dumbbells. Consignes : Stretch bottom; pause top."
+  },
+  {
+    "name": "Step-Up",
+    "category": "Legs/Quads-Glutes",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes",
+      "Hamstrings"
+    ],
+    "equipment": [
+      "Box",
+      "Dumbbells"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Step",
+    "mechanics": "Compound",
+    "cues": "Full foot on box; drive through heel",
+    "common_errors": "Pushing off back leg",
+    "progression": "Higher box",
+    "regression": "Lower box",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 3
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pistol Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bulgarian Split Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Step-Up cible principalement les quadris. Matériel suggéré : Box, Dumbbells. Consignes : Full foot on box; drive through heel."
+  },
+  {
+    "name": "Tibialis Raise",
+    "category": "Legs/Anterior",
+    "primary_muscle": "Tibialis Anterior",
+    "secondary_muscles": [
+      "Shins"
+    ],
+    "equipment": [
+      "Bodyweight",
+      "Band",
+      "Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Dorsiflexion",
+    "mechanics": "Isolation",
+    "cues": "Lift toes high; slow descent",
+    "common_errors": "Bouncing",
+    "progression": "Weighted tib raises",
+    "regression": "Bodyweight only",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {},
+    "alternatives": [
+      {
+        "name": "Russian Twist",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Crunch",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Jump Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Tibialis Raise cible principalement les quadris. Matériel suggéré : Bodyweight, Band, Machine. Consignes : Lift toes high; slow descent."
+  },
+  {
+    "name": "Box Jump",
+    "category": "Legs/Plyometric",
+    "primary_muscle": "Quadriceps,Glutes",
+    "secondary_muscles": [
+      "Hamstrings",
+      "Calves"
+    ],
+    "equipment": [
+      "Plyo Box"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Jump",
+    "mechanics": "Explosive",
+    "cues": "Full hip extension; land soft",
+    "common_errors": "Landing stiff",
+    "progression": "Higher box",
+    "regression": "Step-Up",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Hanches": 1,
+      "Genoux": 1,
+      "Chevilles": 1
+    },
+    "alternatives": [
+      {
+        "name": "Jump Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pistol Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Plyometric Push-Up",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "image_url": "https://www.bodybuilding.com/images/2020/xdb/cropped/xdb-75e-box-jump-m1-square-600x600.jpg",
+    "source_url": "https://www.bodybuilding.com/exercises/front-box-jump",
+    "muscle_group_fr": "Ischio-jambiers",
+    "equipment_label": "Other",
+    "equipment_fr": "Autre",
+    "description_fr": "Box Jump cible principalement les ischio-jambiers. Équipement suggéré : autre. Consulte la fiche détaillée pour l'exécution pas à pas."
+  },
+  {
+    "name": "Bulgarian Split Squat",
+    "category": "Legs/Quads-Glutes",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes",
+      "Hamstrings"
+    ],
+    "equipment": [
+      "Bench",
+      "Dumbbells"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Lunge",
+    "mechanics": "Compound",
+    "cues": "Drop straight down",
+    "common_errors": "Forward lean",
+    "progression": "Barbell BSS",
+    "regression": "Split Squat",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 3
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pistol Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Barbell Back Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Bulgarian Split Squat cible principalement les quadris. Matériel suggéré : Bench, Dumbbells. Consignes : Drop straight down."
+  },
+  {
+    "name": "Cyclist Squat",
+    "category": "Legs/Quads",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes"
+    ],
+    "equipment": [
+      "Barbell",
+      "Dumbbells",
+      "Heels Elevated"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Squat",
+    "mechanics": "Compound",
+    "cues": "Heels raised; vertical torso",
+    "common_errors": "Knees cave",
+    "progression": "Heavier load",
+    "regression": "Bodyweight Cyclist Squat",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 3
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Pistol Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Bulgarian Split Squat",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Cyclist Squat cible principalement les quadris. Matériel suggéré : Barbell, Dumbbells, Heels Elevated. Consignes : Heels raised; vertical torso."
+  },
+  {
+    "name": "Jump Squat",
+    "category": "Legs/Plyometric",
+    "primary_muscle": "Quadriceps,Glutes",
+    "secondary_muscles": [
+      "Hamstrings",
+      "Calves"
+    ],
+    "equipment": [
+      "Bodyweight"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Squat Jump",
+    "mechanics": "Explosive",
+    "cues": "Soft landing; full extension",
+    "common_errors": "Hard landings",
+    "progression": "Weighted jumps",
+    "regression": "Bodyweight Squat",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Hanches": 2,
+      "Genoux": 3,
+      "Chevilles": 1
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Tibialis Raise",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Nordic Hamstring Curl",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Jump Squat cible principalement les quadris. Matériel suggéré : Bodyweight. Consignes : Soft landing; full extension."
+  },
+  {
+    "name": "Romanian Deadlift",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Glutes",
+      "Spinal Erectors"
+    ],
+    "equipment": [
+      "Barbell",
+      "Dumbbells"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Hinge",
+    "mechanics": "Compound",
+    "cues": "Hips back; bar close",
+    "common_errors": "Rounding back",
+    "progression": "Deficit RDL",
+    "regression": "KB RDL",
+    "group": "Quadris",
+    "source": "json_exos/exercices_jambes_enrichis_large.json",
+    "joints": {
+      "Hanches": 3,
+      "Genoux": 2,
+      "Colonne": 2
+    },
+    "alternatives": [
+      {
+        "name": "Nordic Hamstring Curl",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Lying Leg Curl (Machine)",
+        "reason": "substitute for same/similar muscle group"
+      },
+      {
+        "name": "Leg Curl (Machine Seated)",
+        "reason": "substitute for same/similar muscle group"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Romanian Deadlift cible principalement les quadris. Matériel suggéré : Barbell, Dumbbells. Consignes : Hips back; bar close."
+  },
+  {
+    "name": "Front Squat (Barbell)",
+    "category": "Legs",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes",
+      "Core"
+    ],
+    "equipment": [
+      "Barbell"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Squat",
+    "mechanics": "Compound",
+    "cues": "Elbows high; upright torso; knees tracking toes",
+    "common_errors": "Elbows drop; forward lean",
+    "progression": "Heavier front squat with paused reps",
+    "regression": "Goblet squat",
+    "group": "Quadris",
+    "source": "manual_add",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 2
+    },
+    "alternatives": [
+      {
+        "name": "Goblet Squat",
+        "reason": "less technical, similar quad demand"
+      },
+      {
+        "name": "Hack Squat (Machine)",
+        "reason": "machine alternative"
+      },
+      {
+        "name": "Bulgarian Split Squat",
+        "reason": "single-leg quad emphasis"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Front Squat (Barbell) cible principalement les quadris. Matériel suggéré : Barbell. Consignes : Elbows high; upright torso; knees tracking toes."
+  },
+  {
+    "name": "Step-Up (High Box)",
+    "category": "Legs",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes"
+    ],
+    "equipment": [
+      "Box",
+      "Dumbbells"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Step/Single-Leg",
+    "mechanics": "Compound",
+    "cues": "Drive through heel; full knee extension; control descent",
+    "common_errors": "Pushing off back leg; incomplete extension",
+    "progression": "Weighted step-up with higher box",
+    "regression": "Lower box step-up",
+    "group": "Quadris",
+    "source": "manual_add",
+    "joints": {
+      "Genoux": 2,
+      "Hanches": 2
+    },
+    "alternatives": [
+      {
+        "name": "Bulgarian Split Squat",
+        "reason": "single-leg quad focus"
+      },
+      {
+        "name": "Reverse Lunge",
+        "reason": "similar unilateral pattern"
+      },
+      {
+        "name": "Leg Press",
+        "reason": "machine alternative"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Step-Up (High Box) cible principalement les quadris. Matériel suggéré : Box, Dumbbells. Consignes : Drive through heel; full knee extension; control descent."
+  },
+  {
+    "name": "Standing Military Press (Barbell)",
+    "category": "Shoulders",
+    "primary_muscle": "Deltoids",
+    "secondary_muscles": [
+      "Triceps",
+      "Upper Pectorals"
+    ],
+    "equipment": [
+      "Barbell"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Vertical Press",
+    "mechanics": "Compound",
+    "cues": "Tight core; press overhead; avoid excessive lumbar extension",
+    "common_errors": "Back arching; pressing too far forward",
+    "progression": "Push press",
+    "regression": "Seated dumbbell press",
+    "group": "Épaules",
+    "source": "manual_add",
+    "joints": {
+      "Épaules": 3,
+      "Coudes": 2
+    },
+    "alternatives": [
+      {
+        "name": "Dumbbell Shoulder Press",
+        "reason": "similar vertical press"
+      },
+      {
+        "name": "Seated Military Press",
+        "reason": "reduced core demand"
+      },
+      {
+        "name": "Arnold Press",
+        "reason": "alternative shoulder emphasis"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Standing Military Press (Barbell) cible principalement les épaules. Matériel suggéré : Barbell. Consignes : Tight core; press overhead; avoid excessive lumbar extension."
+  },
+  {
+    "name": "Face Pull (Cable)",
+    "category": "Shoulders",
+    "primary_muscle": "Rear Delts",
+    "secondary_muscles": [
+      "Trapezius",
+      "Rotator Cuff"
+    ],
+    "equipment": [
+      "Cable Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Horizontal Pull",
+    "mechanics": "Isolation",
+    "cues": "Pull to forehead level; external rotation; squeeze shoulder blades",
+    "common_errors": "Using too much weight; poor scapular control",
+    "progression": "Face pull with rope to higher rep tempos",
+    "regression": "Band face pull",
+    "group": "Épaules",
+    "source": "manual_add",
+    "joints": {
+      "Épaules": 2,
+      "Colonne": 1
+    },
+    "alternatives": [
+      {
+        "name": "Rear Delt Fly (Dumbbell)",
+        "reason": "similar posterior shoulder activation"
+      },
+      {
+        "name": "Band Face Pull",
+        "reason": "low-equipment alternative"
+      },
+      {
+        "name": "Incline Rear Delt Row",
+        "reason": "compound posterior shoulder option"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Face Pull (Cable) cible principalement les épaules. Matériel suggéré : Cable Machine. Consignes : Pull to forehead level; external rotation; squeeze shoulder blades."
+  },
+  {
+    "name": "Seated Dumbbell Rear Delt Fly",
+    "category": "Shoulders",
+    "primary_muscle": "Rear Delts",
+    "secondary_muscles": [
+      "Trapezius"
+    ],
+    "equipment": [
+      "Dumbbells"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Horizontal Pull / Abduction",
+    "mechanics": "Isolation",
+    "cues": "Chest supported; light weight; squeeze rear delts",
+    "common_errors": "Using momentum; incorrect torso position",
+    "progression": "Incline reverse fly on bench",
+    "regression": "Standing bent-over rear delt fly",
+    "group": "Épaules",
+    "source": "manual_add",
+    "joints": {
+      "Épaules": 2
+    },
+    "alternatives": [
+      {
+        "name": "Incline Rear Delt Fly",
+        "reason": "similar posterior activation"
+      },
+      {
+        "name": "Band Pull-Apart",
+        "reason": "equipment-light alternative"
+      },
+      {
+        "name": "Face Pull",
+        "reason": "shoulder health / rear delts"
+      }
+    ],
+    "body_region": "upper",
+    "description_fr": "Seated Dumbbell Rear Delt Fly cible principalement les épaules. Matériel suggéré : Dumbbells. Consignes : Chest supported; light weight; squeeze rear delts."
+  },
+  {
+    "name": "Leg Extension (Machine)",
+    "category": "Legs",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [],
+    "equipment": [
+      "Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Knee Extension",
+    "mechanics": "Isolation",
+    "cues": "Full knee extension; control eccentric phase",
+    "common_errors": "Using momentum; short ROM",
+    "progression": "Single-leg extension with pause",
+    "regression": "Reduced range / lighter load",
+    "group": "Quadris",
+    "source": "manual_add",
+    "joints": {
+      "Genoux": 3
+    },
+    "alternatives": [
+      {
+        "name": "Sissy Squat",
+        "reason": "bodyweight quad isolation"
+      },
+      {
+        "name": "High-Rep Goblet Squat",
+        "reason": "compound quad focus"
+      },
+      {
+        "name": "Leg Press (Feet Low)",
+        "reason": "machine quad emphasis"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Leg Extension (Machine) cible principalement les quadris. Matériel suggéré : Machine. Consignes : Full knee extension; control eccentric phase."
+  },
+  {
+    "name": "Hack Squat (Machine)",
+    "category": "Legs",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes"
+    ],
+    "equipment": [
+      "Machine"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Squat",
+    "mechanics": "Compound",
+    "cues": "Feet low on platform; drive through heels; full depth",
+    "common_errors": "Lifting heels; shallow depth",
+    "progression": "Heavier loads or unilateral hack",
+    "regression": "Reduced range or lighter load",
+    "group": "Quadris",
+    "source": "manual_add",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 2
+    },
+    "alternatives": [
+      {
+        "name": "Front Squat",
+        "reason": "similar quad demand"
+      },
+      {
+        "name": "Leg Press",
+        "reason": "machine alternative"
+      },
+      {
+        "name": "Goblet Squat",
+        "reason": "less technical alternative"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Hack Squat (Machine) cible principalement les quadris. Matériel suggéré : Machine. Consignes : Feet low on platform; drive through heels; full depth."
+  },
+  {
+    "name": "Cossack Squat",
+    "category": "Legs",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Adductors",
+      "Glutes"
+    ],
+    "equipment": [
+      "Bodyweight"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Side Lunge/Single-Leg",
+    "mechanics": "Compound",
+    "cues": "Straight back; toe pointing; depth per mobility",
+    "common_errors": "Rounding spine; insufficient mobility",
+    "progression": "Weighted Cossack or elevated heel",
+    "regression": "Shallow lateral step or assisted band",
+    "group": "Quadris",
+    "source": "manual_add",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 2
+    },
+    "alternatives": [
+      {
+        "name": "Lateral Lunge",
+        "reason": "similar lateral quad demand"
+      },
+      {
+        "name": "Step-Out Squat",
+        "reason": "reduced mobility demand"
+      },
+      {
+        "name": "Bulgarian Split Squat",
+        "reason": "single-leg quad focus"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Cossack Squat cible principalement les quadris. Matériel suggéré : Bodyweight. Consignes : Straight back; toe pointing; depth per mobility."
+  },
+  {
+    "name": "Barbell Step-Up (Weighted)",
+    "category": "Legs",
+    "primary_muscle": "Quadriceps",
+    "secondary_muscles": [
+      "Glutes",
+      "Hamstrings"
+    ],
+    "equipment": [
+      "Barbell",
+      "Box"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Step/Single-Leg",
+    "mechanics": "Compound",
+    "cues": "Drive through front heel; full hip and knee extension",
+    "common_errors": "Using back leg to push; unstable landing",
+    "progression": "Higher box or loaded vest",
+    "regression": "Dumbbell step-up or lower box",
+    "group": "Quadris",
+    "source": "manual_add",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 2
+    },
+    "alternatives": [
+      {
+        "name": "Step-Up (High Box)",
+        "reason": "already in set, similar"
+      },
+      {
+        "name": "Bulgarian Split Squat",
+        "reason": "single-leg quad alternative"
+      },
+      {
+        "name": "Reverse Lunge",
+        "reason": "unilateral quad work"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Barbell Step-Up (Weighted) cible principalement les quadris. Matériel suggéré : Barbell, Box. Consignes : Drive through front heel; full hip and knee extension."
+  },
+  {
+    "name": "Glute-Ham Raise (Assisted)",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Glutes"
+    ],
+    "equipment": [
+      "Glute-Ham Bench"
+    ],
+    "difficulty": "Advanced",
+    "movement_pattern": "Knee Flexion / Hip Extension",
+    "mechanics": "Compound",
+    "cues": "Tight core; control descent; long lever",
+    "common_errors": "Using hands to push; poor hip extension",
+    "progression": "Weighted glute-ham raise",
+    "regression": "Assisted glute-ham with band",
+    "group": "Ischios",
+    "source": "manual_add",
+    "joints": {
+      "Genoux": 3,
+      "Hanches": 2
+    },
+    "alternatives": [
+      {
+        "name": "Nordic Hamstring Curl",
+        "reason": "similar eccentric hamstring demand"
+      },
+      {
+        "name": "Romanian Deadlift",
+        "reason": "hip hinge alternative"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Glute-Ham Raise (Assisted) cible principalement les ischios. Matériel suggéré : Glute-Ham Bench. Consignes : Tight core; control descent; long lever."
+  },
+  {
+    "name": "Standing Calf Raise (Machine)",
+    "category": "Legs/Calves",
+    "primary_muscle": "Calves",
+    "secondary_muscles": [],
+    "equipment": [
+      "Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Plantar Flexion",
+    "mechanics": "Isolation",
+    "cues": "Full ROM; pause at top; controlled descent",
+    "common_errors": "Bouncing; incomplete ROM",
+    "progression": "Single-leg standing calf raise",
+    "regression": "Seated calf raise (lighter load)",
+    "group": "Mollets",
+    "source": "manual_add",
+    "joints": {
+      "Chevilles": 3
+    },
+    "alternatives": [
+      {
+        "name": "Donkey Calf Raise",
+        "reason": "different angle"
+      },
+      {
+        "name": "Single-leg calf raise",
+        "reason": "unilateral strength"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Standing Calf Raise (Machine) cible principalement les mollets. Matériel suggéré : Machine. Consignes : Full ROM; pause at top; controlled descent."
+  },
+  {
+    "name": "Seated Calf Raise (Machine)",
+    "category": "Legs/Calves",
+    "primary_muscle": "Calves",
+    "secondary_muscles": [],
+    "equipment": [
+      "Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Plantar Flexion",
+    "mechanics": "Isolation",
+    "cues": "Slow eccentric; focus on soleus contraction",
+    "common_errors": "Using toes only; short ROM",
+    "progression": "Heavier seated calf raise",
+    "regression": "Band resisted plantar flexion",
+    "group": "Mollets",
+    "source": "manual_add",
+    "joints": {
+      "Chevilles": 3
+    },
+    "alternatives": [
+      {
+        "name": "Standing calf raise",
+        "reason": "compound standing option"
+      },
+      {
+        "name": "Donkey calf raise",
+        "reason": "angle variation"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Seated Calf Raise (Machine) cible principalement les mollets. Matériel suggéré : Machine. Consignes : Slow eccentric; focus on soleus contraction."
+  },
+  {
+    "name": "Single-Leg Calf Raise (Bodyweight)",
+    "category": "Legs/Calves",
+    "primary_muscle": "Calves",
+    "secondary_muscles": [],
+    "equipment": [
+      "Bodyweight"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Plantar Flexion",
+    "mechanics": "Isolation",
+    "cues": "Balance on one leg; slow control; full ROM",
+    "common_errors": "Leaning; incomplete extension",
+    "progression": "Weighted single-leg calf raises",
+    "regression": "Two-leg calf raises",
+    "group": "Mollets",
+    "source": "manual_add",
+    "joints": {
+      "Chevilles": 3
+    },
+    "alternatives": [
+      {
+        "name": "Seated calf raise",
+        "reason": "soleus focus"
+      },
+      {
+        "name": "Donkey calf raise",
+        "reason": "different stimulus"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Single-Leg Calf Raise (Bodyweight) cible principalement les mollets. Matériel suggéré : Bodyweight. Consignes : Balance on one leg; slow control; full ROM."
+  },
+  {
+    "name": "Donkey Calf Raise",
+    "category": "Legs/Calves",
+    "primary_muscle": "Calves",
+    "secondary_muscles": [
+      "Hamstrings"
+    ],
+    "equipment": [
+      "Machine",
+      "Bodyweight"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Plantar Flexion",
+    "mechanics": "Isolation",
+    "cues": "Bent at hips; full ROM; squeeze at top",
+    "common_errors": "Relying on hip drive; short ROM",
+    "progression": "Weighted donkey calf raises",
+    "regression": "Standing calf raise",
+    "group": "Mollets",
+    "source": "manual_add",
+    "joints": {
+      "Chevilles": 3,
+      "Hanches": 1
+    },
+    "alternatives": [
+      {
+        "name": "Seated calf raise",
+        "reason": "soleus focus"
+      },
+      {
+        "name": "Single-leg calf raise",
+        "reason": "unilateral"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Donkey Calf Raise cible principalement les mollets. Matériel suggéré : Machine, Bodyweight. Consignes : Bent at hips; full ROM; squeeze at top."
+  },
+  {
+    "name": "Single-Leg Romanian Deadlift (Dumbbell)",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Glutes",
+      "Core"
+    ],
+    "equipment": [
+      "Dumbbells"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Hinge/Single-Leg",
+    "mechanics": "Compound",
+    "cues": "Soft knee; hinge at hips; keep balance",
+    "common_errors": "Rounding back; dropping chest",
+    "progression": "Heavier single-leg RDL",
+    "regression": "Two-leg RDL or Romanian deadlift with kettlebell",
+    "group": "Ischios",
+    "source": "manual_add",
+    "joints": {
+      "Hanches": 3,
+      "Genoux": 1
+    },
+    "alternatives": [
+      {
+        "name": "Romanian Deadlift",
+        "reason": "double-leg hinge"
+      },
+      {
+        "name": "Kettlebell Swing",
+        "reason": "hip hinge explosive"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Single-Leg Romanian Deadlift (Dumbbell) cible principalement les ischios. Matériel suggéré : Dumbbells. Consignes : Soft knee; hinge at hips; keep balance."
+  },
+  {
+    "name": "Swiss Ball Hamstring Curl (Single-Leg)",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Glutes"
+    ],
+    "equipment": [
+      "Swiss Ball"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Knee Flexion",
+    "mechanics": "Isolation",
+    "cues": "Heel drive; hips elevated; slow eccentric",
+    "common_errors": "Dropping hips; using momentum",
+    "progression": "Single-leg stability ball curl",
+    "regression": "Two-leg stability ball curl",
+    "group": "Ischios",
+    "source": "manual_add",
+    "joints": {
+      "Genoux": 3
+    },
+    "alternatives": [
+      {
+        "name": "Stability Ball Hamstring Curl",
+        "reason": "similar equipment"
+      },
+      {
+        "name": "Leg Curl (Machine)",
+        "reason": "machine isolation"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Swiss Ball Hamstring Curl (Single-Leg) cible principalement les ischios. Matériel suggéré : Swiss Ball. Consignes : Heel drive; hips elevated; slow eccentric."
+  },
+  {
+    "name": "Banded Good Morning",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Lower Back"
+    ],
+    "equipment": [
+      "Resistance Band"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Hinge",
+    "mechanics": "Compound",
+    "cues": "Soft knees; hinge from hips; neutral spine",
+    "common_errors": "Rounding back; too much knee bend",
+    "progression": "Barbell good morning",
+    "regression": "Hip hinge to box",
+    "group": "Ischios",
+    "source": "manual_add",
+    "joints": {
+      "Hanches": 3,
+      "Colonne": 1
+    },
+    "alternatives": [
+      {
+        "name": "Romanian Deadlift",
+        "reason": "hip hinge alternative"
+      },
+      {
+        "name": "Kettlebell RDL",
+        "reason": "lighter hinge option"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Banded Good Morning cible principalement les ischios. Matériel suggéré : Resistance Band. Consignes : Soft knees; hinge from hips; neutral spine."
+  },
+  {
+    "name": "Sliding Hamstring Curl (Towel)",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [],
+    "equipment": [
+      "Towel",
+      "Sliders"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Knee Flexion",
+    "mechanics": "Isolation",
+    "cues": "Slow return; keep hips elevated; small range initially",
+    "common_errors": "Losing hip height; too fast movement",
+    "progression": "Single-leg sliding curl",
+    "regression": "Band-assisted sliding curl",
+    "group": "Ischios",
+    "source": "manual_add",
+    "joints": {
+      "Genoux": 3
+    },
+    "alternatives": [
+      {
+        "name": "Stability Ball Hamstring Curl",
+        "reason": "similar posterior chain isolation"
+      },
+      {
+        "name": "Leg Curl (Machine)",
+        "reason": "machine alternative"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Sliding Hamstring Curl (Towel) cible principalement les ischios. Matériel suggéré : Towel, Sliders. Consignes : Slow return; keep hips elevated; small range initially."
+  },
+  {
+    "name": "Weighted Nordic Hamstring Curl",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [],
+    "equipment": [
+      "Weight Plate"
+    ],
+    "difficulty": "Advanced",
+    "movement_pattern": "Knee Flexion (Eccentric)",
+    "mechanics": "Isolation",
+    "cues": "Slow eccentric; control with arms only at end",
+    "common_errors": "Using hands to push too early",
+    "progression": "Weighted with plate or partner resistance",
+    "regression": "Assisted Nordic with band",
+    "group": "Ischios",
+    "source": "manual_add",
+    "joints": {
+      "Genoux": 3
+    },
+    "alternatives": [
+      {
+        "name": "Nordic Hamstring Curl",
+        "reason": "less loaded version"
+      },
+      {
+        "name": "Glute-Ham Raise",
+        "reason": "machine similarities"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Weighted Nordic Hamstring Curl cible principalement les ischios. Matériel suggéré : Weight Plate. Consignes : Slow eccentric; control with arms only at end."
+  },
+  {
+    "name": "Romanian Deadlift (Barbell)",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Glutes",
+      "Lower Back"
+    ],
+    "equipment": [
+      "Barbell"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Hinge",
+    "mechanics": "Compound",
+    "cues": "Soft knees; long hamstring stretch; neutral spine",
+    "common_errors": "Rounding back; knees too bent",
+    "progression": "Deficit RDL",
+    "regression": "KB RDL",
+    "group": "Ischios",
+    "source": "manual_add",
+    "joints": {
+      "Hanches": 3,
+      "Colonne": 2
+    },
+    "alternatives": [
+      {
+        "name": "Stiff-Leg Deadlift",
+        "reason": "similar hamstring stretch"
+      },
+      {
+        "name": "Kettlebell RDL",
+        "reason": "lighter hinge option"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Romanian Deadlift (Barbell) cible principalement les ischios. Matériel suggéré : Barbell. Consignes : Soft knees; long hamstring stretch; neutral spine."
+  },
+  {
+    "name": "Reverse Hyper (Band Assisted)",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Glutes",
+      "Lower Back"
+    ],
+    "equipment": [
+      "Bench",
+      "Band"
+    ],
+    "difficulty": "Intermediate",
+    "movement_pattern": "Hip Extension",
+    "mechanics": "Isolation",
+    "cues": "Controlled swing; squeeze glutes at top",
+    "common_errors": "Too much momentum",
+    "progression": "Machine reverse hyper or weighted",
+    "regression": "Band-only reverse hyper",
+    "group": "Ischios",
+    "source": "manual_add",
+    "joints": {
+      "Hanches": 3,
+      "Colonne": 1
+    },
+    "alternatives": [
+      {
+        "name": "Glute Bridge (Single-Leg)",
+        "reason": "hip extension alternative"
+      },
+      {
+        "name": "Back Extension",
+        "reason": "lower back/hamstring option"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Reverse Hyper (Band Assisted) cible principalement les ischios. Matériel suggéré : Bench, Band. Consignes : Controlled swing; squeeze glutes at top."
+  },
+  {
+    "name": "Cable Pull-Through",
+    "category": "Legs/Hamstrings",
+    "primary_muscle": "Hamstrings",
+    "secondary_muscles": [
+      "Glutes"
+    ],
+    "equipment": [
+      "Cable Machine"
+    ],
+    "difficulty": "Beginner",
+    "movement_pattern": "Hip Hinge",
+    "mechanics": "Compound",
+    "cues": "Hinge from hips; small knee bend; squeeze glutes",
+    "common_errors": "Using back; poor hip hinge",
+    "progression": "Heavier cable pull-throughs",
+    "regression": "Band pull-through",
+    "group": "Ischios",
+    "source": "manual_add",
+    "joints": {
+      "Hanches": 3
+    },
+    "alternatives": [
+      {
+        "name": "Kettlebell Swing",
+        "reason": "explosive hip hinge"
+      },
+      {
+        "name": "Romanian Deadlift",
+        "reason": "hip hinge alternative"
+      }
+    ],
+    "body_region": "lower",
+    "description_fr": "Cable Pull-Through cible principalement les ischios. Matériel suggéré : Cable Machine. Consignes : Hinge from hips; small knee bend; squeeze glutes."
+  }
+]
