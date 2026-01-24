@@ -8,7 +8,14 @@ from typing import Any, Optional
 
 
 def _secret() -> bytes:
-    return os.getenv("AUTH_SECRET", "dev-secret-change-me").encode()
+    secret = os.getenv("AUTH_SECRET")
+    if not secret:
+        raise ValueError("AUTH_SECRET environment variable is required")
+    if secret == "dev-secret-change-me" or secret == "gorillax-dev-secret-change-in-production":
+        raise ValueError("AUTH_SECRET must be changed from default value in production")
+    if len(secret) < 32:
+        raise ValueError("AUTH_SECRET must be at least 32 characters long")
+    return secret.encode()
 
 
 def _sign(data: str) -> str:

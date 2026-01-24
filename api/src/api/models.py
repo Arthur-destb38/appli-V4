@@ -20,6 +20,23 @@ class User(SQLModel, table=True):
     avatar_url: Optional[str] = Field(default=None)
     bio: Optional[str] = Field(default=None)
     objective: Optional[str] = Field(default=None)
+    
+    # Nouveaux champs pour la validation email
+    email_verified: bool = Field(default=False)
+    email_verification_token: Optional[str] = Field(default=None)
+    email_verification_expires: Optional[datetime] = Field(default=None)
+    
+    # Champs pour reset password
+    reset_password_token: Optional[str] = Field(default=None)
+    reset_password_expires: Optional[datetime] = Field(default=None)
+    
+    # OAuth
+    oauth_provider: Optional[str] = Field(default=None)  # google, apple, facebook
+    oauth_id: Optional[str] = Field(default=None)
+    
+    # Sécurité
+    last_login: Optional[datetime] = Field(default=None)
+    login_count: int = Field(default=0)
 
 
 class Workout(SQLModel, table=True):
@@ -183,6 +200,15 @@ class RefreshToken(SQLModel, table=True):
     token: str = Field(unique=True, index=True)
     expires_at: datetime
     revoked: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class LoginAttempt(SQLModel, table=True):
+    """Tentative de connexion pour rate limiting."""
+    id: str = Field(default_factory=generate_uuid, primary_key=True)
+    username: str = Field(index=True)
+    ip_address: str = Field(index=True)
+    success: bool = Field(default=False)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 

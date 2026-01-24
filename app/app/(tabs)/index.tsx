@@ -402,14 +402,14 @@ export default function HomeScreen() {
         refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refresh} />}
         showsVerticalScrollIndicator={false}
       >
-        <HeroSection
-          username={username}
-          streak={stats.streak}
-          nextWorkoutTitle={nextWorkout?.workout.title}
-          onStartWorkout={handleLaunchNext}
-          onOpenMenu={openMenu}
+          <HeroSection
+            username={username}
+            streak={stats.streak}
+            nextWorkoutTitle={nextWorkout?.workout.title}
+            onStartWorkout={handleLaunchNext}
+            onOpenMenu={openMenu}
           onNewWorkout={handleCreate}
-        />
+          />
 
         <QuickStatsRow stats={quickStats} />
 
@@ -442,7 +442,7 @@ export default function HomeScreen() {
           <AppCard style={styles.muscleCard}>
             <View style={styles.sectionHeaderRow}>
               <View style={[styles.sectionIconContainer, { backgroundColor: theme.colors.accent + '20' }]}>
-                <Ionicons name="body-outline" size={18} color={theme.colors.accent} />
+              <Ionicons name="body-outline" size={18} color={theme.colors.accent} />
               </View>
               <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
                 Muscles ciblés
@@ -671,24 +671,24 @@ export default function HomeScreen() {
           >
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.drawerContent}>
               {/* Header */}
-              <View style={styles.drawerHeader}>
-                <Text style={[styles.drawerTitle, { color: theme.colors.textPrimary }]}>Menu</Text>
-                <Pressable
-                  onPress={closeMenu}
+            <View style={styles.drawerHeader}>
+              <Text style={[styles.drawerTitle, { color: theme.colors.textPrimary }]}>Menu</Text>
+              <Pressable
+                onPress={closeMenu}
                   style={({ pressed }) => [
                     styles.drawerCloseBtn,
                     { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 },
                   ]}
-                >
+              >
                   <Ionicons name="close" size={20} color={theme.colors.textPrimary} />
-                </Pressable>
-              </View>
-
+              </Pressable>
+            </View>
+            
               {/* Section 1: Navigation */}
-              <View style={styles.drawerSection}>
-                <Text style={[styles.drawerSectionTitle, { color: theme.colors.textSecondary }]}>
-                  Navigation
-                </Text>
+            <View style={styles.drawerSection}>
+              <Text style={[styles.drawerSectionTitle, { color: theme.colors.textSecondary }]}>
+                Navigation
+              </Text>
                 <Pressable
                   style={({ pressed }) => [
                     styles.drawerItem,
@@ -725,13 +725,13 @@ export default function HomeScreen() {
                   </View>
                   <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Paramètres</Text>
                 </Pressable>
-              </View>
+            </View>
 
               {/* Section 2: Créer */}
-              <View style={styles.drawerSection}>
-                <Text style={[styles.drawerSectionTitle, { color: theme.colors.textSecondary }]}>
+            <View style={styles.drawerSection}>
+              <Text style={[styles.drawerSectionTitle, { color: theme.colors.textSecondary }]}>
                   Créer
-                </Text>
+              </Text>
                 <Pressable
                   style={({ pressed }) => [
                     styles.drawerItem,
@@ -768,7 +768,7 @@ export default function HomeScreen() {
               <View style={styles.drawerSection}>
                 <Text style={[styles.drawerSectionTitle, { color: theme.colors.textSecondary }]}>
                   Mes séances
-                </Text>
+                  </Text>
                 
                 {/* Brouillons - Orange */}
                 <Pressable
@@ -778,7 +778,7 @@ export default function HomeScreen() {
                   ]}
                   onPress={() => {
                     closeMenu();
-                    router.push('/library?filter=drafts' as never);
+                    router.push('/library?filter=draft' as never);
                   }}
                 >
                   <View style={[styles.drawerItemIcon, { backgroundColor: '#f59e0b20' }]}>
@@ -805,7 +805,7 @@ export default function HomeScreen() {
                 >
                   <View style={[styles.drawerItemIcon, { backgroundColor: '#10b98120' }]}>
                     <Ionicons name="checkmark-circle-outline" size={20} color="#10b981" />
-                  </View>
+            </View>
                   <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Terminées</Text>
                   {totalCompleted > 0 && (
                     <View style={[styles.drawerCountBadge, { backgroundColor: '#10b981' }]}>

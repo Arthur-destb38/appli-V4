@@ -361,7 +361,7 @@ export default function ProfileScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
               Alert.alert('Déconnexion', 'Es-tu sûr de vouloir te déconnecter ?', [
                 { text: 'Annuler', style: 'cancel' },
-                { text: 'Déconnexion', style: 'destructive', onPress: () => router.push('/auth/login') },
+                { text: 'Déconnexion', style: 'destructive', onPress: () => router.replace('/login') },
               ]);
             }}
           >

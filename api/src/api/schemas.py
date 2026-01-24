@@ -1,7 +1,178 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, constr
+from pydantic import BaseModel, ConfigDict, Field, constr, validator
+
+
+class LoginRequest(BaseModel):
+    username: constr(min_length=3, max_length=30, strip_whitespace=True)
+    password: constr(min_length=6, max_length=128)
+
+
+class RegisterRequest(BaseModel):
+    username: constr(min_length=3, max_length=30, strip_whitespace=True)
+    email: constr(strip_whitespace=True)
+    password: constr(min_length=8, max_length=128)
+    
+    @validator('username')
+    def validate_username(cls, v):
+        import re
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError("Username can only contain letters, numbers, underscores, and hyphens")
+        if v.lower() in ["admin", "root", "user", "guest", "gorillax", "api", "www"]:
+            raise ValueError("Username is reserved")
+        return v
+    
+    @validator('email')
+    def validate_email(cls, v):
+        import re
+        if len(v) > 254:
+            raise ValueError("Email is too long")
+        
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        if not re.match(email_pattern, v):
+            raise ValueError("Invalid email format")
+        return v.lower()
+    
+    @validator('password')
+    def validate_password(cls, v):
+        import re
+        errors = []
+        
+        if not re.search(r"[a-z]", v):
+            errors.append("at least one lowercase letter")
+        if not re.search(r"[A-Z]", v):
+            errors.append("at least one uppercase letter")
+        if not re.search(r"\d", v):
+            errors.append("at least one number")
+        
+        # Check for common weak passwords
+        weak_patterns = [
+            r"^password\d*$",
+            r"^123456\d*$",
+            r"^qwerty\d*$",
+            r"^admin\d*$",
+            r"^gorillax\d*$",
+            r"^weakpass\d*$",
+        ]
+        
+        for pattern in weak_patterns:
+            if re.match(pattern, v.lower()):
+                errors.append("password is too common")
+                break
+        
+        if errors:
+            raise ValueError(f"Password must contain {', '.join(errors)}")
+        
+        return v
+
+
+class RegisterRequestV2(BaseModel):
+    username: constr(min_length=3, max_length=30, strip_whitespace=True)
+    email: constr(strip_whitespace=True)
+    password: constr(min_length=8, max_length=128)
+    
+    @validator('username')
+    def validate_username(cls, v):
+        import re
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError("Username can only contain letters, numbers, underscores, and hyphens")
+        if v.lower() in ["admin", "root", "user", "guest", "gorillax", "api", "www"]:
+            raise ValueError("Username is reserved")
+        return v
+    
+    @validator('email')
+    def validate_email(cls, v):
+        import re
+        if len(v) > 254:
+            raise ValueError("Email is too long")
+        
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        if not re.match(email_pattern, v):
+            raise ValueError("Invalid email format")
+        return v.lower()
+    
+    @validator('password')
+    def validate_password(cls, v):
+        import re
+        errors = []
+        
+        if not re.search(r"[a-z]", v):
+            errors.append("at least one lowercase letter")
+        if not re.search(r"[A-Z]", v):
+            errors.append("at least one uppercase letter")
+        if not re.search(r"\d", v):
+            errors.append("at least one number")
+        
+        # Check for common weak passwords
+        weak_patterns = [
+            r"^password\d*$",
+            r"^123456\d*$",
+            r"^qwerty\d*$",
+            r"^admin\d*$",
+            r"^gorillax\d*$",
+            r"^weakpass\d*$",
+        ]
+        
+        for pattern in weak_patterns:
+            if re.match(pattern, v.lower()):
+                errors.append("password is too common")
+                break
+        
+        if errors:
+            raise ValueError(f"Password must contain {', '.join(errors)}")
+        
+        return v
+
+
+class ResetPasswordRequest(BaseModel):
+    email: constr(strip_whitespace=True)
+
+
+class ResetPasswordConfirm(BaseModel):
+    token: str
+    new_password: constr(min_length=8, max_length=128)
+    
+    @validator('new_password')
+    def validate_password(cls, v):
+        import re
+        errors = []
+        
+        if not re.search(r"[a-z]", v):
+            errors.append("at least one lowercase letter")
+        if not re.search(r"[A-Z]", v):
+            errors.append("at least one uppercase letter")
+        if not re.search(r"\d", v):
+            errors.append("at least one number")
+        
+        if errors:
+            raise ValueError(f"Password must contain {', '.join(errors)}")
+        
+        return v
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+class TokenPair(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class MeResponse(BaseModel):
+    id: str
+    username: str
+    email: str
+    created_at: datetime
+    consent_to_public_share: bool
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
+    objective: Optional[str] = None
+    email_verified: bool = False
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ExerciseBase(BaseModel):
