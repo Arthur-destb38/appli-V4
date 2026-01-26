@@ -24,6 +24,19 @@ export interface User {
   created_at: string;
   consent_to_public_share: boolean;
   email_verified?: boolean;
+  avatar_url?: string;
+  bio?: string;
+  objective?: string;
+  experience_level?: string;
+  training_frequency?: number;
+  equipment_available?: string;
+  location?: string;
+  height?: number;
+  weight?: number;
+  birth_date?: string;
+  gender?: string;
+  profile_completed?: boolean;
+  accessToken?: string; // Pour stocker le token d'accès
 }
 
 export const login = async (payload: LoginRequest): Promise<TokenPair> => {

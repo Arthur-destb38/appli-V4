@@ -1,17 +1,39 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from pydantic import BaseModel
 from sqlmodel import Session, select
 import random
 from collections import defaultdict
 
 from ..db import get_session
-from ..models import Program, ProgramSession, ProgramSet, Exercise, Workout, WorkoutExercise, Set
+from ..models import Program, ProgramSession, ProgramSet, Exercise, Workout, WorkoutExercise, Set, User
 from ..schemas import ProgramCreate, ProgramRead
+from ..utils.auth import decode_token
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/programs", tags=["programs"])
+
+
+def _get_current_user_required(
+    authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
+) -> User:
+    """Get current user from token, raise 401 if no valid token."""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload = decode_token(token)
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
+        user_id = payload.get("sub")
+        user = session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
+        return user
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
 
 
 class GenerateProgramRequest(BaseModel):
@@ -71,8 +93,12 @@ def _upsert_program(session: Session, payload: ProgramCreate) -> Program:
 
 
 @router.get("", response_model=list[ProgramRead], summary="Lister les programmes")
-def list_programs(session: Session = Depends(get_session)) -> list[ProgramRead]:
-    programs = session.exec(select(Program)).all()
+def list_programs(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required)
+) -> list[ProgramRead]:
+    # Only return programs for the authenticated user
+    programs = session.exec(select(Program).where(Program.user_id == current_user.id)).all()
     results: list[ProgramRead] = []
     for prog in programs:
         sessions = session.exec(select(ProgramSession).where(ProgramSession.program_id == prog.id)).all()
@@ -103,7 +129,13 @@ def list_programs(session: Session = Depends(get_session)) -> list[ProgramRead]:
 
 
 @router.post("", response_model=ProgramRead, status_code=status.HTTP_201_CREATED, summary="Créer un programme avec sessions/sets")
-def create_program(payload: ProgramCreate, session: Session = Depends(get_session)) -> ProgramRead:
+def create_program(
+    payload: ProgramCreate, 
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required)
+) -> ProgramRead:
+    # Set the user_id to the authenticated user
+    payload.user_id = current_user.id
     program = _upsert_program(session, payload)
     session.commit()
     session.refresh(program)
@@ -134,10 +166,18 @@ def create_program(payload: ProgramCreate, session: Session = Depends(get_sessio
 
 
 @router.get("/{program_id}", response_model=ProgramRead, summary="Détail d'un programme")
-def get_program(program_id: str, session: Session = Depends(get_session)) -> ProgramRead:
+def get_program(
+    program_id: str, 
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required)
+) -> ProgramRead:
     program = session.get(Program, program_id)
     if not program:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Programme introuvable")
+    
+    # Only allow access to own programs
+    if program.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="access_denied")
     sessions = session.exec(select(ProgramSession).where(ProgramSession.program_id == program.id)).all()
     session_reads = []
     for ps in sessions:
@@ -163,7 +203,11 @@ def get_program(program_id: str, session: Session = Depends(get_session)) -> Pro
 
 
 @router.post("/generate", response_model=ProgramRead, summary="Générer un programme à partir des exos (logique V1 complète)")
-def generate_program(payload: GenerateProgramRequest, session: Session = Depends(get_session)) -> ProgramRead:
+def generate_program(
+    payload: GenerateProgramRequest, 
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required)
+) -> ProgramRead:
     from ..services.program_generator import generate_program as generate_program_logic
     
     exercises = session.exec(select(Exercise)).all()
@@ -186,7 +230,7 @@ def generate_program(payload: GenerateProgramRequest, session: Session = Depends
         'equipment_available': payload.equipment_available or [],
         'cardio': payload.cardio,
         'methode_preferee': payload.methode_preferee,
-        'user_id': payload.user_id,
+        'user_id': current_user.id,  # Use authenticated user
     }
 
     # Générer le programme avec la logique V1
@@ -233,17 +277,22 @@ class ProgramSaveResponse(BaseModel):
 @router.post("/{program_id}/save", response_model=ProgramSaveResponse, summary="Enregistrer un programme et créer les séances associées")
 def save_program(
     program_id: str,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required)
 ) -> ProgramSaveResponse:
     program = session.get(Program, program_id)
     if not program:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Programme introuvable")
+    
+    # Only allow access to own programs
+    if program.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="access_denied")
 
     # Récupérer toutes les sessions du programme
     prog_sessions = session.exec(select(ProgramSession).where(ProgramSession.program_id == program.id)).all()
     
     workouts_created = []
-    user_id = program.user_id or "guest-user"
+    user_id = current_user.id  # Use authenticated user
     now = datetime.now(timezone.utc)
 
     for prog_session in prog_sessions:

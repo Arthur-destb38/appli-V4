@@ -90,6 +90,10 @@ export default function RootLayout() {
                     name="register"
                     options={{ title: 'Inscription', headerShown: false }}
                   />
+                  <Stack.Screen
+                    name="profile-setup"
+                    options={{ title: 'Configuration du profil', headerShown: false }}
+                  />
                 </Stack>
               </WorkoutsProvider>
             </UserProfileProvider>

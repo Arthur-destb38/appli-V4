@@ -10,6 +10,7 @@ interface AuthContextValue {
   register: (credentials: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
+  updateProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -153,6 +154,23 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     setUser(userData);
   }, []);
 
+  const handleUpdateProfile = useCallback(async () => {
+    try {
+      const accessToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+      if (!accessToken) {
+        throw new Error('No access token available');
+      }
+      
+      // Récupérer le profil mis à jour
+      const userData = await getMe(accessToken);
+      setUser(userData);
+      console.log('✅ Profil mis à jour:', userData.username);
+    } catch (error) {
+      console.error('❌ Erreur mise à jour profil:', error);
+      throw error;
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -163,6 +181,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
         register: handleRegister,
         logout: handleLogout,
         refreshAuth: handleRefresh,
+        updateProfile: handleUpdateProfile,
       }}
     >
       {children}

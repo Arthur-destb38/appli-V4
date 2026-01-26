@@ -21,6 +21,17 @@ class User(SQLModel, table=True):
     bio: Optional[str] = Field(default=None)
     objective: Optional[str] = Field(default=None)
     
+    # Nouveaux champs pour le profil complet
+    experience_level: Optional[str] = Field(default=None)  # "beginner", "intermediate", "advanced"
+    training_frequency: Optional[int] = Field(default=None)  # fois par semaine (1-7)
+    equipment_available: Optional[str] = Field(default=None)  # JSON array des équipements
+    location: Optional[str] = Field(default=None)  # Ville/Pays
+    height: Optional[int] = Field(default=None)  # en cm
+    weight: Optional[float] = Field(default=None)  # en kg
+    birth_date: Optional[datetime] = Field(default=None)
+    gender: Optional[str] = Field(default=None)  # "male", "female", "other", "prefer_not_to_say"
+    profile_completed: bool = Field(default=False)  # Flag pour savoir si le profil est complet
+    
     # Nouveaux champs pour la validation email
     email_verified: bool = Field(default=False)
     email_verification_token: Optional[str] = Field(default=None)

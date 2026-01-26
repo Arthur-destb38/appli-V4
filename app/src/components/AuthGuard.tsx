@@ -9,7 +9,7 @@ interface AuthGuardProps {
 }
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const segments = useSegments();
   const { theme } = useAppTheme();
@@ -19,6 +19,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
     const inAuthGroup = segments[0] === '(auth)';
     const isAuthScreen = segments[0] === 'login' || segments[0] === 'register';
+    const isProfileSetupScreen = segments[0] === 'profile-setup';
 
     if (!isAuthenticated && !isAuthScreen) {
       // Utilisateur non connecté et pas sur un écran d'auth -> rediriger vers login
@@ -26,8 +27,14 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     } else if (isAuthenticated && isAuthScreen) {
       // Utilisateur connecté et sur un écran d'auth -> rediriger vers l'app
       router.replace('/');
+    } else if (isAuthenticated && user && !user.profile_completed && !isProfileSetupScreen) {
+      // Utilisateur connecté mais profil incomplet -> rediriger vers setup
+      router.replace('/profile-setup');
+    } else if (isAuthenticated && user && user.profile_completed && isProfileSetupScreen) {
+      // Utilisateur avec profil complet sur la page setup -> rediriger vers l'app
+      router.replace('/');
     }
-  }, [isAuthenticated, isLoading, segments, router]);
+  }, [isAuthenticated, isLoading, user, segments, router]);
 
   // Afficher un loader pendant le chargement de l'auth
   if (isLoading) {

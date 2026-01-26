@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
 from fastapi.responses import Response
 from sqlalchemy import func
 from sqlmodel import Session, select
@@ -11,36 +11,86 @@ from sqlmodel import Session, select
 from ..db import get_session
 from ..models import Follower, Share, User, Comment, Like
 from ..schemas import FeedResponse, FeedItem, FollowRequest
+from ..utils.auth import decode_token
 
 router = APIRouter(prefix="/feed", tags=["feed"])
 
 
+def _get_current_user_optional(
+    authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
+) -> Optional[User]:
+    """Get current user from token, return None if no valid token."""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload = decode_token(token)
+        if payload.get("type") != "access":
+            return None
+        user_id = payload.get("sub")
+        return session.get(User, user_id)
+    except Exception:
+        return None
+
+
+def _get_current_user_required(
+    authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
+) -> User:
+    """Get current user from token, raise 401 if no valid token."""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload = decode_token(token)
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
+        user_id = payload.get("sub")
+        user = session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
+        return user
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
+
+
 @router.post("/follow/{followed_id}", status_code=status.HTTP_204_NO_CONTENT)
-def follow_user(followed_id: str, payload: FollowRequest, session: Session = Depends(get_session)) -> Response:
-    if payload.follower_id == followed_id:
+def follow_user(
+    followed_id: str, 
+    payload: FollowRequest, 
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required)
+) -> Response:
+    # Use authenticated user's ID instead of payload
+    if current_user.id == followed_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="cannot_follow_self")
 
-    follower = session.get(User, payload.follower_id)
     followed = session.get(User, followed_id)
-    if follower is None or followed is None:
+    if followed is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user_not_found")
 
     existing = session.exec(
         select(Follower)
-        .where(Follower.follower_id == payload.follower_id)
+        .where(Follower.follower_id == current_user.id)
         .where(Follower.followed_id == followed_id)
     ).first()
     if existing is None:
-        session.add(Follower(follower_id=payload.follower_id, followed_id=followed_id))
+        session.add(Follower(follower_id=current_user.id, followed_id=followed_id))
         session.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.delete("/follow/{followed_id}", status_code=status.HTTP_204_NO_CONTENT)
-def unfollow_user(followed_id: str, payload: FollowRequest, session: Session = Depends(get_session)) -> Response:
+def unfollow_user(
+    followed_id: str, 
+    payload: FollowRequest, 
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required)
+) -> Response:
     statement = (
         select(Follower)
-        .where(Follower.follower_id == payload.follower_id)
+        .where(Follower.follower_id == current_user.id)
         .where(Follower.followed_id == followed_id)
     )
     existing = session.exec(statement).first()
@@ -52,24 +102,15 @@ def unfollow_user(followed_id: str, payload: FollowRequest, session: Session = D
 
 @router.get("", response_model=FeedResponse)
 def get_feed(
-    user_id: str,
     limit: int = Query(10, ge=1, le=50),
     cursor: Optional[str] = Query(None),
     session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required)
 ) -> FeedResponse:
     # Mode démo: créer l'utilisateur s'il n'existe pas
-    user = session.get(User, user_id)
+    user = current_user  # Use authenticated user
     if user is None:
-        # Créer un utilisateur temporaire pour le feed
-        user = User(
-            id=user_id,
-            username=f"User_{user_id[:8]}",
-            email=f"{user_id}@temp.local",
-            password_hash="temp_not_for_login",
-            consent_to_public_share=True,
-        )
-        session.add(user)
-        session.commit()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
 
     # Affiche les partages publics de tous les utilisateurs (simplifié pour le mode démo)
     statement = select(Share)

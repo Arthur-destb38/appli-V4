@@ -67,12 +67,16 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Gorillax API", version="0.1.0", lifespan=lifespan)
 
 # Configuration CORS pour autoriser les requêtes depuis l'app mobile
+cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
+if os.getenv("ENVIRONMENT") == "production" and "*" in cors_origins:
+    print("⚠️  WARNING: CORS allows all origins in production. Set CORS_ORIGINS environment variable.")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Autorise toutes les origines (app mobile, web, etc.)
+    allow_origins=cors_origins,  # Configurable via CORS_ORIGINS env var
     allow_credentials=True,
-    allow_methods=["*"],  # Autorise toutes les méthodes (GET, POST, PUT, DELETE, OPTIONS)
-    allow_headers=["*"],  # Autorise tous les headers
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Explicit methods
+    allow_headers=["Authorization", "Content-Type", "Accept"],  # Explicit headers
 )
 
 app.include_router(health.router)

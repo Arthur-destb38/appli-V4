@@ -171,6 +171,15 @@ class MeResponse(BaseModel):
     bio: Optional[str] = None
     objective: Optional[str] = None
     email_verified: bool = False
+    experience_level: Optional[str] = None
+    training_frequency: Optional[int] = None
+    equipment_available: Optional[str] = None
+    location: Optional[str] = None
+    height: Optional[int] = None
+    weight: Optional[float] = None
+    birth_date: Optional[datetime] = None
+    gender: Optional[str] = None
+    profile_completed: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -436,3 +445,57 @@ class CreateConversationRequest(BaseModel):
 class CreateConversationResponse(BaseModel):
     conversation: ConversationRead
     created: bool  # True si nouvelle conversation, False si existante
+
+
+# Profile Setup Schemas
+class ProfileSetupStep1(BaseModel):
+    """Étape 1: Informations de base"""
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = Field(None, max_length=150)
+    location: Optional[str] = Field(None, max_length=100)
+    height: Optional[int] = Field(None, ge=100, le=250)  # cm
+    weight: Optional[float] = Field(None, ge=30, le=300)  # kg
+    birth_date: Optional[datetime] = None
+    gender: Optional[str] = Field(None, pattern="^(male|female|other|prefer_not_to_say)$")
+
+
+class ProfileSetupStep2(BaseModel):
+    """Étape 2: Objectifs fitness"""
+    objective: Optional[str] = Field(None, pattern="^(muscle_gain|weight_loss|strength|endurance|general_fitness|sport_specific)$")
+    experience_level: Optional[str] = Field(None, pattern="^(beginner|intermediate|advanced)$")
+    training_frequency: Optional[int] = Field(None, ge=1, le=7)  # fois par semaine
+
+
+class ProfileSetupStep3(BaseModel):
+    """Étape 3: Préférences"""
+    equipment_available: Optional[list[str]] = None  # Liste des équipements
+    consent_to_public_share: bool = False
+
+
+class CompleteProfileRequest(BaseModel):
+    """Requête pour compléter le profil en une fois"""
+    # Étape 1
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = Field(None, max_length=150)
+    location: Optional[str] = Field(None, max_length=100)
+    height: Optional[int] = Field(None, ge=100, le=250)
+    weight: Optional[float] = Field(None, ge=30, le=300)
+    birth_date: Optional[datetime] = None
+    gender: Optional[str] = Field(None, pattern="^(male|female|other|prefer_not_to_say)$")
+    
+    # Étape 2
+    objective: Optional[str] = Field(None, pattern="^(muscle_gain|weight_loss|strength|endurance|general_fitness|sport_specific)$")
+    experience_level: Optional[str] = Field(None, pattern="^(beginner|intermediate|advanced)$")
+    training_frequency: Optional[int] = Field(None, ge=1, le=7)
+    
+    # Étape 3
+    equipment_available: Optional[list[str]] = None
+    consent_to_public_share: bool = False
+
+
+class ProfileSetupResponse(BaseModel):
+    """Réponse après mise à jour du profil"""
+    success: bool
+    profile_completed: bool
+    message: str
+    user: MeResponse

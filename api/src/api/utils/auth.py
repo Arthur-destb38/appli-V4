@@ -24,7 +24,8 @@ def _sign(data: str) -> str:
 
 
 def _encode(payload: dict[str, Any]) -> str:
-    body = base64.urlsafe_b64encode(str(payload).encode()).decode().rstrip("=")
+    import json
+    body = base64.urlsafe_b64encode(json.dumps(payload).encode()).decode().rstrip("=")
     signature = _sign(body)
     return f"{body}.{signature}"
 
@@ -36,7 +37,11 @@ def _decode(token: str) -> dict[str, Any]:
     if _sign(body) != sig:
         raise ValueError("invalid_signature")
     decoded = base64.urlsafe_b64decode(body + "==").decode()
-    payload = eval(decoded)
+    try:
+        import json
+        payload = json.loads(decoded)
+    except (json.JSONDecodeError, ValueError):
+        raise ValueError("bad_payload")
     if not isinstance(payload, dict):
         raise ValueError("bad_payload")
     return payload

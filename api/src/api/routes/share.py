@@ -3,15 +3,37 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlmodel import Session, select
 
 from ..db import get_session
 from ..models import Exercise, Share, User, Workout, WorkoutExercise, Set
 from ..utils.slug import make_exercise_slug
+from ..utils.auth import decode_token
 from ..schemas import ShareRequest, ShareResponse
 
 router = APIRouter(prefix="/share", tags=["share"])
+
+
+def _get_current_user_required(
+    authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
+) -> User:
+    """Get current user from token, raise 401 if no valid token."""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload = decode_token(token)
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
+        user_id = payload.get("sub")
+        user = session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
+        return user
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
 
 
 def _generate_share_id() -> str:
@@ -90,20 +112,10 @@ def share_workout(
     workout_id: str,  # Changé en str pour supporter les UUIDs
     payload: ShareRequest,
     session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required)
 ) -> ShareResponse:
-    # Créer l'utilisateur s'il n'existe pas (mode démo)
-    user = session.get(User, payload.user_id)
-    if user is None:
-        user = User(
-            id=payload.user_id,
-            username=f"User_{payload.user_id[:8]}",
-            email=f"{payload.user_id}@temp.local",
-            password_hash="temp_not_for_login",
-            consent_to_public_share=True,
-        )
-        session.add(user)
-        session.commit()
-        session.refresh(user)
+    # Use authenticated user instead of payload
+    user = current_user
 
     # Récupérer le workout
     workout = session.get(Workout, workout_id)
