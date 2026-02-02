@@ -45,16 +45,16 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     } else if (isAuthenticated && isAuthScreen) {
       // Connecté et sur écran d'auth -> vérifier profil
       if (user && user.profile_completed === false) {
-        console.log('Redirection vers profile-setup');
-        navigate('/profile-setup');
+        console.log('Redirection vers profile-setup-simple');
+        navigate('/profile-setup-simple');
       } else {
         console.log('Redirection vers app');
         navigate('/(tabs)');
       }
     } else if (isAuthenticated && user && user.profile_completed === false && !isProfileSetupScreen) {
       // Connecté mais profil incomplet -> setup
-      console.log('Redirection vers profile-setup (profil incomplet)');
-      navigate('/profile-setup');
+      console.log('Redirection vers profile-setup-simple (profil incomplet)');
+      navigate('/profile-setup-simple');
     }
   }, [isAuthenticated, isLoading, user, pathname, router, isMounted]);
 

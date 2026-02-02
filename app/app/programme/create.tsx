@@ -23,12 +23,15 @@ import { useWorkouts } from '@/hooks/useWorkouts';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'expo-router';
 
+import { useUserProfile } from '@/hooks/useUserProfile';
+
 const CreateProgramScreen: React.FC = () => {
   const { theme, mode } = useAppTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { createDraft, addExercise, addSet, refresh, pullFromServer } = useWorkouts();
   const { isAuthenticated } = useAuth();
+  const { profile } = useUserProfile(); // 🎯 NOUVEAU: Récupérer le profil utilisateur
 
   // États principaux
   const [objective, setObjective] = useState('Hypertrophie');
@@ -41,6 +44,7 @@ const CreateProgramScreen: React.FC = () => {
   const [launchingSession, setLaunchingSession] = useState<number | null>(null);
   const [savingSessions, setSavingSessions] = useState(false);
   const [programSaved, setProgramSaved] = useState(false);
+  const [showProfileSuggestions, setShowProfileSuggestions] = useState(true); // 🎯 NOUVEAU
 
   // États avancés
   const [niveau, setNiveau] = useState('Intermédiaire');
@@ -48,6 +52,59 @@ const CreateProgramScreen: React.FC = () => {
   const [blessures, setBlessures] = useState('');
   const [equipmentAvailable, setEquipmentAvailable] = useState<string[]>(['barbell', 'dumbbell']);
   const [methodePreferee, setMethodePreferee] = useState<string>('');
+
+  // 🎯 NOUVEAU: Suggestions intelligentes basées sur le profil
+  const profileSuggestions = useMemo(() => {
+    if (!profile) return null;
+    
+    const suggestions = [];
+    
+    // Suggestion d'objectif
+    if (profile.objective && profile.objective !== objective) {
+      const objectiveMap: Record<string, string> = {
+        'muscle_gain': 'Hypertrophie',
+        'weight_loss': 'Perte de poids',
+        'strength': 'Force', 
+        'endurance': 'Endurance',
+        'general_fitness': 'Remise en forme'
+      };
+      const suggestedObjective = objectiveMap[profile.objective] || profile.objective;
+      suggestions.push({
+        type: 'objective',
+        message: `Objectif suggéré: ${suggestedObjective}`,
+        action: () => setObjective(suggestedObjective),
+        icon: 'flag-outline'
+      });
+    }
+    
+    // Suggestion de niveau
+    if (profile.experience_level && profile.experience_level !== niveau.toLowerCase()) {
+      const levelMap: Record<string, string> = {
+        'beginner': 'Débutant',
+        'intermediate': 'Intermédiaire',
+        'advanced': 'Avancé'
+      };
+      const suggestedLevel = levelMap[profile.experience_level] || profile.experience_level;
+      suggestions.push({
+        type: 'level',
+        message: `Niveau suggéré: ${suggestedLevel}`,
+        action: () => setNiveau(suggestedLevel),
+        icon: 'trophy-outline'
+      });
+    }
+    
+    // Suggestion de fréquence
+    if (profile.training_frequency && profile.training_frequency !== frequency) {
+      suggestions.push({
+        type: 'frequency',
+        message: `Fréquence suggérée: ${profile.training_frequency}x/semaine`,
+        action: () => setFrequency(profile.training_frequency),
+        icon: 'calendar-outline'
+      });
+    }
+    
+    return suggestions.length > 0 ? suggestions : null;
+  }, [profile, objective, niveau, frequency]);
 
   // Animation du header
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -491,6 +548,58 @@ const CreateProgramScreen: React.FC = () => {
               })}
             </View>
           </View>
+
+          {/* 🎯 NOUVEAU: Section Suggestions Intelligentes */}
+          {profileSuggestions && showProfileSuggestions && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Ionicons name="bulb" size={20} color="#f59e0b" />
+                <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
+                  Suggestions basées sur ton profil
+                </Text>
+                <Pressable
+                  onPress={() => setShowProfileSuggestions(false)}
+                  style={styles.closeButton}
+                >
+                  <Ionicons name="close" size={16} color={theme.colors.textSecondary} />
+                </Pressable>
+              </View>
+              <View style={[styles.suggestionsContainer, { backgroundColor: '#f59e0b' + '10', borderColor: '#f59e0b' + '30' }]}>
+                <View style={styles.suggestionHeader}>
+                  <Ionicons name="sparkles" size={16} color="#f59e0b" />
+                  <Text style={[styles.suggestionHeaderText, { color: '#f59e0b' }]}>
+                    Personnalisation intelligente
+                  </Text>
+                </View>
+                {profileSuggestions.map((suggestion, index) => (
+                  <Pressable
+                    key={index}
+                    style={({ pressed }) => [
+                      styles.suggestionItem,
+                      { backgroundColor: theme.colors.surface, opacity: pressed ? 0.8 : 1 }
+                    ]}
+                    onPress={() => {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                      suggestion.action();
+                    }}
+                  >
+                    <View style={styles.suggestionLeft}>
+                      <Ionicons name={suggestion.icon as any} size={16} color={theme.colors.accent} />
+                      <Text style={[styles.suggestionText, { color: theme.colors.textPrimary }]}>
+                        {suggestion.message}
+                      </Text>
+                    </View>
+                    <View style={[styles.suggestionButton, { backgroundColor: theme.colors.accent }]}>
+                      <Text style={styles.suggestionButtonText}>Appliquer</Text>
+                    </View>
+                  </Pressable>
+                ))}
+                <Text style={[styles.suggestionNote, { color: theme.colors.textSecondary }]}>
+                  💡 Ces suggestions sont basées sur les informations de ton profil
+                </Text>
+              </View>
+            </View>
+          )}
 
           {/* Section Paramètres */}
           <View style={styles.section}>
@@ -1054,6 +1163,61 @@ const styles = StyleSheet.create({
   programTagText: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  // 🎯 NOUVEAU: Styles pour les suggestions intelligentes
+  suggestionsContainer: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 16,
+    gap: 12,
+  },
+  suggestionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  suggestionHeaderText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  suggestionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  suggestionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  suggestionText: {
+    fontSize: 14,
+    fontWeight: '500',
+    flex: 1,
+  },
+  suggestionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  suggestionButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  suggestionNote: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  closeButton: {
+    padding: 4,
   },
   savedBadge: {
     flexDirection: 'row',

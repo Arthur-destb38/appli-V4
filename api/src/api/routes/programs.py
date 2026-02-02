@@ -15,6 +15,94 @@ from datetime import datetime, timezone
 router = APIRouter(prefix="/programs", tags=["programs"])
 
 
+def _get_user_profile_data(user: User) -> dict:
+    """Récupère et structure les données du profil utilisateur pour la génération de programmes"""
+    profile_data = {}
+    
+    # Informations de base
+    if user.objective:
+        # Mapper les objectifs du profil vers ceux du générateur
+        objective_mapping = {
+            'muscle_gain': 'Hypertrophie',
+            'weight_loss': 'Perte de poids', 
+            'strength': 'Force',
+            'endurance': 'Endurance',
+            'general_fitness': 'Remise en forme'
+        }
+        profile_data['objective'] = objective_mapping.get(user.objective, user.objective)
+    
+    # Niveau d'expérience
+    if user.experience_level:
+        level_mapping = {
+            'beginner': 'Débutant',
+            'intermediate': 'Intermédiaire', 
+            'advanced': 'Avancé'
+        }
+        profile_data['experience_level'] = level_mapping.get(user.experience_level, user.experience_level)
+    
+    # Fréquence d'entraînement
+    if user.training_frequency:
+        profile_data['training_frequency'] = user.training_frequency
+    
+    # Équipement disponible
+    if user.equipment_available:
+        try:
+            import json
+            equipment_list = json.loads(user.equipment_available)
+            # Mapper les équipements français vers les identifiants anglais
+            equipment_mapping = {
+                'Haltères': 'dumbbell',
+                'Barre olympique': 'barbell', 
+                'Machines': 'machine',
+                'Kettlebells': 'kettlebell',
+                'Élastiques': 'resistance_band',
+                'Poids du corps': 'bodyweight',
+                'TRX': 'suspension',
+                'Banc': 'bench',
+                'Rack à squat': 'squat_rack',
+                'Cardio (tapis, vélo...)': 'cardio'
+            }
+            mapped_equipment = []
+            for eq in equipment_list:
+                mapped = equipment_mapping.get(eq, eq.lower().replace(' ', '_'))
+                mapped_equipment.append(mapped)
+            profile_data['equipment_available'] = mapped_equipment
+        except (json.JSONDecodeError, TypeError):
+            profile_data['equipment_available'] = []
+    
+    # Informations physiques
+    if user.height:
+        profile_data['height'] = user.height
+    if user.weight:
+        profile_data['weight'] = user.weight
+    if user.gender:
+        profile_data['gender'] = user.gender
+    if user.location:
+        profile_data['location'] = user.location
+    
+    # Détection des blessures potentielles depuis la bio
+    if user.bio:
+        bio_lower = user.bio.lower()
+        injury_keywords = {
+            'dos': 'Dos',
+            'genou': 'Genoux', 
+            'épaule': 'Épaules',
+            'coude': 'Coudes',
+            'poignet': 'Poignets',
+            'cheville': 'Chevilles',
+            'blessure': 'Général',
+            'douleur': 'Général'
+        }
+        detected_injuries = []
+        for keyword, injury in injury_keywords.items():
+            if keyword in bio_lower:
+                detected_injuries.append(injury)
+        if detected_injuries:
+            profile_data['injuries'] = ', '.join(detected_injuries[:2])  # Max 2 blessures
+    
+    return profile_data
+
+
 def _get_current_user_required(
     authorization: Optional[str] = Header(None),
     session: Session = Depends(get_session),
@@ -202,7 +290,7 @@ def get_program(
     )
 
 
-@router.post("/generate", response_model=ProgramRead, summary="Générer un programme à partir des exos (logique V1 complète)")
+@router.post("/generate", response_model=ProgramRead, summary="Générer un programme intelligent basé sur le profil utilisateur")
 def generate_program(
     payload: GenerateProgramRequest, 
     session: Session = Depends(get_session),
@@ -214,23 +302,36 @@ def generate_program(
     if not exercises:
         raise HTTPException(status_code=400, detail="Aucun exercice en base pour générer un programme")
 
-    # Construire le profil utilisateur pour le générateur
+    # 🎯 NOUVEAU: Récupérer automatiquement les données du profil utilisateur
+    user_profile = _get_user_profile_data(current_user)
+    
+    # Construire le profil utilisateur pour le générateur en fusionnant les données
     profile = {
         'frequency': max(2, min(6, payload.frequency)),
         'duration_weeks': payload.duration_weeks,
-        'objective': payload.objective or 'Hypertrophie',
-        'niveau': payload.niveau or 'Intermédiaire',
-        'duree_seance': payload.duree_seance or '45',
+        # 🎯 Utiliser l'objectif du profil si non spécifié dans la requête
+        'objective': payload.objective or user_profile.get('objective') or 'Hypertrophie',
+        # 🎯 Utiliser le niveau du profil si non spécifié
+        'niveau': payload.niveau or user_profile.get('experience_level') or 'Intermédiaire',
+        # 🎯 Utiliser la fréquence du profil si disponible
+        'duree_seance': payload.duree_seance or str(user_profile.get('training_frequency', 3) * 15) or '45',
         'priorite': payload.priorite,
         'priorite_first': payload.priorite_first,
         'priorite_second': payload.priorite_second,
-        'has_blessure': payload.has_blessure,
-        'blessure_first': payload.blessure_first,
+        # 🎯 Détecter automatiquement les blessures depuis le profil
+        'has_blessure': payload.has_blessure or bool(user_profile.get('injuries')),
+        'blessure_first': payload.blessure_first or user_profile.get('injuries', '').split(',')[0].strip() if user_profile.get('injuries') else None,
         'blessure_second': payload.blessure_second,
-        'equipment_available': payload.equipment_available or [],
+        # 🎯 Utiliser l'équipement du profil si non spécifié
+        'equipment_available': payload.equipment_available or user_profile.get('equipment_available', []),
         'cardio': payload.cardio,
         'methode_preferee': payload.methode_preferee,
-        'user_id': current_user.id,  # Use authenticated user
+        'user_id': current_user.id,
+        # 🎯 NOUVEAU: Données supplémentaires du profil
+        'user_height': user_profile.get('height'),
+        'user_weight': user_profile.get('weight'),
+        'user_gender': user_profile.get('gender'),
+        'user_location': user_profile.get('location'),
     }
 
     # Générer le programme avec la logique V1

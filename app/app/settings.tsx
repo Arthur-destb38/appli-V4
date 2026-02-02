@@ -21,8 +21,6 @@ import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { updateRemoteProfile } from '@/services/userProfileApi';
 import { apiCall } from '@/utils/api';
 
 interface ProfileSetupData {
@@ -79,8 +77,7 @@ const GENDER_OPTIONS = [
 
 export default function SettingsScreen() {
   const { theme } = useAppTheme();
-  const { user, logout } = useAuth();
-  const { profile, refresh } = useUserProfile();
+  const { user, logout, updateProfile } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 

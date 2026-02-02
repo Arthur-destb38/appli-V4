@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const CLOUD_API_URL = 'https://appli-v2.onrender.com';
 
 // Pour le dev local
-const LOCAL_API_IP = 'http://192.168.1.175:8000';        
+const LOCAL_API_IP = 'http://172.20.10.2:8000';        
 const LOCAL_API_WEB = 'http://localhost:8000';       
 
 // Toggle pour basculer entre local et cloud

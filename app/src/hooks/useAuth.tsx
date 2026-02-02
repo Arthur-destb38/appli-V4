@@ -21,6 +21,9 @@ interface User {
   consent_to_public_share?: boolean;
   profile_completed?: boolean;
   email_verified?: boolean;
+  bio?: string;
+  objective?: string;
+  avatar_url?: string;
 }
 
 interface AuthTokens {

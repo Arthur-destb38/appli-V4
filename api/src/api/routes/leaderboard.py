@@ -29,7 +29,7 @@ class LeaderboardResponse(BaseModel):
 
 @router.get("/volume", response_model=LeaderboardResponse)
 def get_volume_leaderboard(
-    period: str = Query("week", regex="^(week|month|all)$"),
+    period: str = Query("week", pattern="^(week|month|all)$"),
     current_user_id: Optional[str] = None,
     limit: int = Query(20, ge=1, le=100),
     session: Session = Depends(get_session)
@@ -97,7 +97,7 @@ def get_volume_leaderboard(
 
 @router.get("/sessions", response_model=LeaderboardResponse)
 def get_sessions_leaderboard(
-    period: str = Query("week", regex="^(week|month|all)$"),
+    period: str = Query("week", pattern="^(week|month|all)$"),
     current_user_id: Optional[str] = None,
     limit: int = Query(20, ge=1, le=100),
     session: Session = Depends(get_session)

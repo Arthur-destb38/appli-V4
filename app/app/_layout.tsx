@@ -65,8 +65,16 @@ export default function RootLayout() {
                   options={{ title: 'Profil', headerShown: false }}
                 />
                 <Stack.Screen
+                  name="objectives"
+                  options={{ title: 'Mes Objectifs', headerShown: true, headerBackTitle: 'Retour' }}
+                />
+                <Stack.Screen
                   name="notifications"
                   options={{ title: 'Notifications', headerShown: true, headerBackTitle: 'Retour' }}
+                />
+                <Stack.Screen
+                  name="library"
+                  options={{ title: 'Bibliothèque', headerShown: true, headerBackTitle: 'Retour' }}
                 />
                 <Stack.Screen
                   name="leaderboard"
@@ -75,6 +83,22 @@ export default function RootLayout() {
                 <Stack.Screen
                   name="challenge/[id]"
                   options={{ title: 'Défi', headerShown: false }}
+                />
+                <Stack.Screen
+                  name="messages/index"
+                  options={{ title: 'Messages', headerShown: true, headerBackTitle: 'Retour' }}
+                />
+                <Stack.Screen
+                  name="messages/[id]"
+                  options={{ title: 'Conversation', headerShown: true, headerBackTitle: 'Retour' }}
+                />
+                <Stack.Screen
+                  name="messages/new"
+                  options={{ title: 'Nouveau message', headerShown: true, headerBackTitle: 'Retour' }}
+                />
+                <Stack.Screen
+                  name="shared-workout/[id]"
+                  options={{ title: 'Séance partagée', headerShown: true, headerBackTitle: 'Retour' }}
                 />
                 <Stack.Screen
                   name="modal"

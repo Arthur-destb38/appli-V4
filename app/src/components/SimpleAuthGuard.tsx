@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { usePathname } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/theme/ThemeProvider';
 
@@ -10,19 +10,27 @@ interface SimpleAuthGuardProps {
 
 export const SimpleAuthGuard: React.FC<SimpleAuthGuardProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
   const { theme } = useAppTheme();
 
-  // Pages publiques (pas besoin d'authentification)
-  const publicPages = ['/login', '/register', '/profile-setup', '/profile-setup-simple'];
-  const isPublicPage = publicPages.includes(pathname);
+  React.useEffect(() => {
+    if (isLoading) return;
 
-  // Si on est sur une page publique, on affiche le contenu
-  if (isPublicPage) {
-    return <>{children}</>;
-  }
+    const isAuthScreen = pathname === '/login' || pathname === '/register';
+    
+    // Si pas connecté et pas sur écran d'auth -> login
+    if (!isAuthenticated && !isAuthScreen) {
+      console.log('SimpleAuthGuard: Redirection vers login');
+      router.replace('/login');
+    }
+    // Si connecté et sur écran d'auth -> app directement
+    else if (isAuthenticated && isAuthScreen) {
+      console.log('SimpleAuthGuard: Redirection vers app');
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated, isLoading, pathname, router]);
 
-  // Si on charge l'auth, on affiche un loader
   if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
@@ -31,8 +39,6 @@ export const SimpleAuthGuard: React.FC<SimpleAuthGuardProps> = ({ children }) =>
     );
   }
 
-  // Si pas authentifié sur une page privée, on affiche quand même le contenu
-  // (la logique de redirection sera gérée manuellement dans les pages)
   return <>{children}</>;
 };
 

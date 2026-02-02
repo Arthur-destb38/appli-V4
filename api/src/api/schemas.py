@@ -364,10 +364,63 @@ class StoryRead(BaseModel):
     expires_at: Optional[datetime] = None
 
 
-# Auth
+# Auth - Fixed RegisterRequest to include email field
 class RegisterRequest(BaseModel):
     username: constr(min_length=3, max_length=50)
+    email: constr(strip_whitespace=True)
     password: constr(min_length=6, max_length=100)
+    
+    @validator('username')
+    def validate_username(cls, v):
+        import re
+        if not re.match(r"^[a-zA-Z0-9_-]+$", v):
+            raise ValueError("Username can only contain letters, numbers, underscores, and hyphens")
+        if v.lower() in ["admin", "root", "user", "guest", "gorillax", "api", "www"]:
+            raise ValueError("Username is reserved")
+        return v
+    
+    @validator('email')
+    def validate_email(cls, v):
+        import re
+        if len(v) > 254:
+            raise ValueError("Email is too long")
+        
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        if not re.match(email_pattern, v):
+            raise ValueError("Invalid email format")
+        return v.lower()
+    
+    @validator('password')
+    def validate_password(cls, v):
+        import re
+        errors = []
+        
+        if not re.search(r"[a-z]", v):
+            errors.append("at least one lowercase letter")
+        if not re.search(r"[A-Z]", v):
+            errors.append("at least one uppercase letter")
+        if not re.search(r"\d", v):
+            errors.append("at least one number")
+        
+        # Check for common weak passwords
+        weak_patterns = [
+            r"^password\d*$",
+            r"^123456\d*$",
+            r"^qwerty\d*$",
+            r"^admin\d*$",
+            r"^gorillax\d*$",
+            r"^weakpass\d*$",
+        ]
+        
+        for pattern in weak_patterns:
+            if re.match(pattern, v.lower()):
+                errors.append("password is too common")
+                break
+        
+        if errors:
+            raise ValueError(f"Password must contain {', '.join(errors)}")
+        
+        return v
 
 
 class LoginRequest(BaseModel):

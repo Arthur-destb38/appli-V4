@@ -24,16 +24,13 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { useUserProfile } from '@/hooks/useUserProfile';
+import { useAuth } from '@/hooks/useAuth';
 import { useWorkouts } from '@/hooks/useWorkouts';
-import { updateRemoteProfile } from '@/services/userProfileApi';
-import { uploadAvatar } from '@/services/profileApi';
-
-const CURRENT_USER_ID = 'guest-user';
+import { apiCall } from '@/utils/api';
 
 export default function ProfileScreen() {
   const { theme } = useAppTheme();
-  const { profile, refresh } = useUserProfile();
+  const { user, logout, updateProfile } = useAuth();
   const { workouts } = useWorkouts();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -43,7 +40,6 @@ export default function ProfileScreen() {
   const [editBio, setEditBio] = useState('');
   const [editObjective, setEditObjective] = useState('');
   const [saving, setSaving] = useState(false);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const headerAnim = useRef(new Animated.Value(0)).current;
   const cardsAnim = useRef(new Animated.Value(0)).current;
@@ -70,10 +66,10 @@ export default function ProfileScreen() {
   const totalExercises = workouts.reduce((acc, w) => acc + w.exercises.length, 0);
 
   const menuItems = [
-    { label: 'Mon profil public', route: '/profile/guest-user', icon: 'person' as const, color: '#6366f1' },
+    { label: 'Mon profil public', route: `/profile/${user?.id}`, icon: 'person' as const, color: '#6366f1' },
     { label: 'Progression', route: '/history', icon: 'trending-up' as const, color: '#10b981' },
     { label: 'Mon Programme', route: '/programme', icon: 'calendar' as const, color: '#f59e0b' },
-    { label: 'Classement', route: '/leaderboard', icon: 'trophy' as const, color: '#ec4899' },
+    { label: 'Mes Objectifs', route: '/objectives', icon: 'flag' as const, color: '#ec4899' },
     { label: 'Notifications', route: '/notifications', icon: 'notifications' as const, color: '#8b5cf6' },
   ];
 
@@ -85,9 +81,9 @@ export default function ProfileScreen() {
 
   const openEditModal = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    setEditUsername(profile?.username || '');
-    setEditBio(profile?.bio || '');
-    setEditObjective(profile?.objective || '');
+    setEditUsername(user?.username || '');
+    setEditBio(user?.bio || '');
+    setEditObjective(user?.objective || '');
     setEditModalVisible(true);
   };
 
@@ -99,21 +95,30 @@ export default function ProfileScreen() {
 
     setSaving(true);
     try {
-      await updateRemoteProfile(profile?.id || CURRENT_USER_ID, {
-        username: editUsername.trim(),
-        bio: editBio.trim() || undefined,
-        objective: editObjective.trim() || undefined,
+      const response = await apiCall(`/users/profile/${user?.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          username: editUsername.trim(),
+          bio: editBio.trim() || undefined,
+          objective: editObjective.trim() || undefined,
+        }),
       });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      await refresh();
-      setEditModalVisible(false);
-      Alert.alert('✅ Profil mis à jour !');
-    } catch (error: any) {
-      if (error.code === 'username_taken') {
-        Alert.alert('Erreur', 'Ce nom d\'utilisateur est déjà pris');
+
+      if (response.ok) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        await updateProfile();
+        setEditModalVisible(false);
+        Alert.alert('✅ Profil mis à jour !');
       } else {
-        Alert.alert('Erreur', 'Impossible de sauvegarder le profil');
+        const error = await response.json().catch(() => ({ detail: 'Erreur' }));
+        if (error.detail === 'username_taken') {
+          Alert.alert('Erreur', 'Ce nom d\'utilisateur est déjà pris');
+        } else {
+          Alert.alert('Erreur', 'Impossible de sauvegarder le profil');
+        }
       }
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de sauvegarder le profil');
     } finally {
       setSaving(false);
     }
@@ -132,24 +137,25 @@ export default function ProfileScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
-      base64: true,
     });
 
-    if (!result.canceled && result.assets[0].base64) {
-      setUploadingAvatar(true);
-      try {
-        await uploadAvatar(profile?.id || CURRENT_USER_ID, result.assets[0].base64);
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-        await refresh();
-      } catch (error) {
-        Alert.alert('Erreur', 'Impossible de changer l\'avatar');
-      } finally {
-        setUploadingAvatar(false);
-      }
+    if (!result.canceled) {
+      // Pour l'instant, on simule juste le changement d'avatar
+      Alert.alert('Info', 'Fonctionnalité d\'upload d\'avatar à venir !');
     }
   };
 
-  const avatarUri = profile?.avatar_url;
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/login');
+    } catch (error) {
+      console.error('Erreur logout:', error);
+      router.replace('/login');
+    }
+  };
+
+  const avatarUri = user?.avatar_url;
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -175,7 +181,7 @@ export default function ProfileScreen() {
           ]}
         >
           <LinearGradient
-            colors={theme.dark ? ['#1e1b4b', '#312e81', '#1e1b4b'] : ['#6366f1', '#8b5cf6', '#a855f7']}
+            colors={theme.mode === 'dark' ? ['#1e1b4b', '#312e81', '#1e1b4b'] : ['#6366f1', '#8b5cf6', '#a855f7']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.headerGradient, { paddingTop: insets.top + 20 }]}
@@ -187,7 +193,6 @@ export default function ProfileScreen() {
             {/* Avatar */}
             <TouchableOpacity 
               onPress={handlePickAvatar} 
-              disabled={uploadingAvatar}
               style={styles.avatarContainer}
               activeOpacity={0.8}
             >
@@ -200,28 +205,24 @@ export default function ProfileScreen() {
                     style={styles.avatar}
                   >
                     <Text style={styles.avatarText}>
-                      {(profile?.username || 'U').charAt(0).toUpperCase()}
+                      {(user?.username || 'U').charAt(0).toUpperCase()}
                     </Text>
                   </LinearGradient>
                 )}
               </View>
               <View style={styles.editAvatarBadge}>
-                {uploadingAvatar ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <Ionicons name="camera" size={14} color="#fff" />
-                )}
+                <Ionicons name="camera" size={14} color="#fff" />
               </View>
             </TouchableOpacity>
 
             {/* Infos utilisateur */}
-            <Text style={styles.username}>{profile?.username || 'Utilisateur'}</Text>
-            <Text style={styles.bio}>{profile?.bio || 'Aucune bio définie'}</Text>
+            <Text style={styles.username}>{user?.username || 'Utilisateur'}</Text>
+            <Text style={styles.bio}>{user?.bio || 'Aucune bio définie'}</Text>
 
-            {profile?.objective && (
+            {user?.objective && (
               <View style={styles.objectiveBadge}>
                 <Ionicons name="flag" size={14} color="#fff" />
-                <Text style={styles.objectiveText}>{profile.objective}</Text>
+                <Text style={styles.objectiveText}>{user.objective}</Text>
               </View>
             )}
 
@@ -361,7 +362,7 @@ export default function ProfileScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
               Alert.alert('Déconnexion', 'Es-tu sûr de vouloir te déconnecter ?', [
                 { text: 'Annuler', style: 'cancel' },
-                { text: 'Déconnexion', style: 'destructive', onPress: () => router.replace('/login') },
+                { text: 'Déconnexion', style: 'destructive', onPress: handleLogout },
               ]);
             }}
           >

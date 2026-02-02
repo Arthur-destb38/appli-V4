@@ -24,17 +24,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { formatDate } from '@/utils/formatting';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { AppCard } from '@/components/AppCard';
+
 import { HeroSection } from '@/components/HeroSection';
 import { QuickStatsRow } from '@/components/QuickStatsRow';
-import { NextWorkoutCard } from '@/components/NextWorkoutCard';
-import { WeekChart } from '@/components/WeekChart';
+
+import { PersonalStats } from '@/components/PersonalStats';
 import { WorkoutCard } from '@/components/WorkoutCard';
 import { AppButton } from '@/components/AppButton';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const { profile } = useUserProfile();
   const { workouts, isLoading, refresh, createDraft, deleteWorkout } = useWorkouts();
   const { theme } = useAppTheme();
@@ -44,6 +44,11 @@ export default function HomeScreen() {
   const [goalInput, setGoalInput] = useState('3');
   const drawerAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
+
+  // Données par défaut si pas connecté
+  const displayWorkouts = workouts || [];
+  const displayProfile = profile || { username: 'Utilisateur' };
+  const displayUser = user || { username: 'Utilisateur' };
 
   // Charger l'objectif sauvegardé
   useEffect(() => {
@@ -86,7 +91,7 @@ export default function HomeScreen() {
 
   // Calcul des statistiques
   const stats = useMemo(() => {
-    if (!workouts.length) {
+    if (!displayWorkouts.length) {
       return {
         total: 0,
         completed: 0,
@@ -100,20 +105,18 @@ export default function HomeScreen() {
         prevVolume7d: 0,
         prevSessions7d: 0,
         streak: 0,
-        muscleVolume: {} as Record<string, number>,
-        weekDays: [] as Array<{ day: string; value: number; isToday?: boolean }>,
       };
     }
 
-    const total = workouts.length;
-    const completed = workouts.filter((item) => item.workout.status === 'completed');
-    const drafts = workouts.filter((item) => item.workout.status === 'draft');
+    const total = displayWorkouts.length;
+    const completed = displayWorkouts.filter((item) => item.workout.status === 'completed');
+    const drafts = displayWorkouts.filter((item) => item.workout.status === 'draft');
     const completedThisWeek = completed.filter((item) => {
       const diff = Date.now() - item.workout.updated_at;
       return diff <= 7 * 24 * 60 * 60 * 1000;
     }).length;
 
-    const liftedThisWeek = workouts.reduce((sum, record) => {
+    const liftedThisWeek = displayWorkouts.reduce((sum, record) => {
       const isThisWeek = Date.now() - record.workout.updated_at <= 7 * 24 * 60 * 60 * 1000;
       if (!isThisWeek) return sum;
       const sets = record.exercises.flatMap((exercise) => exercise.sets);
@@ -127,14 +130,14 @@ export default function HomeScreen() {
     }, 0);
 
     const now = Date.now();
-    const last7d = workouts.filter((w) => now - w.workout.updated_at <= 7 * 24 * 60 * 60 * 1000);
-    const prev7d = workouts.filter(
+    const last7d = displayWorkouts.filter((w) => now - w.workout.updated_at <= 7 * 24 * 60 * 60 * 1000);
+    const prev7d = displayWorkouts.filter(
       (w) =>
         now - w.workout.updated_at > 7 * 24 * 60 * 60 * 1000 &&
         now - w.workout.updated_at <= 14 * 24 * 60 * 60 * 1000
     );
 
-    const calcVolume = (records: typeof workouts) =>
+    const calcVolume = (records: typeof displayWorkouts) =>
       records.reduce((sum, record) => {
         const sets = record.exercises.flatMap((ex) => ex.sets || []);
         const vol = sets.reduce((acc, set) => {
@@ -163,7 +166,7 @@ export default function HomeScreen() {
       const dayStart = checkDate.getTime();
       const dayEnd = dayStart + 24 * 60 * 60 * 1000;
       
-      const hasWorkout = workouts.some(
+      const hasWorkout = displayWorkouts.some(
         (w) => w.workout.updated_at >= dayStart && w.workout.updated_at < dayEnd
       );
       
@@ -173,51 +176,6 @@ export default function HomeScreen() {
         break;
       }
     }
-
-    // Répartition musculaire 7j
-    const muscleVolume: Record<string, number> = {};
-    const catalogMap = new Map(EXERCISE_CATALOG.map((ex) => [ex.id, ex]));
-    last7d.forEach((record) => {
-      record.exercises.forEach((ex) => {
-        const meta = catalogMap.get(ex.exercise_id);
-        const muscle = meta?.muscleGroupFr ?? meta?.muscleGroup ?? 'Autre';
-        const vol = (ex.sets || []).reduce((acc, set) => {
-          if (!set) return acc;
-          const weight = typeof set.weight === 'number' ? set.weight : 0;
-          const reps = typeof set.reps === 'number' ? set.reps : 0;
-          return acc + weight * reps;
-        }, 0);
-        muscleVolume[muscle] = (muscleVolume[muscle] || 0) + vol;
-      });
-    });
-
-    // Données par jour de la semaine
-    const dayNames = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-    const weekDays = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - i));
-      date.setHours(0, 0, 0, 0);
-      const dayStart = date.getTime();
-      const dayEnd = dayStart + 24 * 60 * 60 * 1000;
-      
-      const dayVolume = workouts
-        .filter((w) => w.workout.updated_at >= dayStart && w.workout.updated_at < dayEnd)
-        .reduce((sum, record) => {
-          const sets = record.exercises.flatMap((ex) => ex.sets || []);
-          return sum + sets.reduce((acc, set) => {
-            if (!set) return acc;
-            const weight = typeof set.weight === 'number' ? set.weight : 0;
-            const reps = typeof set.reps === 'number' ? set.reps : 0;
-            return acc + weight * reps;
-          }, 0);
-        }, 0);
-
-      return {
-        day: dayNames[date.getDay()],
-        value: dayVolume,
-        isToday: i === 6,
-      };
-    });
 
     return {
       total,
@@ -232,15 +190,10 @@ export default function HomeScreen() {
       prevVolume7d,
       prevSessions7d,
       streak,
-      muscleVolume,
-      weekDays,
     };
-  }, [workouts]);
+  }, [displayWorkouts]);
 
-  const nextWorkout = useMemo(
-    () => workouts.find((item) => item.workout.status !== 'completed'),
-    [workouts]
-  );
+
 
   // Séparer les séances en deux catégories (1 seule sur l'accueil, le reste en historique)
   const latestDraft = useMemo(
@@ -261,13 +214,13 @@ export default function HomeScreen() {
 
   // Compteurs pour le drawer
   const totalDrafts = useMemo(
-    () => workouts.filter((item) => item.workout.status !== 'completed').length,
-    [workouts]
+    () => displayWorkouts.filter((item) => item.workout.status !== 'completed').length,
+    [displayWorkouts]
   );
 
   const totalCompleted = useMemo(
-    () => workouts.filter((item) => item.workout.status === 'completed').length,
-    [workouts]
+    () => displayWorkouts.filter((item) => item.workout.status === 'completed').length,
+    [displayWorkouts]
   );
 
   const quickStats = useMemo(() => {
@@ -333,6 +286,7 @@ export default function HomeScreen() {
   };
 
   const handleLaunchNext = async () => {
+    const nextWorkout = displayWorkouts.find((item) => item.workout.status !== 'completed');
     if (nextWorkout) {
       router.push(`/track/${nextWorkout.workout.id}`);
     } else {
@@ -386,13 +340,30 @@ export default function HomeScreen() {
     router.push(route as never);
   };
 
-  const username = profile?.username || 'Champion';
+  const username = displayProfile?.username || 'Champion';
   const volumeTrend = stats.prevVolume7d > 0
     ? {
-        direction: stats.volume7d > stats.prevVolume7d ? 'up' : stats.volume7d < stats.prevVolume7d ? 'down' : 'neutral' as const,
+        direction: (stats.volume7d > stats.prevVolume7d ? 'up' : stats.volume7d < stats.prevVolume7d ? 'down' : 'neutral') as 'up' | 'down' | 'neutral',
         value: `${stats.volume7d > stats.prevVolume7d ? '+' : ''}${Math.round(((stats.volume7d - stats.prevVolume7d) / stats.prevVolume7d) * 100)}%`,
       }
     : undefined;
+
+  // 🎯 NOUVEAU: Calcul du système XP
+  const xpData = useMemo(() => {
+    // Base XP: 10 XP par séance terminée + 5 XP par jour de streak + volume/100
+    const baseXP = stats.completed * 10 + stats.streak * 5 + Math.floor(stats.volume7d / 100);
+    
+    // Calcul du niveau (100 XP par niveau)
+    const level = Math.floor(baseXP / 100) + 1;
+    const currentLevelXP = baseXP % 100;
+    const nextLevelXP = 100;
+    
+    return {
+      level,
+      xp: currentLevelXP,
+      nextLevelXp: nextLevelXP,
+    };
+  }, [stats.completed, stats.streak, stats.volume7d]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -405,76 +376,61 @@ export default function HomeScreen() {
           <HeroSection
             username={username}
             streak={stats.streak}
-            nextWorkoutTitle={nextWorkout?.workout.title}
+            nextWorkoutTitle={displayWorkouts.find((item) => item.workout.status !== 'completed')?.workout.title}
             onStartWorkout={handleLaunchNext}
             onOpenMenu={openMenu}
-          onNewWorkout={handleCreate}
+            completedThisWeek={stats.completedThisWeek}
+            goalSessions={goalSessions}
+            level={xpData.level}
+            xp={xpData.xp}
+            nextLevelXp={xpData.nextLevelXp}
           />
 
-        <QuickStatsRow stats={quickStats} />
-
-        {nextWorkout && (
-          <NextWorkoutCard
-            title={nextWorkout.workout.title}
-            exercises={nextWorkout.exercises.map((e) => {
-              const catalog = EXERCISE_CATALOG.find((c) => c.id === e.exercise_id);
-              return {
-                name: catalog?.name || e.exercise_id,
-                muscle_group: catalog?.muscleGroup,
-              };
-            })}
-            setsCount={nextWorkout.exercises.reduce((sum, e) => sum + (e.sets?.length || 0), 0)}
-            estimatedDuration={Math.max(20, nextWorkout.exercises.length * 10)}
-            onStart={() => router.push(`/track/${nextWorkout.workout.id}`)}
-            onEdit={() => router.push(`/create?id=${nextWorkout.workout.id}`)}
-          />
-        )}
-
-        <WeekChart
-          data={stats.weekDays}
-          title="Cette semaine"
-          unit="kg"
-          totalValue={stats.volume7d}
-          trend={volumeTrend}
+        <PersonalStats
+          lastWorkoutDays={(() => {
+            if (!displayWorkouts.length) return 999;
+            const lastCompleted = displayWorkouts
+              .filter(w => w.workout.status === 'completed')
+              .sort((a, b) => b.workout.updated_at - a.workout.updated_at)[0];
+            if (!lastCompleted) return 999;
+            return Math.floor((Date.now() - lastCompleted.workout.updated_at) / (24 * 60 * 60 * 1000));
+          })()}
+          weekProgress={{
+            completed: stats.completedThisWeek,
+            goal: goalSessions,
+          }}
+          nextMilestone={(() => {
+            if (stats.completed < 10) return {
+              type: 'sessions' as const,
+              current: stats.completed,
+              target: 10,
+              label: '10 séances'
+            };
+            if (stats.streak < 7) return {
+              type: 'streak' as const,
+              current: stats.streak,
+              target: 7,
+              label: '7 jours de suite'
+            };
+            if (stats.completed < 25) return {
+              type: 'sessions' as const,
+              current: stats.completed,
+              target: 25,
+              label: '25 séances'
+            };
+            return {
+              type: 'sessions' as const,
+              current: stats.completed,
+              target: Math.ceil(stats.completed / 50) * 50,
+              label: `${Math.ceil(stats.completed / 50) * 50} séances`
+            };
+          })()}
+          personalRecord={stats.volume7d > 0 ? {
+            label: 'Volume cette semaine',
+            value: stats.volume7d > 1000 ? `${(stats.volume7d / 1000).toFixed(1)}k kg` : `${stats.volume7d} kg`,
+            isNew: stats.volume7d > stats.prevVolume7d
+          } : undefined}
         />
-
-        {Object.keys(stats.muscleVolume).length > 0 && (
-          <AppCard style={styles.muscleCard}>
-            <View style={styles.sectionHeaderRow}>
-              <View style={[styles.sectionIconContainer, { backgroundColor: theme.colors.accent + '20' }]}>
-              <Ionicons name="body-outline" size={18} color={theme.colors.accent} />
-              </View>
-              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                Muscles ciblés
-              </Text>
-            </View>
-            {Object.entries(stats.muscleVolume)
-              .sort((a, b) => b[1] - a[1])
-              .slice(0, 5)
-              .map(([muscle, volume]) => {
-                const maxVolume = Math.max(...Object.values(stats.muscleVolume));
-                const width = maxVolume ? Math.max(12, (volume / maxVolume) * 100) : 12;
-                return (
-                  <View key={muscle} style={styles.muscleRow}>
-                    <Text style={[styles.muscleLabel, { color: theme.colors.textPrimary }]} numberOfLines={1}>
-                      {muscle}
-                    </Text>
-                    <View style={[styles.muscleBar, { backgroundColor: theme.colors.surfaceMuted }]}>
-                      <View
-                        style={[
-                          styles.muscleBarFill,
-                          { width: `${width}%`, backgroundColor: theme.colors.accent },
-                        ]}
-                      />
-                    </View>
-                    <Text style={[styles.muscleValue, { color: theme.colors.textSecondary }]}>
-                      {Math.round(volume)} kg
-                    </Text>
-                  </View>
-                );
-              })}
-          </AppCard>
-        )}
 
         {/* Dernière séance créée */}
         <View style={styles.sectionContainer}>
@@ -670,25 +626,36 @@ export default function HomeScreen() {
             ]}
           >
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.drawerContent}>
-              {/* Header */}
-            <View style={styles.drawerHeader}>
-              <Text style={[styles.drawerTitle, { color: theme.colors.textPrimary }]}>Menu</Text>
-              <Pressable
-                onPress={closeMenu}
-                  style={({ pressed }) => [
-                    styles.drawerCloseBtn,
-                    { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 },
-                  ]}
-              >
-                  <Ionicons name="close" size={20} color={theme.colors.textPrimary} />
-              </Pressable>
-            </View>
+              {/* Section Profil élégante */}
+              <View style={styles.drawerProfileSection}>
+                <View style={styles.drawerProfileHeader}>
+                  <View style={[styles.drawerAvatar, { backgroundColor: theme.colors.accent }]}>
+                    <Text style={styles.drawerAvatarText}>
+                      {displayUser.username.charAt(0).toUpperCase()}
+                    </Text>
+                  </View>
+                  <View style={styles.drawerProfileInfo}>
+                    <Text style={[styles.drawerProfileName, { color: theme.colors.textPrimary }]}>
+                      {username}
+                    </Text>
+                    <Text style={[styles.drawerProfileSubtitle, { color: theme.colors.textSecondary }]}>
+                      {stats.completed} séances terminées
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={closeMenu}
+                    style={({ pressed }) => [
+                      styles.drawerCloseBtn,
+                      { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 },
+                    ]}
+                  >
+                    <Ionicons name="close" size={20} color={theme.colors.textPrimary} />
+                  </Pressable>
+                </View>
+              </View>
             
-              {/* Section 1: Navigation */}
+              {/* Navigation principale */}
             <View style={styles.drawerSection}>
-              <Text style={[styles.drawerSectionTitle, { color: theme.colors.textSecondary }]}>
-                Navigation
-              </Text>
                 <Pressable
                   style={({ pressed }) => [
                     styles.drawerItem,
@@ -696,23 +663,47 @@ export default function HomeScreen() {
                   ]}
                   onPress={() => goTo('/history')}
                 >
-                  <View style={[styles.drawerItemIcon, { backgroundColor: theme.colors.surfaceMuted }]}>
-                    <Ionicons name="time-outline" size={20} color={theme.colors.textSecondary} />
+                  <View style={[styles.drawerItemIcon, { backgroundColor: '#6366f120' }]}>
+                    <Ionicons name="time" size={22} color="#6366f1" />
                   </View>
-                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Progression</Text>
+                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Historique</Text>
+                  <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
                 </Pressable>
+                
                 <Pressable
                   style={({ pressed }) => [
                     styles.drawerItem,
-                    { backgroundColor: pressed ? '#6366f115' : 'transparent' },
+                    { backgroundColor: pressed ? '#f59e0b15' : 'transparent' },
+                  ]}
+                  onPress={() => goTo('/objectives')}
+                >
+                  <View style={[styles.drawerItemIcon, { backgroundColor: '#f59e0b20' }]}>
+                    <Ionicons name="flag" size={22} color="#f59e0b" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Objectifs</Text>
+                    <Text style={[styles.drawerItemSubtext, { color: theme.colors.textSecondary }]}>
+                      {stats.completedThisWeek}/{goalSessions} séances cette semaine
+                      {stats.completedThisWeek >= goalSessions ? ' ✅' : ''}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
+                </Pressable>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.drawerItem,
+                    { backgroundColor: pressed ? '#8b5cf615' : 'transparent' },
                   ]}
                   onPress={() => goTo('/messages')}
                 >
-                  <View style={[styles.drawerItemIcon, { backgroundColor: '#6366f120' }]}>
-                    <Ionicons name="chatbubbles-outline" size={20} color="#6366f1" />
+                  <View style={[styles.drawerItemIcon, { backgroundColor: '#8b5cf620' }]}>
+                    <Ionicons name="chatbubbles" size={22} color="#8b5cf6" />
                   </View>
                   <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Messages</Text>
+                  <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
                 </Pressable>
+
                 <Pressable
                   style={({ pressed }) => [
                     styles.drawerItem,
@@ -721,56 +712,57 @@ export default function HomeScreen() {
                   onPress={() => goTo('/settings')}
                 >
                   <View style={[styles.drawerItemIcon, { backgroundColor: theme.colors.surfaceMuted }]}>
-                    <Ionicons name="settings-outline" size={20} color={theme.colors.textSecondary} />
+                    <Ionicons name="settings" size={22} color={theme.colors.textSecondary} />
                   </View>
                   <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Paramètres</Text>
+                  <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
                 </Pressable>
             </View>
 
-              {/* Section 2: Créer */}
+              {/* Actions rapides */}
             <View style={styles.drawerSection}>
               <Text style={[styles.drawerSectionTitle, { color: theme.colors.textSecondary }]}>
-                  Créer
+                Actions rapides
               </Text>
                 <Pressable
                   style={({ pressed }) => [
                     styles.drawerItem,
-                    { backgroundColor: pressed ? theme.colors.surfaceMuted : 'transparent' },
+                    { backgroundColor: pressed ? '#f9731615' : 'transparent' },
                   ]}
                   onPress={() => {
                     handleCreate();
                     closeMenu();
                   }}
                 >
-                  <View style={[styles.drawerItemIcon, { backgroundColor: theme.colors.accent + '15' }]}>
-                    <Ionicons name="add-circle-outline" size={20} color={theme.colors.accent} />
+                  <View style={[styles.drawerItemIcon, { backgroundColor: '#f9731620' }]}>
+                    <Ionicons name="add-circle" size={22} color="#f97316" />
                   </View>
                   <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Nouvelle séance</Text>
                 </Pressable>
+                
                 <Pressable
                   style={({ pressed }) => [
                     styles.drawerItem,
-                    { backgroundColor: pressed ? theme.colors.surfaceMuted : 'transparent' },
+                    { backgroundColor: pressed ? '#f9731615' : 'transparent' },
                   ]}
                   onPress={() => {
                     router.push('/programme/create' as never);
                     closeMenu();
                   }}
                 >
-                  <View style={[styles.drawerItemIcon, { backgroundColor: theme.colors.accent + '15' }]}>
-                    <Ionicons name="clipboard-outline" size={20} color={theme.colors.accent} />
+                  <View style={[styles.drawerItemIcon, { backgroundColor: '#f9731620' }]}>
+                    <Ionicons name="document-text" size={22} color="#f97316" />
                   </View>
                   <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Nouveau programme</Text>
                 </Pressable>
               </View>
 
-              {/* Section 3: Mes séances */}
+              {/* Mes séances */}
               <View style={styles.drawerSection}>
                 <Text style={[styles.drawerSectionTitle, { color: theme.colors.textSecondary }]}>
                   Mes séances
-                  </Text>
+                </Text>
                 
-                {/* Brouillons - Orange */}
                 <Pressable
                   style={({ pressed }) => [
                     styles.drawerItem,
@@ -782,7 +774,7 @@ export default function HomeScreen() {
                   }}
                 >
                   <View style={[styles.drawerItemIcon, { backgroundColor: '#f59e0b20' }]}>
-                    <Ionicons name="document-text-outline" size={20} color="#f59e0b" />
+                    <Ionicons name="document-text" size={22} color="#f59e0b" />
                   </View>
                   <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Brouillons</Text>
                   {totalDrafts > 0 && (
@@ -792,7 +784,6 @@ export default function HomeScreen() {
                   )}
                 </Pressable>
 
-                {/* Terminées - Vert */}
                 <Pressable
                   style={({ pressed }) => [
                     styles.drawerItem,
@@ -804,8 +795,8 @@ export default function HomeScreen() {
                   }}
                 >
                   <View style={[styles.drawerItemIcon, { backgroundColor: '#10b98120' }]}>
-                    <Ionicons name="checkmark-circle-outline" size={20} color="#10b981" />
-            </View>
+                    <Ionicons name="checkmark-circle" size={22} color="#10b981" />
+                  </View>
                   <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Terminées</Text>
                   {totalCompleted > 0 && (
                     <View style={[styles.drawerCountBadge, { backgroundColor: '#10b981' }]}>
@@ -826,10 +817,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  muscleCard: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-  },
+
   sectionContainer: {
     marginHorizontal: 16,
     marginBottom: 32,
@@ -868,33 +856,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  muscleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 14,
-    gap: 12,
-  },
-  muscleLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    width: 90,
-  },
-  muscleBar: {
-    flex: 1,
-    height: 10,
-    borderRadius: 5,
-    overflow: 'hidden',
-  },
-  muscleBarFill: {
-    height: '100%',
-    borderRadius: 5,
-  },
-  muscleValue: {
-    fontSize: 12,
-    fontWeight: '600',
-    width: 70,
-    textAlign: 'right',
-  },
+
   emptyState: {
     padding: 24,
     borderRadius: 16,
@@ -942,20 +904,58 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   drawerContent: {
-    paddingTop: 60,
+    paddingTop: 50,
     paddingBottom: 40,
   },
-  drawerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 24,
+  drawerProfileSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+    marginBottom: 8,
   },
-  drawerTitle: {
+  drawerProfileHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  drawerAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  drawerAvatarText: {
+    color: '#fff',
     fontSize: 24,
     fontWeight: '800',
   },
+  drawerProfileInfo: {
+    flex: 1,
+  },
+  drawerProfileName: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  drawerProfileSubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  drawerCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
   drawerCloseBtn: {
     width: 36,
     height: 36,
@@ -964,35 +964,56 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   drawerSection: {
-    paddingHorizontal: 20,
-    marginBottom: 24,
+    paddingHorizontal: 24,
+    marginBottom: 32,
   },
   drawerSectionTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 12,
+    letterSpacing: 1.2,
+    marginBottom: 16,
+    opacity: 0.6,
   },
   drawerItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    gap: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 16,
     marginBottom: 4,
   },
   drawerItemIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   drawerItemText: {
     fontSize: 16,
     fontWeight: '600',
+    flex: 1,
+  },
+  drawerItemSubtext: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
+    opacity: 0.7,
+  },
+  drawerCountBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    minWidth: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  drawerCountText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
   },
   drawerSubSection: {
     marginBottom: 16,

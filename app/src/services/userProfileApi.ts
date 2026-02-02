@@ -1,4 +1,4 @@
-import { buildApiUrl, getAuthHeaders } from '@/utils/api';
+import { buildApiUrl, getAuthHeaders, apiCall } from '@/utils/api';
 
 export type UserProfilePayload = {
   id: string;
@@ -24,10 +24,8 @@ export type UserStatsResponse = {
 export const upsertRemoteProfile = async (
   payload: UserProfilePayload
 ): Promise<UserProfileResponse> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(PROFILE_ENDPOINT, {
+  const response = await apiCall('/users/profile', {
     method: 'POST',
-    headers,
     body: JSON.stringify(payload),
   });
 
@@ -43,10 +41,8 @@ export const upsertRemoteProfile = async (
 };
 
 export const fetchRemoteProfile = async (id: string): Promise<UserProfileResponse | null> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${PROFILE_ENDPOINT}/${id}`, {
-    headers,
-  });
+  const response = await apiCall(`/users/profile/${id}`);
+  
   if (response.status === 404) {
     return null;
   }
@@ -59,10 +55,7 @@ export const fetchRemoteProfile = async (id: string): Promise<UserProfileRespons
 };
 
 export const fetchUserStats = async (userId: string): Promise<UserStatsResponse | null> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${USERS_BASE}/${userId}/stats`, {
-    headers,
-  });
+  const response = await apiCall(`/users/${userId}/stats`);
   if (!response.ok) return null;
   return (await response.json()) as UserStatsResponse;
 };
@@ -78,10 +71,8 @@ export const updateRemoteProfile = async (
   userId: string,
   payload: UpdateProfilePayload
 ): Promise<UserProfileResponse> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${PROFILE_ENDPOINT}/${userId}`, {
+  const response = await apiCall(`/users/profile/${userId}`, {
     method: 'PUT',
-    headers,
     body: JSON.stringify(payload),
   });
 

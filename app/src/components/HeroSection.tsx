@@ -19,7 +19,13 @@ interface HeroSectionProps {
   nextWorkoutTitle?: string;
   onStartWorkout: () => void;
   onOpenMenu: () => void;
-  onNewWorkout?: () => void;
+  // 🎯 NOUVEAU: Stats pour message motivationnel
+  completedThisWeek: number;
+  goalSessions: number;
+  // 🎯 NOUVEAU: Système XP
+  level?: number;
+  xp?: number;
+  nextLevelXp?: number;
 }
 
 const getGreeting = () => {
@@ -29,11 +35,13 @@ const getGreeting = () => {
   return 'Bonsoir';
 };
 
-const getMotivationalMessage = (streak: number, hasNextWorkout: boolean) => {
-  if (streak >= 7) return "Tu es en feu ! Continue comme ça 💪";
-  if (streak >= 3) return "Belle série ! Ne lâche rien 🔥";
-  if (hasNextWorkout) return "Ta séance t'attend !";
-  return "Prêt à te dépasser ?";
+const getMotivationalMessage = (streak: number, hasNextWorkout: boolean, completedThisWeek: number, goalSessions: number) => {
+  if (completedThisWeek >= goalSessions) return `${completedThisWeek}/${goalSessions} séances 🎯`;
+  if (streak >= 7) return `${streak} jours consécutifs 💪`;
+  if (streak >= 3) return `${streak} jours de suite 🔥`;
+  if (hasNextWorkout) return "Prêt pour ta séance ?";
+  if (completedThisWeek > 0) return `${completedThisWeek}/${goalSessions} cette semaine`;
+  return "C'est parti !";
 };
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
@@ -42,7 +50,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   nextWorkoutTitle,
   onStartWorkout,
   onOpenMenu,
-  onNewWorkout,
+  completedThisWeek,
+  goalSessions,
+  // 🎯 NOUVEAU: Valeurs par défaut pour XP
+  level = 1,
+  xp = 0,
+  nextLevelXp = 100,
 }) => {
   const { theme } = useAppTheme();
   const fireAnim = useRef(new Animated.Value(1)).current;
@@ -117,12 +130,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   }, [streak]);
 
   const greeting = getGreeting();
-  const motivationalMessage = getMotivationalMessage(streak, !!nextWorkoutTitle);
-
-  const handleNewWorkout = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    onNewWorkout?.();
-  };
+  const motivationalMessage = getMotivationalMessage(streak, !!nextWorkoutTitle, completedThisWeek, goalSessions);
 
   const handleStartWorkout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
@@ -148,7 +156,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     >
       <LinearGradient
         colors={
-          theme.dark
+          theme.mode === 'dark'
             ? ['#1e1b4b', '#312e81', '#1e1b4b']
             : ['#6366f1', '#8b5cf6', '#a855f7']
         }
@@ -203,56 +211,54 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
         {/* Main content */}
         <View style={styles.content}>
-          <View style={styles.greetingRow}>
-            <Text style={styles.greeting}>{greeting},</Text>
-          </View>
-          <Text style={styles.username}>{username} !</Text>
+          <Text style={styles.username}>{username}</Text>
           <Text style={styles.motivational}>{motivationalMessage}</Text>
-
-          {onNewWorkout && (
-            <Pressable 
-              onPress={handleNewWorkout} 
-              style={({ pressed }) => [
-                styles.newWorkoutButton,
-                { opacity: pressed ? 0.8 : 1 }
-              ]}
-            >
-              <Ionicons name="add" size={16} color="#fff" />
-              <Text style={styles.newWorkoutText}>Nouvelle séance</Text>
-            </Pressable>
-          )}
         </View>
 
-        {/* CTA Button */}
-        {nextWorkoutTitle && (
-          <View style={styles.ctaSection}>
-            <View style={styles.nextWorkoutInfo}>
-              <View style={styles.nextWorkoutIcon}>
-                <Ionicons name="barbell" size={16} color="rgba(255,255,255,0.9)" />
-              </View>
-              <Text style={styles.nextWorkoutLabel} numberOfLines={1}>
-                {nextWorkoutTitle}
+        {/* XP Progress Section */}
+        <View style={styles.xpProgressSection}>
+          <View style={styles.xpProgressHeader}>
+            <View style={styles.xpProgressInfo}>
+              <Text style={styles.xpProgressTitle}>Progression</Text>
+              <Text style={styles.xpProgressSubtitle}>
+                Niveau {level} • {xp}/{nextLevelXp} XP
               </Text>
             </View>
-            
-            <Animated.View style={{ transform: [{ scale: pulseAnim }], width: '100%' }}>
-              <TouchableOpacity style={styles.ctaButton} onPress={handleStartWorkout} activeOpacity={0.85}>
-                <LinearGradient
-                  colors={['#f97316', '#ea580c']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.ctaGradient}
-                >
-                  <View style={styles.ctaIconCircle}>
-                    <Ionicons name="play" size={18} color="#fff" />
-                  </View>
-                  <Text style={styles.ctaText}>Démarrer</Text>
-                  <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.7)" />
-                </LinearGradient>
-              </TouchableOpacity>
-            </Animated.View>
+            <View style={styles.xpLevelBadge}>
+              <Ionicons name="star" size={16} color="#FFD700" />
+              <Text style={styles.xpLevelText}>{level}</Text>
+            </View>
           </View>
-        )}
+          
+          <TouchableOpacity 
+            style={styles.xpProgressBar} 
+            onPress={nextWorkoutTitle ? handleStartWorkout : undefined}
+            activeOpacity={nextWorkoutTitle ? 0.8 : 1}
+          >
+            <View style={styles.xpProgressTrack}>
+              <Animated.View 
+                style={[
+                  styles.xpProgressFill, 
+                  { 
+                    width: `${(xp / nextLevelXp) * 100}%`,
+                    transform: [{ scale: nextWorkoutTitle ? pulseAnim : 1 }]
+                  }
+                ]} 
+              />
+              {nextWorkoutTitle && (
+                <View style={styles.xpProgressOverlay}>
+                  <View style={styles.xpProgressIcon}>
+                    <Ionicons name="play" size={14} color="#fff" />
+                  </View>
+                  <Text style={styles.xpProgressText} numberOfLines={1}>
+                    {nextWorkoutTitle}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={14} color="rgba(255,255,255,0.8)" />
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+        </View>
 
         {/* Decorative elements */}
         <View style={styles.decorCircle1} pointerEvents="none" />
@@ -344,20 +350,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   username: {
-    fontSize: 30,
+    fontSize: 28,
     color: '#fff',
     fontWeight: '800',
-    marginTop: 4,
+    marginBottom: 6,
     letterSpacing: -0.5,
     textShadowColor: 'rgba(0,0,0,0.15)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
   motivational: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.65)',
-    marginTop: 6,
+    fontSize: 15,
+    color: 'rgba(255,255,255,0.75)',
     letterSpacing: 0.2,
+    fontWeight: '500',
   },
   newWorkoutButton: {
     flexDirection: 'row',
@@ -378,59 +384,92 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.2,
   },
-  ctaSection: {
+  // 🎯 NOUVEAU: Section XP Progress
+  xpProgressSection: {
     gap: 12,
   },
-  nextWorkoutInfo: {
+  xpProgressHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 10,
   },
-  nextWorkoutIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  nextWorkoutLabel: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 14,
-    fontWeight: '600',
+  xpProgressInfo: {
     flex: 1,
   },
-  ctaButton: {
-    alignSelf: 'stretch',
-    shadowColor: '#f97316',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+  xpProgressTitle: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
-  ctaGradient: {
+  xpProgressSubtitle: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  xpLevelBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    backgroundColor: 'rgba(255, 215, 0, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 16,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.3)',
   },
-  ctaIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  xpLevelText: {
+    color: '#FFD700',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  xpProgressBar: {
+    width: '100%',
+  },
+  xpProgressTrack: {
+    height: 48,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 24,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  xpProgressFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    height: '100%',
+    backgroundColor: '#FFD700',
+    borderRadius: 24,
+    minWidth: 48,
+  },
+  xpProgressOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    gap: 10,
+  },
+  xpProgressIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ctaText: {
+  xpProgressText: {
     color: '#fff',
-    fontSize: 17,
+    fontSize: 14,
     fontWeight: '700',
     flex: 1,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
   decorCircle1: {
     position: 'absolute',

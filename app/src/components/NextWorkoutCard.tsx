@@ -87,8 +87,8 @@ export const NextWorkoutCard: React.FC<NextWorkoutCardProps> = ({
     ]).start();
   }, []);
 
-  const displayedExercises = exercises.slice(0, 4);
-  const remainingCount = Math.max(0, exercises.length - 4);
+  const displayedExercises = exercises.slice(0, 3);
+  const remainingCount = Math.max(0, exercises.length - 3);
 
   return (
     <Animated.View
@@ -102,57 +102,34 @@ export const NextWorkoutCard: React.FC<NextWorkoutCardProps> = ({
         },
       ]}
     >
-      {/* Header */}
+      {/* Header épuré */}
       <View style={styles.header}>
-        <View style={[styles.iconBadge, { backgroundColor: theme.colors.accent + '20' }]}>
-          <Ionicons name="calendar-outline" size={20} color={theme.colors.accent} />
-        </View>
-        <View style={styles.headerText}>
-          <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
-            Prochaine séance
-          </Text>
+        <View style={styles.headerContent}>
           <Text style={[styles.title, { color: theme.colors.textPrimary }]} numberOfLines={1}>
             {title}
           </Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+            {exercises.length} exercices • {estimatedDuration} min
+          </Text>
         </View>
         <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-          <Ionicons name="pencil" size={18} color={theme.colors.textSecondary} />
+          <Ionicons name="pencil" size={16} color={theme.colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
-      {/* Stats row */}
-      <View style={styles.statsRow}>
-        <View style={styles.statItem}>
-          <Ionicons name="barbell-outline" size={14} color={theme.colors.textSecondary} />
-          <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>
-            {exercises.length} exercice{exercises.length > 1 ? 's' : ''}
-          </Text>
-        </View>
-        <View style={[styles.statDivider, { backgroundColor: theme.colors.border }]} />
-        <View style={styles.statItem}>
-          <Ionicons name="layers-outline" size={14} color={theme.colors.textSecondary} />
-          <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>
-            {setsCount} série{setsCount > 1 ? 's' : ''}
-          </Text>
-        </View>
-        <View style={[styles.statDivider, { backgroundColor: theme.colors.border }]} />
-        <View style={styles.statItem}>
-          <Ionicons name="time-outline" size={14} color={theme.colors.textSecondary} />
-          <Text style={[styles.statText, { color: theme.colors.textSecondary }]}>
-            ~{estimatedDuration} min
-          </Text>
-        </View>
-      </View>
-
-      {/* Exercise chips */}
+      {/* Exercise chips épurés */}
       {exercises.length > 0 && (
         <View style={styles.exercisesRow}>
           {displayedExercises.map((exercise, index) => (
-            <ExercisePreview key={index} exercise={exercise} index={index} />
+            <View key={index} style={[styles.exerciseChip, { backgroundColor: theme.colors.surfaceMuted }]}>
+              <Text style={[styles.exerciseName, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+                {exercise.name.length > 15 ? exercise.name.slice(0, 15) + '...' : exercise.name}
+              </Text>
+            </View>
           ))}
           {remainingCount > 0 && (
-            <View style={[styles.moreChip, { backgroundColor: theme.colors.surfaceMuted }]}>
-              <Text style={[styles.moreText, { color: theme.colors.textSecondary }]}>
+            <View style={[styles.exerciseChip, { backgroundColor: theme.colors.surfaceMuted }]}>
+              <Text style={[styles.exerciseName, { color: theme.colors.textSecondary }]}>
                 +{remainingCount}
               </Text>
             </View>
@@ -160,17 +137,15 @@ export const NextWorkoutCard: React.FC<NextWorkoutCardProps> = ({
         </View>
       )}
 
-      {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={[styles.startButton, { backgroundColor: theme.colors.accent }]}
-          onPress={onStart}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="play" size={18} color="#fff" />
-          <Text style={styles.startButtonText}>Lancer</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Bouton d'action épuré */}
+      <TouchableOpacity
+        style={[styles.startButton, { backgroundColor: theme.colors.accent }]}
+        onPress={onStart}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="play" size={16} color="#fff" />
+        <Text style={styles.startButtonText}>Lancer</Text>
+      </TouchableOpacity>
     </Animated.View>
   );
 };
@@ -179,108 +154,62 @@ const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 16,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 14,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
-  iconBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerText: {
+  headerContent: {
     flex: 1,
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   title: {
     fontSize: 18,
     fontWeight: '700',
-    marginTop: 2,
+    marginBottom: 2,
   },
-  editButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statText: {
+  subtitle: {
     fontSize: 13,
     fontWeight: '500',
   },
-  statDivider: {
-    width: 1,
-    height: 12,
-    marginHorizontal: 12,
+  editButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   exercisesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
     marginBottom: 16,
   },
   exerciseChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 10,
-    borderWidth: 1,
+    borderRadius: 8,
   },
   exerciseName: {
     fontSize: 12,
-    fontWeight: '600',
-  },
-  moreChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-  },
-  moreText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
+    fontWeight: '500',
   },
   startButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 14,
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 12,
   },
   startButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
 
