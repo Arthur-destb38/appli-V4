@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface PersonalStatsProps {
   lastWorkoutDays?: number;
@@ -124,13 +125,24 @@ export const PersonalStats: React.FC<PersonalStatsProps> = ({
   personalRecord,
 }) => {
   const { theme } = useAppTheme();
+  const { t, isLoading } = useTranslations();
+
+  // Fonction de traduction sécurisée
+  const safeT = (key: string, fallback: string = key) => {
+    try {
+      return isLoading ? fallback : t(key as any);
+    } catch (error) {
+      console.warn('Translation error:', error);
+      return fallback;
+    }
+  };
 
   // Calcul du message pour la dernière séance
   const getLastWorkoutMessage = () => {
-    if (lastWorkoutDays === 0) return { value: "Aujourd'hui", subtitle: "Dernière séance" };
-    if (lastWorkoutDays === 1) return { value: "Hier", subtitle: "Dernière séance" };
-    if (lastWorkoutDays <= 7) return { value: `Il y a ${lastWorkoutDays}j`, subtitle: "Dernière séance" };
-    return { value: "Reprends !", subtitle: "Ça fait un moment..." };
+    if (lastWorkoutDays === 0) return { value: safeT('today', 'Aujourd\'hui'), subtitle: safeT('lastWorkout', 'Dernière séance') };
+    if (lastWorkoutDays === 1) return { value: safeT('yesterday', 'Hier'), subtitle: safeT('lastWorkout', 'Dernière séance') };
+    if (lastWorkoutDays <= 7) return { value: safeT('daysAgo', `Il y a ${lastWorkoutDays}j`).replace('{days}', String(lastWorkoutDays)), subtitle: safeT('lastWorkout', 'Dernière séance') };
+    return { value: safeT('getBackToIt', 'Reprends !'), subtitle: safeT('itsBeenAWhile', 'Ça fait un moment...') };
   };
 
   const lastWorkoutInfo = getLastWorkoutMessage();
@@ -152,9 +164,9 @@ export const PersonalStats: React.FC<PersonalStatsProps> = ({
         <StatCard
           icon="flag"
           iconColor="#6366F1"
-          title="Cette semaine"
+          title={safeT('thisWeek', 'Cette semaine')}
           value={`${weekProgress.completed}/${weekProgress.goal}`}
-          subtitle={weekProgress.completed >= weekProgress.goal ? "Objectif atteint ! 🎯" : "séances"}
+          subtitle={weekProgress.completed >= weekProgress.goal ? safeT('goalReached', 'Objectif atteint ! 🎯') : safeT('sessions', 'séances')}
           progress={(weekProgress.completed / weekProgress.goal) * 100}
           isHighlight={weekProgress.completed >= weekProgress.goal}
         />
@@ -179,7 +191,7 @@ export const PersonalStats: React.FC<PersonalStatsProps> = ({
           iconColor="#8B5CF6"
           title={personalRecord.label}
           value={personalRecord.value}
-          subtitle={personalRecord.isNew ? "Nouveau record ! 🔥" : "Record personnel"}
+          subtitle={personalRecord.isNew ? safeT('newRecord', 'Nouveau record ! 🔥') : safeT('personalRecord', 'Record personnel')}
           isHighlight={personalRecord.isNew}
         />
       )}

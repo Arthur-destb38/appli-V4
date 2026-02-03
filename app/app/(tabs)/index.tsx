@@ -24,6 +24,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { formatDate } from '@/utils/formatting';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 import { HeroSection } from '@/components/HeroSection';
 import { QuickStatsRow } from '@/components/QuickStatsRow';
@@ -38,6 +39,7 @@ export default function HomeScreen() {
   const { profile } = useUserProfile();
   const { workouts, isLoading, refresh, createDraft, deleteWorkout } = useWorkouts();
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const [menuOpen, setMenuOpen] = useState(false);
   const [goalSessions, setGoalSessions] = useState(3);
   const [editGoalModal, setEditGoalModal] = useState(false);
@@ -76,7 +78,7 @@ export default function HomeScreen() {
   const handleSaveGoal = async () => {
     const parsed = parseInt(goalInput, 10);
     if (isNaN(parsed) || parsed < 1 || parsed > 14) {
-      Alert.alert('Erreur', 'L\'objectif doit être entre 1 et 14 séances par semaine.');
+      Alert.alert(t('error'), t('goalError'));
       return;
     }
     try {
@@ -85,7 +87,7 @@ export default function HomeScreen() {
       setEditGoalModal(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de sauvegarder l\'objectif.');
+      Alert.alert(t('error'), t('cannotSaveGoal'));
     }
   };
 
@@ -441,10 +443,10 @@ export default function HomeScreen() {
               </View>
               <View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Dernière séance créée
+                  {t('lastCreatedWorkout')}
                 </Text>
                 <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary }]}>
-                  Brouillon en cours
+                  {t('draftInProgress')}
                 </Text>
               </View>
             </View>
@@ -454,7 +456,7 @@ export default function HomeScreen() {
                 style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
               >
                 <Text style={[styles.seeAllLink, { color: '#F97316' }]}>
-                  Voir les {totalDrafts}
+                  {t('seeAll')} {totalDrafts}
                 </Text>
               </Pressable>
             )}
@@ -466,13 +468,13 @@ export default function HomeScreen() {
                 <Ionicons name="document-text-outline" size={32} color="#F97316" />
               </View>
               <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                Aucune séance en cours
+                {t('noWorkoutInProgress')}
               </Text>
               <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                Crée ta première séance pour commencer
+                {t('createFirstWorkout')}
               </Text>
               <AppButton
-                title="Créer une séance"
+                title={t('createWorkout')}
                 onPress={handleCreate}
                 style={styles.emptyButton}
               />
@@ -501,10 +503,10 @@ export default function HomeScreen() {
               </View>
               <View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Dernière séance terminée
+                  {t('lastCompletedWorkout')}
                 </Text>
                 <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary }]}>
-                  Séance complétée
+                  {t('completedSession')}
                 </Text>
               </View>
             </View>
@@ -514,7 +516,7 @@ export default function HomeScreen() {
                 style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
               >
                 <Text style={[styles.seeAllLink, { color: '#22C55E' }]}>
-                  Voir les {totalCompleted}
+                  {t('seeAll')} {totalCompleted}
                 </Text>
               </Pressable>
             )}
@@ -526,10 +528,10 @@ export default function HomeScreen() {
                 <Ionicons name="trophy-outline" size={32} color="#22C55E" />
               </View>
               <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                Aucune séance terminée
+                {t('noCompletedWorkout')}
               </Text>
               <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                Termine une séance pour la voir apparaître ici
+                {t('completeWorkoutToSee')}
               </Text>
             </View>
           ) : (
@@ -565,7 +567,7 @@ export default function HomeScreen() {
           >
             <View style={styles.goalModalHeader}>
               <Text style={[styles.goalModalTitle, { color: theme.colors.textPrimary }]}>
-                Objectif hebdomadaire
+                {t('weeklyGoal')}
               </Text>
               <Pressable
                 onPress={() => setEditGoalModal(false)}
@@ -575,7 +577,7 @@ export default function HomeScreen() {
               </Pressable>
             </View>
             <Text style={[styles.goalModalDescription, { color: theme.colors.textSecondary }]}>
-              Combien de séances veux-tu faire par semaine ?
+              {t('howManySessionsPerWeek')}
             </Text>
             <TextInput
               style={[styles.goalInput, {
@@ -599,7 +601,7 @@ export default function HomeScreen() {
                 onPress={() => setEditGoalModal(false)}
               >
                 <Text style={[styles.goalModalButtonText, { color: theme.colors.textPrimary }]}>
-                  Annuler
+                  {t('cancel')}
                 </Text>
               </Pressable>
               <Pressable
@@ -607,7 +609,7 @@ export default function HomeScreen() {
                 onPress={handleSaveGoal}
               >
                 <Text style={[styles.goalModalButtonText, { color: '#FFFFFF' }]}>
-                  Enregistrer
+                  {t('save')}
                 </Text>
               </Pressable>
             </View>
@@ -630,7 +632,7 @@ export default function HomeScreen() {
               <View style={styles.drawerProfileSection}>
                 <View style={styles.drawerProfileHeader}>
                   <Text style={styles.drawerMenuTitle}>
-                    Menu
+                    {t('menu')}
                   </Text>
                   <Pressable
                     onPress={closeMenu}
@@ -656,7 +658,7 @@ export default function HomeScreen() {
                   <View style={[styles.drawerItemIcon, { backgroundColor: '#6366f120' }]}>
                     <Ionicons name="time" size={22} color="#6366f1" />
                   </View>
-                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Historique</Text>
+                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>{t('history')}</Text>
                   <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
                 </Pressable>
                 
@@ -671,9 +673,9 @@ export default function HomeScreen() {
                     <Ionicons name="flag" size={22} color="#f59e0b" />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Objectifs</Text>
+                    <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>{t('objectives')}</Text>
                     <Text style={[styles.drawerItemSubtext, { color: theme.colors.textSecondary }]}>
-                      {stats.completedThisWeek}/{goalSessions} séances cette semaine
+                      {stats.completedThisWeek}/{goalSessions} {t('sessions')} {t('thisWeek')}
                       {stats.completedThisWeek >= goalSessions ? ' ✅' : ''}
                     </Text>
                   </View>
@@ -690,7 +692,7 @@ export default function HomeScreen() {
                   <View style={[styles.drawerItemIcon, { backgroundColor: theme.colors.surfaceMuted }]}>
                     <Ionicons name="settings" size={22} color={theme.colors.textSecondary} />
                   </View>
-                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Paramètres</Text>
+                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>{t('parameters')}</Text>
                   <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
                 </Pressable>
             </View>
@@ -698,7 +700,7 @@ export default function HomeScreen() {
               {/* Actions rapides */}
             <View style={styles.drawerSection}>
               <Text style={[styles.drawerSectionTitle, { color: theme.colors.textSecondary }]}>
-                Actions rapides
+                {t('quickActions')}
               </Text>
                 <Pressable
                   style={({ pressed }) => [
@@ -713,7 +715,7 @@ export default function HomeScreen() {
                   <View style={[styles.drawerItemIcon, { backgroundColor: '#f9731620' }]}>
                     <Ionicons name="add-circle" size={22} color="#f97316" />
                   </View>
-                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Nouvelle séance</Text>
+                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>{t('newWorkout')}</Text>
                 </Pressable>
                 
                 <Pressable
@@ -729,14 +731,14 @@ export default function HomeScreen() {
                   <View style={[styles.drawerItemIcon, { backgroundColor: '#f9731620' }]}>
                     <Ionicons name="document-text" size={22} color="#f97316" />
                   </View>
-                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Nouveau programme</Text>
+                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>{t('newProgram')}</Text>
                 </Pressable>
               </View>
 
               {/* Mes séances */}
               <View style={styles.drawerSection}>
                 <Text style={[styles.drawerSectionTitle, { color: theme.colors.textSecondary }]}>
-                  Mes séances
+                  {t('myWorkouts')}
                 </Text>
                 
                 <Pressable
@@ -752,7 +754,7 @@ export default function HomeScreen() {
                   <View style={[styles.drawerItemIcon, { backgroundColor: '#f59e0b20' }]}>
                     <Ionicons name="document-text" size={22} color="#f59e0b" />
                   </View>
-                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Brouillons</Text>
+                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>{t('drafts')}</Text>
                   {totalDrafts > 0 && (
                     <View style={[styles.drawerCountBadge, { backgroundColor: '#f59e0b' }]}>
                       <Text style={styles.drawerCountText}>{totalDrafts}</Text>
@@ -773,7 +775,7 @@ export default function HomeScreen() {
                   <View style={[styles.drawerItemIcon, { backgroundColor: '#10b98120' }]}>
                     <Ionicons name="checkmark-circle" size={22} color="#10b981" />
                   </View>
-                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>Terminées</Text>
+                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>{t('completed')}</Text>
                   {totalCompleted > 0 && (
                     <View style={[styles.drawerCountBadge, { backgroundColor: '#10b981' }]}>
                       <Text style={styles.drawerCountText}>{totalCompleted}</Text>

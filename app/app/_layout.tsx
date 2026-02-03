@@ -7,6 +7,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { WorkoutsProvider } from '@/hooks/useWorkouts';
 import { UserProfileProvider } from '@/hooks/useUserProfile';
 import { AuthProvider } from '@/hooks/useAuth';
+import { PreferencesProvider } from '@/hooks/usePreferences';
 import { AppThemeProvider } from '@/theme/ThemeProvider';
 
 export default function RootLayout() {
@@ -14,10 +15,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AppThemeProvider>
-        <AuthProvider>
-          <UserProfileProvider>
-            <WorkoutsProvider>
+      <PreferencesProvider>
+        <AppThemeProvider>
+          <AuthProvider>
+            <UserProfileProvider>
+              <WorkoutsProvider>
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen
@@ -125,6 +127,7 @@ export default function RootLayout() {
           </UserProfileProvider>
         </AuthProvider>
       </AppThemeProvider>
+      </PreferencesProvider>
       <StatusBar style="auto" />
     </ThemeProvider>
   );

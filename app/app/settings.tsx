@@ -22,6 +22,7 @@ import * as Haptics from 'expo-haptics';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { usePreferences, accentColors, heroColors, translations, useTranslations } from '@/hooks/usePreferences';
 import { apiCall } from '@/utils/api';
 import { updateRemoteProfile } from '@/services/userProfileApi';
 
@@ -42,45 +43,48 @@ interface ProfileSetupData {
   consent_to_public_share: boolean;
 }
 
+// These will be translated dynamically in the component
 const EXPERIENCE_LEVELS = [
-  { key: 'beginner', label: 'Débutant', description: 'Moins de 6 mois' },
-  { key: 'intermediate', label: 'Intermédiaire', description: '6 mois - 2 ans' },
-  { key: 'advanced', label: 'Avancé', description: 'Plus de 2 ans' },
+  { key: 'beginner', labelKey: 'beginner', descriptionKey: 'beginnerDesc' },
+  { key: 'intermediate', labelKey: 'intermediate', descriptionKey: 'intermediateDesc' },
+  { key: 'advanced', labelKey: 'advanced', descriptionKey: 'advancedDesc' },
 ];
 
 const OBJECTIVES = [
-  { key: 'muscle_gain', label: 'Prise de masse', icon: '💪' },
-  { key: 'weight_loss', label: 'Perte de poids', icon: '🔥' },
-  { key: 'strength', label: 'Force', icon: '🏋️' },
-  { key: 'endurance', label: 'Endurance', icon: '🏃' },
-  { key: 'general_fitness', label: 'Forme générale', icon: '✨' },
-  { key: 'sport_specific', label: 'Sport spécifique', icon: '⚽' },
+  { key: 'muscle_gain', labelKey: 'muscleGain', icon: '💪' },
+  { key: 'weight_loss', labelKey: 'weightLoss', icon: '🔥' },
+  { key: 'strength', labelKey: 'strength', icon: '🏋️' },
+  { key: 'endurance', labelKey: 'endurance', icon: '🏃' },
+  { key: 'general_fitness', labelKey: 'generalFitness', icon: '✨' },
+  { key: 'sport_specific', labelKey: 'sportSpecific', icon: '⚽' },
 ];
 
-const EQUIPMENT_OPTIONS = [
-  'Haltères',
-  'Barre olympique', 
-  'Machines',
-  'Kettlebells',
-  'Élastiques',
-  'Poids du corps',
-  'TRX',
-  'Banc',
-  'Rack à squat',
-  'Cardio (tapis, vélo...)',
+const EQUIPMENT_OPTIONS_KEYS = [
+  'dumbbells',
+  'barbell', 
+  'machines',
+  'kettlebells',
+  'bands',
+  'bodyweight',
+  'trx',
+  'bench',
+  'squat_rack',
+  'cardio',
 ];
 
 const GENDER_OPTIONS = [
-  { key: 'male', label: 'Homme', icon: 'male' },
-  { key: 'female', label: 'Femme', icon: 'female' },
-  { key: 'other', label: 'Autre', icon: 'transgender' },
-  { key: 'prefer_not_to_say', label: 'Préfère ne pas dire', icon: 'help-circle' },
+  { key: 'male', labelKey: 'male', icon: 'male' },
+  { key: 'female', labelKey: 'female', icon: 'female' },
+  { key: 'other', labelKey: 'other', icon: 'transgender' },
+  { key: 'prefer_not_to_say', labelKey: 'preferNotToSay', icon: 'help-circle' },
 ];
 
 export default function SettingsScreen() {
   const { theme, toggleMode } = useAppTheme();
   const { user, logout, updateProfile } = useAuth();
   const { profile, refresh } = useUserProfile();
+  const { preferences, updatePreference } = usePreferences();
+  const { t } = useTranslations();
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
@@ -153,7 +157,7 @@ export default function SettingsScreen() {
 
   const handleSaveBasicInfo = async () => {
     if (!username.trim()) {
-      Alert.alert('Erreur', 'Le nom d\'utilisateur ne peut pas être vide');
+      Alert.alert(t('error'), t('usernameRequired'));
       return;
     }
 
@@ -167,12 +171,12 @@ export default function SettingsScreen() {
       
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       await refresh();
-      Alert.alert('✅ Informations mises à jour !');
+      Alert.alert(t('profileSaved'));
     } catch (error: any) {
       if (error.code === 'username_taken') {
-        Alert.alert('Erreur', 'Ce nom d\'utilisateur est déjà pris');
+        Alert.alert(t('error'), t('usernameTaken'));
       } else {
-        Alert.alert('Erreur', 'Impossible de sauvegarder les informations');
+        Alert.alert(t('error'), t('cannotSaveInfo'));
       }
     } finally {
       setSaving(false);
@@ -194,13 +198,13 @@ export default function SettingsScreen() {
 
       if (response.ok) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-        Alert.alert('✅ Profil complet sauvegardé !');
+        Alert.alert(t('profileCompleteSaved'));
         await refresh();
       } else {
         throw new Error('Erreur sauvegarde');
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de sauvegarder le profil complet');
+      Alert.alert(t('error'), t('cannotSaveProfile'));
     } finally {
       setSaving(false);
     }
@@ -208,12 +212,12 @@ export default function SettingsScreen() {
 
   const handleLogout = () => {
     Alert.alert(
-      'Déconnexion',
-      'Es-tu sûr de vouloir te déconnecter ?',
+      t('logout'),
+      t('logoutConfirm'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Déconnexion',
+          text: t('logoutButton'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -239,7 +243,7 @@ export default function SettingsScreen() {
       <View style={[styles.container, styles.centered, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.accent} />
         <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-          Chargement des paramètres...
+          {t('loadingSettings')}
         </Text>
       </View>
     );
@@ -259,7 +263,7 @@ export default function SettingsScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Paramètres</Text>
+          <Text style={styles.headerTitle}>{t('settings')}</Text>
           <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
@@ -283,7 +287,7 @@ export default function SettingsScreen() {
                   <Ionicons name="person" size={20} color="#6366f1" />
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Informations de base
+                  {t('basicInfo')}
                 </Text>
               </View>
               <Ionicons
@@ -297,26 +301,26 @@ export default function SettingsScreen() {
               <View style={styles.sectionContent}>
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                    Nom d'utilisateur
+                    {t('username')}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.textPrimary, borderColor: theme.colors.border }]}
                     value={username}
                     onChangeText={setUsername}
-                    placeholder="Ton pseudo"
+                    placeholder={t('yourUsername')}
                     placeholderTextColor={theme.colors.textSecondary}
                   />
                 </View>
 
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                    Bio
+                    {t('bio')}
                   </Text>
                   <TextInput
                     style={[styles.input, styles.textArea, { backgroundColor: theme.colors.background, color: theme.colors.textPrimary, borderColor: theme.colors.border }]}
                     value={bio}
                     onChangeText={setBio}
-                    placeholder="Parle de toi..."
+                    placeholder={t('tellAboutYou')}
                     placeholderTextColor={theme.colors.textSecondary}
                     multiline
                     numberOfLines={3}
@@ -325,7 +329,7 @@ export default function SettingsScreen() {
 
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                    Objectif principal
+                    {t('mainGoal')}
                   </Text>
                   <View style={styles.objectivesGrid}>
                     {OBJECTIVES.map((obj) => (
@@ -346,7 +350,7 @@ export default function SettingsScreen() {
                             objective === obj.key && { color: theme.colors.accent },
                           ]}
                         >
-                          {obj.label}
+                          {t(obj.labelKey as any)}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -367,7 +371,7 @@ export default function SettingsScreen() {
                     ) : (
                       <>
                         <Ionicons name="checkmark-circle" size={18} color="#fff" />
-                        <Text style={styles.saveButtonText}>Sauvegarder</Text>
+                        <Text style={styles.saveButtonText}>{t('save')}</Text>
                       </>
                     )}
                   </LinearGradient>
@@ -387,7 +391,7 @@ export default function SettingsScreen() {
                   <Ionicons name="body" size={20} color="#10b981" />
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Informations personnelles
+                  {t('personalInfo')}
                 </Text>
               </View>
               <Ionicons
@@ -401,13 +405,13 @@ export default function SettingsScreen() {
               <View style={styles.sectionContent}>
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                    Localisation
+                    {t('location')}
                   </Text>
                   <TextInput
                     style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.textPrimary, borderColor: theme.colors.border }]}
                     value={profileData.location || ''}
                     onChangeText={(text) => updateField('location', text)}
-                    placeholder="Paris, France"
+                    placeholder={t('locationPlaceholder')}
                     placeholderTextColor={theme.colors.textSecondary}
                   />
                 </View>
@@ -415,26 +419,26 @@ export default function SettingsScreen() {
                 <View style={styles.row}>
                   <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
                     <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                      Taille (cm)
+                      {t('height')} ({t('cm')})
                     </Text>
                     <TextInput
                       style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.textPrimary, borderColor: theme.colors.border }]}
                       value={profileData.height?.toString() || ''}
                       onChangeText={(text) => updateField('height', parseInt(text) || undefined)}
-                      placeholder="175"
+                      placeholder={t('heightPlaceholder')}
                       placeholderTextColor={theme.colors.textSecondary}
                       keyboardType="numeric"
                     />
                   </View>
                   <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
                     <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                      Poids (kg)
+                      {t('weight')} ({t('kg')})
                     </Text>
                     <TextInput
                       style={[styles.input, { backgroundColor: theme.colors.background, color: theme.colors.textPrimary, borderColor: theme.colors.border }]}
                       value={profileData.weight?.toString() || ''}
                       onChangeText={(text) => updateField('weight', parseFloat(text) || undefined)}
-                      placeholder="70"
+                      placeholder={t('weightPlaceholder')}
                       placeholderTextColor={theme.colors.textSecondary}
                       keyboardType="numeric"
                     />
@@ -443,7 +447,7 @@ export default function SettingsScreen() {
 
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                    Genre
+                    {t('gender')}
                   </Text>
                   <View style={styles.genderGrid}>
                     {GENDER_OPTIONS.map((gender) => (
@@ -468,7 +472,7 @@ export default function SettingsScreen() {
                             profileData.gender === gender.key && { color: theme.colors.accent },
                           ]}
                         >
-                          {gender.label}
+                          {t(gender.labelKey as any)}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -489,7 +493,7 @@ export default function SettingsScreen() {
                   <Ionicons name="fitness" size={20} color="#f59e0b" />
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Objectifs fitness
+                  {t('fitnessGoals')}
                 </Text>
               </View>
               <Ionicons
@@ -503,7 +507,7 @@ export default function SettingsScreen() {
               <View style={styles.sectionContent}>
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                    Niveau d'expérience
+                    {t('experienceLevel')}
                   </Text>
                   {EXPERIENCE_LEVELS.map((level) => (
                     <TouchableOpacity
@@ -523,7 +527,7 @@ export default function SettingsScreen() {
                             profileData.experience_level === level.key && { color: theme.colors.accent },
                           ]}
                         >
-                          {level.label}
+                          {t(level.labelKey as any)}
                         </Text>
                         <Text
                           style={[
@@ -532,7 +536,7 @@ export default function SettingsScreen() {
                             profileData.experience_level === level.key && { color: theme.colors.accent },
                           ]}
                         >
-                          {level.description}
+                          {t(level.descriptionKey as any)}
                         </Text>
                       </View>
                       {profileData.experience_level === level.key && (
@@ -544,7 +548,7 @@ export default function SettingsScreen() {
 
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                    Fréquence d'entraînement (fois par semaine)
+                    {t('trainingFrequency')}
                   </Text>
                   <View style={styles.frequencyContainer}>
                     {[1, 2, 3, 4, 5, 6, 7].map((freq) => (
@@ -573,14 +577,15 @@ export default function SettingsScreen() {
 
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                    Équipement disponible
+                    {t('availableEquipment')}
                   </Text>
                   <View style={styles.equipmentGrid}>
-                    {EQUIPMENT_OPTIONS.map((equipment) => {
-                      const isSelected = profileData.equipment_available?.includes(equipment);
+                    {EQUIPMENT_OPTIONS_KEYS.map((equipmentKey) => {
+                      const equipmentName = t(equipmentKey as any);
+                      const isSelected = profileData.equipment_available?.includes(equipmentName);
                       return (
                         <TouchableOpacity
-                          key={equipment}
+                          key={equipmentKey}
                           style={[
                             styles.equipmentChip,
                             { backgroundColor: theme.colors.background, borderColor: theme.colors.border },
@@ -589,9 +594,9 @@ export default function SettingsScreen() {
                           onPress={() => {
                             const current = profileData.equipment_available || [];
                             if (isSelected) {
-                              updateField('equipment_available', current.filter(e => e !== equipment));
+                              updateField('equipment_available', current.filter(e => e !== equipmentName));
                             } else {
-                              updateField('equipment_available', [...current, equipment]);
+                              updateField('equipment_available', [...current, equipmentName]);
                             }
                           }}
                         >
@@ -602,7 +607,7 @@ export default function SettingsScreen() {
                               isSelected && { color: theme.colors.accent },
                             ]}
                           >
-                            {equipment}
+                            {equipmentName}
                           </Text>
                         </TouchableOpacity>
                       );
@@ -624,7 +629,7 @@ export default function SettingsScreen() {
                   <Ionicons name="color-palette" size={20} color="#6366f1" />
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Apparence
+                  {t('appearance')}
                 </Text>
               </View>
               <Ionicons
@@ -639,10 +644,10 @@ export default function SettingsScreen() {
                 <View style={styles.switchContainer}>
                   <View style={styles.switchTextContainer}>
                     <Text style={[styles.switchTitle, { color: theme.colors.textPrimary }]}>
-                      Mode sombre
+                      {t('darkMode')}
                     </Text>
                     <Text style={[styles.switchDescription, { color: theme.colors.textSecondary }]}>
-                      Interface sombre pour tes yeux
+                      {t('darkModeDescription')}
                     </Text>
                   </View>
                   <Switch
@@ -654,6 +659,201 @@ export default function SettingsScreen() {
                     trackColor={{ false: theme.colors.surfaceMuted, true: theme.colors.accent }}
                     thumbColor={theme.mode === 'dark' ? '#FFFFFF' : '#FFFFFF'}
                   />
+                </View>
+
+                {/* Couleur d'accent */}
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
+                    {t('accentColor')}
+                  </Text>
+                  <View style={styles.colorGrid}>
+                    {Object.entries(accentColors).map(([key, color]) => (
+                      <Pressable
+                        key={key}
+                        style={[
+                          styles.colorOption,
+                          { backgroundColor: color[theme.mode] },
+                          preferences.accentColor === key && styles.colorOptionSelected,
+                        ]}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                          updatePreference('accentColor', key as any);
+                        }}
+                      >
+                        {preferences.accentColor === key && (
+                          <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                        )}
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Couleur du header */}
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
+                    {t('heroColor')}
+                  </Text>
+                  <View style={styles.colorGrid}>
+                    {Object.entries(heroColors).map(([key, color]) => (
+                      <Pressable
+                        key={key}
+                        style={[
+                          styles.heroColorOption,
+                          preferences.heroColor === key && styles.colorOptionSelected,
+                        ]}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                          updatePreference('heroColor', key as any);
+                        }}
+                      >
+                        <View style={[
+                          styles.heroColorPreview,
+                          { backgroundColor: (color[theme.mode] as any)[0] || color[theme.mode] }
+                        ]} />
+                        {preferences.heroColor === key && (
+                          <View style={styles.heroColorCheck}>
+                            <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+                          </View>
+                        )}
+                      </Pressable>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* Langue et région */}
+          <View style={[styles.section, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+            <TouchableOpacity
+              style={styles.sectionHeader}
+              onPress={() => toggleSection('language')}
+            >
+              <View style={styles.sectionHeaderLeft}>
+                <View style={[styles.sectionIcon, { backgroundColor: '#10b981' + '20' }]}>
+                  <Ionicons name="language" size={20} color="#10b981" />
+                </View>
+                <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
+                  {t('languageAndRegion')}
+                </Text>
+              </View>
+              <Ionicons
+                name={expandedSection === 'language' ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color={theme.colors.textSecondary}
+              />
+            </TouchableOpacity>
+
+            {expandedSection === 'language' && (
+              <View style={styles.sectionContent}>
+                {/* Langue */}
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
+                    {t('language')}
+                  </Text>
+                  <View style={styles.languageGrid}>
+                    <Pressable
+                      style={[
+                        styles.languageOption,
+                        { backgroundColor: theme.colors.background, borderColor: theme.colors.border },
+                        preferences.language === 'fr' && { backgroundColor: theme.colors.accent + '20', borderColor: theme.colors.accent },
+                      ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                        updatePreference('language', 'fr');
+                      }}
+                    >
+                      <Text style={styles.languageFlag}>🇫🇷</Text>
+                      <Text style={[
+                        styles.languageText,
+                        { color: theme.colors.textPrimary },
+                        preferences.language === 'fr' && { color: theme.colors.accent },
+                      ]}>
+                        Français
+                      </Text>
+                    </Pressable>
+                    
+                    <Pressable
+                      style={[
+                        styles.languageOption,
+                        { backgroundColor: theme.colors.background, borderColor: theme.colors.border },
+                        preferences.language === 'en' && { backgroundColor: theme.colors.accent + '20', borderColor: theme.colors.accent },
+                      ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                        updatePreference('language', 'en');
+                      }}
+                    >
+                      <Text style={styles.languageFlag}>🇺🇸</Text>
+                      <Text style={[
+                        styles.languageText,
+                        { color: theme.colors.textPrimary },
+                        preferences.language === 'en' && { color: theme.colors.accent },
+                      ]}>
+                        English
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                {/* Unités */}
+                <View style={styles.inputGroup}>
+                  <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
+                    {t('unitSystem')}
+                  </Text>
+                  <View style={styles.languageGrid}>
+                    <Pressable
+                      style={[
+                        styles.languageOption,
+                        { backgroundColor: theme.colors.background, borderColor: theme.colors.border },
+                        preferences.units === 'metric' && { backgroundColor: theme.colors.accent + '20', borderColor: theme.colors.accent },
+                      ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                        updatePreference('units', 'metric');
+                      }}
+                    >
+                      <Text style={styles.languageFlag}>📏</Text>
+                      <View>
+                        <Text style={[
+                          styles.languageText,
+                          { color: theme.colors.textPrimary },
+                          preferences.units === 'metric' && { color: theme.colors.accent },
+                        ]}>
+                          {t('metric')}
+                        </Text>
+                        <Text style={[styles.languageSubtext, { color: theme.colors.textSecondary }]}>
+                          kg, cm
+                        </Text>
+                      </View>
+                    </Pressable>
+                    
+                    <Pressable
+                      style={[
+                        styles.languageOption,
+                        { backgroundColor: theme.colors.background, borderColor: theme.colors.border },
+                        preferences.units === 'imperial' && { backgroundColor: theme.colors.accent + '20', borderColor: theme.colors.accent },
+                      ]}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                        updatePreference('units', 'imperial');
+                      }}
+                    >
+                      <Text style={styles.languageFlag}>📐</Text>
+                      <View>
+                        <Text style={[
+                          styles.languageText,
+                          { color: theme.colors.textPrimary },
+                          preferences.units === 'imperial' && { color: theme.colors.accent },
+                        ]}>
+                          {t('imperial')}
+                        </Text>
+                        <Text style={[styles.languageSubtext, { color: theme.colors.textSecondary }]}>
+                          lbs, ft
+                        </Text>
+                      </View>
+                    </Pressable>
+                  </View>
                 </View>
               </View>
             )}
@@ -670,7 +870,7 @@ export default function SettingsScreen() {
                   <Ionicons name="settings" size={20} color="#8b5cf6" />
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Préférences
+                  {t('preferences')}
                 </Text>
               </View>
               <Ionicons
@@ -687,10 +887,10 @@ export default function SettingsScreen() {
                     <Ionicons name="share-social" size={20} color={theme.colors.textSecondary} />
                     <View style={styles.switchTextContainer}>
                       <Text style={[styles.switchTitle, { color: theme.colors.textPrimary }]}>
-                        Partage public
+                        {t('publicShare')}
                       </Text>
                       <Text style={[styles.switchDescription, { color: theme.colors.textSecondary }]}>
-                        Autoriser le partage de tes séances publiquement
+                        {t('publicShareDesc')}
                       </Text>
                     </View>
                   </View>
@@ -716,7 +916,7 @@ export default function SettingsScreen() {
                     ) : (
                       <>
                         <Ionicons name="save" size={18} color="#fff" />
-                        <Text style={styles.saveButtonText}>Sauvegarder le profil complet</Text>
+                        <Text style={styles.saveButtonText}>{t('saveCompleteProfile')}</Text>
                       </>
                     )}
                   </LinearGradient>
@@ -733,7 +933,7 @@ export default function SettingsScreen() {
                   <Ionicons name="exit" size={20} color="#ef4444" />
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Actions
+                  {t('actions')}
                 </Text>
               </View>
             </View>
@@ -745,7 +945,7 @@ export default function SettingsScreen() {
               >
                 <Ionicons name="log-out-outline" size={20} color={theme.colors.error} />
                 <Text style={[styles.actionButtonText, { color: theme.colors.error }]}>
-                  Se déconnecter
+                  {t('logout')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -754,7 +954,7 @@ export default function SettingsScreen() {
           {/* Version */}
           <View style={styles.versionContainer}>
             <Text style={[styles.versionText, { color: theme.colors.textSecondary }]}>
-              Gorillax v1.0.0
+              {t('version')}
             </Text>
           </View>
         </ScrollView>
@@ -1007,5 +1207,73 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 12,
+  },
+  // Nouveaux styles pour la personnalisation
+  colorGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  colorOption: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  colorOptionSelected: {
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  heroColorOption: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    position: 'relative',
+  },
+  heroColorPreview: {
+    width: '100%',
+    height: '100%',
+  },
+  heroColorCheck: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  languageGrid: {
+    gap: 12,
+  },
+  languageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 12,
+  },
+  languageFlag: {
+    fontSize: 24,
+  },
+  languageText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  languageSubtext: {
+    fontSize: 12,
+    marginTop: 2,
   },
 });

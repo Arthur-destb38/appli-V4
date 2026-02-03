@@ -5,11 +5,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { SimpleAuthGuard } from '@/components/SimpleAuthGuard';
 
 export default function TabLayout() {
   const { theme } = useAppTheme();
+  const { t, isLoading } = useTranslations();
   const insets = useSafeAreaInsets();
+
+  // Si les traductions sont en cours de chargement, utiliser les valeurs par défaut
+  const getTitle = (key: string, fallback: string) => {
+    return isLoading ? fallback : t(key as any);
+  };
 
   return (
     // Pas d'AuthGuard - accès direct
@@ -36,7 +43,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: 'Accueil',
+            title: getTitle('home', 'Accueil'),
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons 
                 name={focused ? 'home' : 'home-outline'} 
@@ -49,7 +56,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="feed"
           options={{
-            title: 'Réseau',
+            title: getTitle('feed', 'Réseau'),
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons 
                 name={focused ? 'people' : 'people-outline'} 
@@ -62,7 +69,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="messages"
           options={{
-            title: 'Messages',
+            title: getTitle('messages', 'Messages'),
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons 
                 name={focused ? 'chatbubbles' : 'chatbubbles-outline'} 
@@ -75,7 +82,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="explore"
           options={{
-            title: 'Explorer',
+            title: getTitle('explore', 'Explorer'),
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons 
                 name={focused ? 'compass' : 'compass-outline'} 
@@ -88,7 +95,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="profile"
           options={{
-            title: 'Profil',
+            title: getTitle('profile', 'Profil'),
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons 
                 name={focused ? 'person' : 'person-outline'} 

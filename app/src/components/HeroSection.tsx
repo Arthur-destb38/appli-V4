@@ -11,6 +11,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import * as Haptics from 'expo-haptics';
 
 interface HeroSectionProps {
@@ -30,18 +31,18 @@ interface HeroSectionProps {
 
 const getGreeting = () => {
   const hour = new Date().getHours();
-  if (hour < 12) return 'Bonjour';
-  if (hour < 18) return 'Bon après-midi';
-  return 'Bonsoir';
+  if (hour < 12) return 'goodMorning';
+  if (hour < 18) return 'goodAfternoon';
+  return 'goodEvening';
 };
 
 const getMotivationalMessage = (streak: number, hasNextWorkout: boolean, completedThisWeek: number, goalSessions: number) => {
-  if (completedThisWeek >= goalSessions) return `${completedThisWeek}/${goalSessions} séances 🎯`;
-  if (streak >= 7) return `${streak} jours consécutifs 💪`;
-  if (streak >= 3) return `${streak} jours de suite 🔥`;
-  if (hasNextWorkout) return "Prêt pour ta séance ?";
-  if (completedThisWeek > 0) return `${completedThisWeek}/${goalSessions} cette semaine`;
-  return "C'est parti !";
+  if (completedThisWeek >= goalSessions) return { key: 'goalReached', params: { completed: completedThisWeek, goal: goalSessions } };
+  if (streak >= 7) return { key: 'consecutiveDaysStreak', params: { days: streak } };
+  if (streak >= 3) return { key: 'daysInARowStreak', params: { days: streak } };
+  if (hasNextWorkout) return { key: 'readyForWorkout' };
+  if (completedThisWeek > 0) return { key: 'weekProgress', params: { completed: completedThisWeek, goal: goalSessions } };
+  return { key: 'letsGo' };
 };
 
 export const HeroSection: React.FC<HeroSectionProps> = ({
@@ -58,11 +59,22 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   nextLevelXp = 100,
 }) => {
   const { theme } = useAppTheme();
+  const { t, isLoading } = useTranslations();
   const fireAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const shimmerAnim = useRef(new Animated.Value(0)).current;
+
+  // Fonction de traduction sécurisée
+  const safeT = (key: string, fallback: string = key) => {
+    try {
+      return isLoading ? fallback : t(key as any);
+    } catch (error) {
+      console.warn('Translation error:', error);
+      return fallback;
+    }
+  };
 
   useEffect(() => {
     // Animation d'entrée
@@ -130,7 +142,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   }, [streak]);
 
   const greeting = getGreeting();
-  const motivationalMessage = getMotivationalMessage(streak, !!nextWorkoutTitle, completedThisWeek, goalSessions);
+  const motivationalMessageData = getMotivationalMessage(streak, !!nextWorkoutTitle, completedThisWeek, goalSessions);
+  
+  const motivationalMessage = (() => {
+    if (typeof motivationalMessageData === 'object') {
+      if (motivationalMessageData.key === 'goalReached') {
+        return `${motivationalMessageData.params.completed}/${motivationalMessageData.params.goal} ${safeT('sessions', 'séances')} 🎯`;
+      }
+      if (motivationalMessageData.key === 'consecutiveDaysStreak') {
+        return `${motivationalMessageData.params.days} ${safeT('consecutiveDays', 'jours consécutifs')} 💪`;
+      }
+      if (motivationalMessageData.key === 'daysInARowStreak') {
+        return `${motivationalMessageData.params.days} ${safeT('daysInARow', 'jours de suite')} 🔥`;
+      }
+      if (motivationalMessageData.key === 'weekProgress') {
+        return `${motivationalMessageData.params.completed}/${motivationalMessageData.params.goal} ${safeT('thisWeek', 'cette semaine')}`;
+      }
+      return safeT(motivationalMessageData.key, 'C\'est parti !');
+    }
+    return motivationalMessageData;
+  })();
 
   const handleStartWorkout = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
@@ -155,11 +186,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       ]}
     >
       <LinearGradient
-        colors={
-          theme.mode === 'dark'
-            ? ['#1e1b4b', '#312e81', '#1e1b4b']
-            : ['#6366f1', '#8b5cf6', '#a855f7']
-        }
+        colors={theme.colors.heroGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
@@ -219,9 +246,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <View style={styles.xpProgressSection}>
           <View style={styles.xpProgressHeader}>
             <View style={styles.xpProgressInfo}>
-              <Text style={styles.xpProgressTitle}>Progression</Text>
+              <Text style={styles.xpProgressTitle}>{safeT('progression', 'Progression')}</Text>
               <Text style={styles.xpProgressSubtitle}>
-                Niveau {level} • {xp}/{nextLevelXp} XP
+                {safeT('level', 'Niveau')} {level} • {xp}/{nextLevelXp} XP
               </Text>
             </View>
             <View style={styles.xpLevelBadge}>
