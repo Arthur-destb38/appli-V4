@@ -15,6 +15,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Easing,
+  ScrollView,
+  Pressable,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,8 +29,17 @@ import { useFeed } from '@/hooks/useFeed';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { FeedCard } from '@/components/FeedCard';
 import { getComments, addComment, Comment, toggleCommentLike } from '@/services/likesApi';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
-const CURRENT_USER_ID = 'guest-user';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+// Quick action items for stories section
+const QUICK_ACTIONS = [
+  { id: 'workout', icon: 'add', label: 'Séance', gradient: ['#10b981', '#059669'] },
+  { id: 'challenge', icon: 'trophy', label: 'Défi', gradient: ['#f59e0b', '#d97706'] },
+  { id: 'pr', icon: 'flame', label: 'PR', gradient: ['#ef4444', '#dc2626'] },
+  { id: 'streak', icon: 'flash', label: 'Streak', gradient: ['#8b5cf6', '#7c3aed'] },
+];
 
 // Composant pour afficher un commentaire avec like
 const CommentItem: React.FC<{
@@ -128,11 +140,17 @@ const CommentItem: React.FC<{
 
 const FeedScreen: React.FC = () => {
   const { items, load, nextCursor, isLoading, error, duplicate } = useFeed();
-  const { theme } = useAppTheme();
+  const { theme, mode } = useAppTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { profile } = useUserProfile();
   const [refreshing, setRefreshing] = useState(false);
   const headerAnim = useRef(new Animated.Value(0)).current;
+  const storiesAnim = useRef(new Animated.Value(0)).current;
+  const fabAnim = useRef(new Animated.Value(1)).current;
+
+  const currentUserId = profile?.id || 'guest-user';
+  const isDark = mode === 'dark';
 
   // Comments modal state
   const [commentsModal, setCommentsModal] = useState<{
@@ -150,12 +168,38 @@ const FeedScreen: React.FC = () => {
   const [postingComment, setPostingComment] = useState(false);
 
   useEffect(() => {
-    Animated.timing(headerAnim, {
-      toValue: 1,
-      duration: 500,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
+    Animated.stagger(100, [
+      Animated.timing(headerAnim, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(storiesAnim, {
+        toValue: 1,
+        duration: 400,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // FAB pulse animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(fabAnim, {
+          toValue: 1.05,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(fabAnim, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
   }, []);
 
   useEffect(() => {
@@ -188,7 +232,7 @@ const FeedScreen: React.FC = () => {
     setPostingComment(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     try {
-      const comment = await addComment(commentsModal.shareId, CURRENT_USER_ID, newComment.trim());
+      const comment = await addComment(commentsModal.shareId, currentUserId, newComment.trim());
       setCommentsModal((prev) => ({
         ...prev,
         comments: [comment, ...prev.comments],
@@ -201,6 +245,69 @@ const FeedScreen: React.FC = () => {
     }
   };
 
+  const handleQuickAction = (actionId: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    if (actionId === 'workout') {
+      router.push('/workout/create');
+    }
+  };
+
+  // Stories/Quick Actions Component
+  const StoriesSection = () => (
+    <Animated.View
+      style={[
+        styles.storiesSection,
+        {
+          opacity: storiesAnim,
+          transform: [
+            { translateY: storiesAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
+          ],
+        },
+      ]}
+    >
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.storiesContent}
+      >
+        {/* Your story / Create */}
+        <Pressable
+          style={styles.storyItem}
+          onPress={() => handleQuickAction('workout')}
+        >
+          <LinearGradient
+            colors={['#6366f1', '#8b5cf6']}
+            style={styles.storyAvatarGradient}
+          >
+            <View style={[styles.storyAvatarInner, { backgroundColor: theme.colors.background }]}>
+              <Ionicons name="add" size={24} color="#6366f1" />
+            </View>
+          </LinearGradient>
+          <Text style={[styles.storyLabel, { color: theme.colors.textPrimary }]}>Ta story</Text>
+        </Pressable>
+
+        {/* Quick actions */}
+        {QUICK_ACTIONS.map((action) => (
+          <Pressable
+            key={action.id}
+            style={styles.storyItem}
+            onPress={() => handleQuickAction(action.id)}
+          >
+            <LinearGradient
+              colors={action.gradient as [string, string]}
+              style={styles.quickActionCircle}
+            >
+              <Ionicons name={action.icon as any} size={22} color="#FFFFFF" />
+            </LinearGradient>
+            <Text style={[styles.storyLabel, { color: theme.colors.textPrimary }]}>
+              {action.label}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </Animated.View>
+  );
+
   const renderItem = ({ item, index }: any) => (
     <FeedCard
       shareId={item.share_id}
@@ -210,7 +317,7 @@ const FeedScreen: React.FC = () => {
       exerciseCount={item.exercise_count}
       setCount={item.set_count}
       createdAt={item.created_at}
-      currentUserId={CURRENT_USER_ID}
+      currentUserId={currentUserId}
       initialLikeCount={item.like_count || 0}
       comments={item.comments || []}
       commentCount={item.comment_count || 0}
@@ -224,14 +331,13 @@ const FeedScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Header moderne */}
+      {/* Modern Header */}
       <Animated.View
         style={[
           styles.header,
           {
             paddingTop: insets.top + 8,
             backgroundColor: theme.colors.background,
-            borderBottomColor: theme.colors.border,
             opacity: headerAnim,
             transform: [
               {
@@ -245,91 +351,139 @@ const FeedScreen: React.FC = () => {
         ]}
       >
         <View style={styles.logoContainer}>
-          <LinearGradient
-            colors={['#6366f1', '#8b5cf6']}
-            style={styles.logoIcon}
-          >
-            <Ionicons name="fitness" size={18} color="#fff" />
-          </LinearGradient>
-          <Text style={[styles.logo, { color: theme.colors.textPrimary }]}>Gorillax</Text>
+          <View style={styles.logoIconWrapper}>
+            <LinearGradient
+              colors={['#6366f1', '#8b5cf6']}
+              style={styles.logoIcon}
+            >
+              <Ionicons name="fitness" size={20} color="#fff" />
+            </LinearGradient>
+            {/* Activity indicator dot */}
+            <View style={styles.activityDot} />
+          </View>
+          <View>
+            <Text style={[styles.logo, { color: theme.colors.textPrimary }]}>Gorillax</Text>
+            <Text style={[styles.logoSubtitle, { color: theme.colors.textSecondary }]}>
+              {items.length > 0 ? `${items.length} posts` : 'Feed'}
+            </Text>
+          </View>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={[styles.headerButton, { backgroundColor: theme.colors.surfaceMuted }]}
+          <Pressable
+            style={({ pressed }) => [
+              styles.headerButton,
+              { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 },
+            ]}
             onPress={() => {
               Haptics.selectionAsync().catch(() => {});
               router.push('/leaderboard');
             }}
           >
-            <Ionicons name="trophy" size={20} color="#f59e0b" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerButton, { backgroundColor: theme.colors.surfaceMuted }]}
+            <LinearGradient
+              colors={['#f59e0b', '#d97706']}
+              style={styles.headerButtonGradient}
+            >
+              <Ionicons name="trophy" size={18} color="#fff" />
+            </LinearGradient>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.headerButton,
+              { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 },
+            ]}
             onPress={() => {
               Haptics.selectionAsync().catch(() => {});
               router.push('/notifications');
             }}
           >
-            <Ionicons name="heart" size={20} color="#ec4899" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.headerButton, { backgroundColor: theme.colors.surfaceMuted }]}
+            <View style={styles.notificationWrapper}>
+              <Ionicons name="heart" size={20} color="#ec4899" />
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>3</Text>
+              </View>
+            </View>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [
+              styles.headerButton,
+              { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 },
+            ]}
             onPress={() => {
               Haptics.selectionAsync().catch(() => {});
               router.push('/explore');
             }}
           >
             <Ionicons name="search" size={20} color={theme.colors.textPrimary} />
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </Animated.View>
 
       {/* Feed */}
       {isLoading && !items.length ? (
         <View style={styles.loadingContainer}>
-          <View style={[styles.loadingCard, { backgroundColor: theme.colors.surface }]}>
-            <ActivityIndicator size="large" color="#6366f1" />
-            <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-              Chargement du feed...
-            </Text>
-          </View>
+          <LinearGradient
+            colors={['#6366f1', '#8b5cf6']}
+            style={styles.loadingGradient}
+          >
+            <ActivityIndicator size="large" color="#fff" />
+          </LinearGradient>
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
+            Chargement du feed...
+          </Text>
         </View>
       ) : items.length === 0 ? (
-        <View style={styles.emptyState}>
-          <View style={[styles.emptyIconCircle, { backgroundColor: theme.colors.surfaceMuted }]}>
+        <ScrollView contentContainerStyle={styles.emptyScrollContent}>
+          <StoriesSection />
+          <View style={styles.emptyState}>
             <LinearGradient
               colors={['#6366f1', '#8b5cf6']}
               style={styles.emptyIconGradient}
             >
-              <Ionicons name="people" size={40} color="#fff" />
+              <Ionicons name="people" size={48} color="#fff" />
             </LinearGradient>
+            <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
+              Ton feed est vide
+            </Text>
+            <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
+              Suis d&apos;autres utilisateurs pour voir leurs séances et partager les tiennes !
+            </Text>
+            <View style={styles.emptyActions}>
+              <Pressable
+                style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                onPress={() => router.push('/explore')}
+              >
+                <LinearGradient
+                  colors={['#6366f1', '#8b5cf6']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.emptyButtonGradient}
+                >
+                  <Ionicons name="compass" size={18} color="#fff" />
+                  <Text style={styles.emptyButtonText}>Explorer</Text>
+                </LinearGradient>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.emptySecondaryBtn,
+                  { borderColor: theme.colors.border, opacity: pressed ? 0.7 : 1 },
+                ]}
+                onPress={() => router.push('/workout/create')}
+              >
+                <Ionicons name="add" size={18} color={theme.colors.textPrimary} />
+                <Text style={[styles.emptySecondaryText, { color: theme.colors.textPrimary }]}>
+                  Créer une séance
+                </Text>
+              </Pressable>
+            </View>
           </View>
-          <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-            Ton feed est vide
-          </Text>
-          <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-            Suis d&apos;autres utilisateurs pour voir leurs séances et partager les tiennes !
-          </Text>
-          <TouchableOpacity
-            style={styles.emptyButton}
-            onPress={() => router.push('/explore')}
-          >
-            <LinearGradient
-              colors={['#6366f1', '#8b5cf6']}
-              style={styles.emptyButtonGradient}
-            >
-              <Ionicons name="compass" size={18} color="#fff" />
-              <Text style={styles.emptyButtonText}>Explorer</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
+        </ScrollView>
       ) : (
         <FlatList
           data={items}
           keyExtractor={(item) => item.share_id}
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 100 }]}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -337,29 +491,71 @@ const FeedScreen: React.FC = () => {
               tintColor="#6366f1"
             />
           }
+          ListHeaderComponent={<StoriesSection />}
           ListFooterComponent={
             nextCursor ? (
-              <TouchableOpacity
-                style={[styles.loadMore, { backgroundColor: theme.colors.surfaceMuted }]}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.loadMore,
+                  { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 },
+                ]}
                 onPress={() => load(false)}
               >
-                <Ionicons name="refresh" size={18} color={theme.colors.textSecondary} />
-                <Text style={[styles.loadMoreText, { color: theme.colors.textSecondary }]}>
-                  Charger plus
+                <LinearGradient
+                  colors={['#6366f1', '#8b5cf6']}
+                  style={styles.loadMoreIcon}
+                >
+                  <Ionicons name="chevron-down" size={16} color="#fff" />
+                </LinearGradient>
+                <Text style={[styles.loadMoreText, { color: theme.colors.textPrimary }]}>
+                  Charger plus de posts
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
             ) : (
               <View style={styles.endOfFeed}>
-                <View style={[styles.endDivider, { backgroundColor: theme.colors.border }]} />
-                <Text style={[styles.endText, { color: theme.colors.textSecondary }]}>
-                  Tu es à jour ! 🎉
-                </Text>
-                <View style={[styles.endDivider, { backgroundColor: theme.colors.border }]} />
+                <LinearGradient
+                  colors={isDark ? ['transparent', '#6366f120', 'transparent'] : ['transparent', '#6366f110', 'transparent']}
+                  start={{ x: 0, y: 0.5 }}
+                  end={{ x: 1, y: 0.5 }}
+                  style={styles.endGradient}
+                />
+                <View style={[styles.endBadge, { backgroundColor: theme.colors.surfaceMuted }]}>
+                  <Ionicons name="checkmark-circle" size={16} color="#10b981" />
+                  <Text style={[styles.endText, { color: theme.colors.textSecondary }]}>
+                    Tu es à jour !
+                  </Text>
+                </View>
               </View>
             )
           }
         />
       )}
+
+      {/* Floating Action Button */}
+      <Animated.View
+        style={[
+          styles.fabContainer,
+          {
+            bottom: insets.bottom + 90,
+            transform: [{ scale: fabAnim }],
+          },
+        ]}
+      >
+        <Pressable
+          style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+            router.push('/workout/create');
+          }}
+        >
+          <LinearGradient
+            colors={['#6366f1', '#8b5cf6']}
+            style={styles.fab}
+          >
+            <Ionicons name="add" size={28} color="#FFFFFF" />
+          </LinearGradient>
+        </Pressable>
+      </Animated.View>
 
       {error ? (
         <View style={[styles.errorBanner, { backgroundColor: theme.colors.error + '20' }]}>
@@ -500,56 +696,140 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingBottom: 12,
-    borderBottomWidth: 1,
   },
   logoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
+  },
+  logoIconWrapper: {
+    position: 'relative',
   },
   logoIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    fontSize: 24,
-    fontWeight: '800',
-    fontStyle: 'italic',
-    letterSpacing: -0.5,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  headerButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  activityDot: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#10b981',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  logo: {
+    fontSize: 22,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+  },
+  logoSubtitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: -2,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  headerButtonGradient: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationWrapper: {
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#ef4444',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  // Stories section
+  storiesSection: {
+    marginBottom: 16,
+  },
+  storiesContent: {
+    paddingHorizontal: 16,
+    gap: 16,
+  },
+  storyItem: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  storyAvatarGradient: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    padding: 3,
+  },
+  storyAvatarInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 31,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickActionCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  storyLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
   listContent: {
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 100,
+    paddingTop: 8,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 32,
+    gap: 20,
   },
-  loadingCard: {
-    padding: 32,
-    borderRadius: 20,
+  loadingGradient: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     alignItems: 'center',
-    gap: 16,
+    justifyContent: 'center',
   },
   loadingText: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  emptyScrollContent: {
+    flexGrow: 1,
   },
   emptyState: {
     flex: 1,
@@ -558,24 +838,18 @@ const styles = StyleSheet.create({
     padding: 32,
     gap: 16,
   },
-  emptyIconCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  emptyIconGradient: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
-  emptyIconGradient: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   emptyTitle: {
     fontSize: 22,
-    fontWeight: '700',
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   emptySubtitle: {
     fontSize: 15,
@@ -583,49 +857,95 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     maxWidth: 280,
   },
-  emptyButton: {
+  emptyActions: {
+    flexDirection: 'row',
+    gap: 12,
     marginTop: 8,
-    borderRadius: 16,
-    overflow: 'hidden',
   },
   emptyButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingVertical: 14,
+    borderRadius: 14,
   },
   emptyButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
+  },
+  emptySecondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+  },
+  emptySecondaryText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   loadMore: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    padding: 16,
-    borderRadius: 14,
+    gap: 10,
+    padding: 14,
+    borderRadius: 16,
     marginTop: 8,
+  },
+  loadMoreIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadMoreText: {
     fontSize: 14,
     fontWeight: '600',
   },
   endOfFeed: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
     paddingVertical: 24,
   },
-  endDivider: {
-    flex: 1,
+  endGradient: {
+    position: 'absolute',
+    top: '50%',
+    left: 16,
+    right: 16,
     height: 1,
+  },
+  endBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   endText: {
     fontSize: 13,
+    fontWeight: '600',
+  },
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+  },
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#6366f1',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   errorBanner: {
     flexDirection: 'row',

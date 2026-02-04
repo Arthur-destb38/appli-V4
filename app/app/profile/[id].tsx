@@ -9,7 +9,6 @@ import {
   View,
   Animated,
   Easing,
-  TouchableOpacity,
   Image,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -33,9 +32,10 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 export default function ProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { theme } = useAppTheme();
+  const { theme, mode } = useAppTheme();
   const insets = useSafeAreaInsets();
   const { profile: currentUserProfile } = useUserProfile();
+  const isDark = mode === 'dark';
 
   const CURRENT_USER_ID = currentUserProfile?.id || 'guest-user';
 
@@ -165,13 +165,13 @@ export default function ProfileScreen() {
         <Text style={[styles.errorSubtitle, { color: theme.colors.textSecondary }]}>
           Ce profil n'existe pas ou a été supprimé
         </Text>
-        <TouchableOpacity
-          style={[styles.errorButton, { backgroundColor: theme.colors.accent }]}
+        <Pressable
+          style={({ pressed }) => [styles.errorButton, { backgroundColor: theme.colors.accent, opacity: pressed ? 0.9 : 1 }]}
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={18} color="#fff" />
           <Text style={styles.errorButtonText}>Retour</Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     );
   }
@@ -209,7 +209,7 @@ export default function ProfileScreen() {
           ]}
         >
           <LinearGradient
-            colors={theme.dark ? ['#1e1b4b', '#312e81', '#1e1b4b'] : ['#6366f1', '#8b5cf6', '#a855f7']}
+            colors={isDark ? ['#1e1b4b', '#312e81', '#1e1b4b'] : ['#6366f1', '#8b5cf6', '#a855f7']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.headerGradient, { paddingTop: insets.top + 12 }]}
@@ -220,22 +220,18 @@ export default function ProfileScreen() {
 
             {/* Navigation */}
             <View style={styles.navBar}>
-              <TouchableOpacity 
-                onPress={() => router.back()} 
-                style={styles.navButton}
-                activeOpacity={0.7}
+              <Pressable
+                onPress={() => router.back()}
+                style={({ pressed }) => [styles.navButton, { opacity: pressed ? 0.8 : 1 }]}
               >
                 <Ionicons name="arrow-back" size={22} color="#fff" />
-              </TouchableOpacity>
-              <Text style={styles.navTitle}>{profile.username}</Text>
-              <TouchableOpacity style={styles.navButton} activeOpacity={0.7}>
-                <Ionicons name="ellipsis-horizontal" size={22} color="#fff" />
-              </TouchableOpacity>
+              </Pressable>
+              <Text style={styles.navTitle} numberOfLines={1}>{profile.username}</Text>
+              <View style={styles.navButton} />
             </View>
 
-            {/* Avatar et Stats */}
-            <View style={styles.profileHeader}>
-              {/* Avatar */}
+            {/* Avatar centré */}
+            <View style={styles.avatarRow}>
               <View style={styles.avatarContainer}>
                 <View style={styles.avatarRing}>
                   {profile.avatar_url ? (
@@ -255,35 +251,39 @@ export default function ProfileScreen() {
                   </View>
                 )}
               </View>
+            </View>
 
-              {/* Stats */}
-              <View style={styles.statsContainer}>
-                <TouchableOpacity style={styles.statItem} activeOpacity={0.7}>
-                  <Text style={styles.statValue}>{profile.posts_count}</Text>
-                  <Text style={styles.statLabel}>Posts</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.statItem} activeOpacity={0.7}>
-                  <Text style={styles.statValue}>{profile.followers_count}</Text>
-                  <Text style={styles.statLabel}>Abonnés</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.statItem} activeOpacity={0.7}>
-                  <Text style={styles.statValue}>{profile.following_count}</Text>
-                  <Text style={styles.statLabel}>Suivis</Text>
-                </TouchableOpacity>
+            {/* Stats en ligne sous l'avatar */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{profile.posts_count}</Text>
+                <Text style={styles.statLabel}>Posts</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{profile.followers_count}</Text>
+                <Text style={styles.statLabel}>Abonnés</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{profile.following_count}</Text>
+                <Text style={styles.statLabel}>Suivis</Text>
               </View>
             </View>
 
             {/* Bio */}
             <View style={styles.bioSection}>
-              <Text style={styles.bioUsername}>{profile.username}</Text>
+              <Text style={styles.bioUsername}>@{profile.username}</Text>
               {profile.objective && (
                 <View style={styles.objectiveBadge}>
                   <Ionicons name="flag" size={12} color="#fff" />
                   <Text style={styles.objectiveText}>{profile.objective}</Text>
                 </View>
               )}
-              {profile.bio && (
+              {profile.bio ? (
                 <Text style={styles.bioText}>{profile.bio}</Text>
+              ) : !profile.objective && (
+                <Text style={styles.bioPlaceholder}>Aucune bio</Text>
               )}
               {profile.total_likes > 0 && (
                 <View style={styles.likesRow}>
@@ -296,29 +296,32 @@ export default function ProfileScreen() {
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
               {profile.is_own_profile ? (
-                <TouchableOpacity style={styles.editProfileBtn} activeOpacity={0.8}>
+                <Pressable
+                  style={({ pressed }) => [styles.editProfileBtn, { opacity: pressed ? 0.9 : 1 }]}
+                  onPress={() => router.push('/(tabs)/profile')}
+                >
                   <Ionicons name="pencil" size={16} color="#fff" />
                   <Text style={styles.editProfileText}>Modifier le profil</Text>
-                </TouchableOpacity>
+                </Pressable>
               ) : (
                 <>
-                  <TouchableOpacity
-                    style={[
+                  <Pressable
+                    style={({ pressed }) => [
                       styles.followBtn,
                       profile.is_following && styles.followingBtn,
+                      { opacity: pressed ? 0.9 : 1 },
                     ]}
                     onPress={handleFollowToggle}
                     disabled={followLoading}
-                    activeOpacity={0.8}
                   >
                     {followLoading ? (
                       <ActivityIndicator size="small" color={profile.is_following ? '#fff' : '#6366f1'} />
                     ) : (
                       <>
-                        <Ionicons 
-                          name={profile.is_following ? 'checkmark' : 'person-add'} 
-                          size={16} 
-                          color={profile.is_following ? '#fff' : '#6366f1'} 
+                        <Ionicons
+                          name={profile.is_following ? 'checkmark' : 'person-add'}
+                          size={16}
+                          color={profile.is_following ? '#fff' : '#6366f1'}
                         />
                         <Text style={[
                           styles.followBtnText,
@@ -328,19 +331,21 @@ export default function ProfileScreen() {
                         </Text>
                       </>
                     )}
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.messageBtn} 
-                    activeOpacity={0.7}
+                  </Pressable>
+                  <Pressable
+                    style={({ pressed }) => [styles.messageBtn, { opacity: pressed ? 0.9 : 1 }]}
                     onPress={handleMessagePress}
                     disabled={messageLoading}
                   >
                     {messageLoading ? (
                       <ActivityIndicator size="small" color="#fff" />
                     ) : (
-                      <Ionicons name="chatbubble" size={18} color="#fff" />
+                      <>
+                        <Ionicons name="chatbubble-outline" size={18} color="#fff" />
+                        <Text style={styles.messageBtnText}>Message</Text>
+                      </>
                     )}
-                  </TouchableOpacity>
+                  </Pressable>
                 </>
               )}
             </View>
@@ -365,67 +370,77 @@ export default function ProfileScreen() {
           ]}
         >
           {/* Onglets */}
-          <View style={[styles.tabsContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-            <TouchableOpacity
+          <View style={[styles.tabsContainer, { backgroundColor: theme.colors.surface }]}>
+            <Pressable
               style={[
                 styles.tab,
-                activeTab === 'posts' && [styles.tabActive, { borderBottomColor: theme.colors.accent }],
+                activeTab === 'posts' && styles.tabActive,
               ]}
-              onPress={() => setActiveTab('posts')}
-              activeOpacity={0.7}
+              onPress={() => { Haptics.selectionAsync().catch(() => {}); setActiveTab('posts'); }}
             >
-              <Ionicons 
-                name="grid" 
-                size={22} 
-                color={activeTab === 'posts' ? theme.colors.accent : theme.colors.textSecondary} 
+              <Ionicons
+                name="grid"
+                size={20}
+                color={activeTab === 'posts' ? theme.colors.accent : theme.colors.textSecondary}
               />
-              <Text style={[
-                styles.tabText,
-                { color: activeTab === 'posts' ? theme.colors.accent : theme.colors.textSecondary },
-              ]}>
+              <Text style={[styles.tabText, { color: activeTab === 'posts' ? theme.colors.accent : theme.colors.textSecondary }]}>
                 Posts
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </Pressable>
+            <Pressable
               style={[
                 styles.tab,
-                activeTab === 'saved' && [styles.tabActive, { borderBottomColor: theme.colors.accent }],
+                activeTab === 'saved' && styles.tabActive,
               ]}
-              onPress={() => setActiveTab('saved')}
-              activeOpacity={0.7}
+              onPress={() => { Haptics.selectionAsync().catch(() => {}); setActiveTab('saved'); }}
             >
-              <Ionicons 
-                name="bookmark" 
-                size={22} 
-                color={activeTab === 'saved' ? theme.colors.accent : theme.colors.textSecondary} 
+              <Ionicons
+                name="bookmark"
+                size={20}
+                color={activeTab === 'saved' ? theme.colors.accent : theme.colors.textSecondary}
               />
-              <Text style={[
-                styles.tabText,
-                { color: activeTab === 'saved' ? theme.colors.accent : theme.colors.textSecondary },
-              ]}>
+              <Text style={[styles.tabText, { color: activeTab === 'saved' ? theme.colors.accent : theme.colors.textSecondary }]}>
                 Sauvegardés
               </Text>
-            </TouchableOpacity>
+            </Pressable>
+            <View
+              style={[
+                styles.tabIndicator,
+                {
+                  backgroundColor: theme.colors.accent,
+                  left: activeTab === 'posts' ? '2%' : '52%',
+                  width: '46%',
+                },
+              ]}
+            />
           </View>
 
           {/* Contenu des onglets */}
           {posts.length === 0 ? (
             <View style={styles.emptyPosts}>
-              <View style={[styles.emptyIconCircle, { backgroundColor: theme.colors.surfaceMuted }]}>
-                <Ionicons 
-                  name={activeTab === 'posts' ? 'images-outline' : 'bookmark-outline'} 
-                  size={40} 
-                  color={theme.colors.textSecondary} 
+              <LinearGradient
+                colors={isDark ? ['#312e81', '#1e1b4b'] : ['#6366f115', '#8b5cf608']}
+                style={styles.emptyIconCircle}
+              >
+                <Ionicons
+                  name={activeTab === 'posts' ? 'barbell-outline' : 'bookmark-outline'}
+                  size={44}
+                  color={theme.colors.accent}
                 />
-              </View>
+              </LinearGradient>
               <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
                 {activeTab === 'posts' ? 'Aucune séance partagée' : 'Aucun post sauvegardé'}
               </Text>
               <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                {activeTab === 'posts' 
-                  ? 'Les séances partagées apparaîtront ici' 
-                  : 'Les posts sauvegardés apparaîtront ici'}
+                {activeTab === 'posts'
+                  ? 'Les séances que tu partages apparaîtront ici'
+                  : 'Les posts que tu sauvegardes apparaîtront ici'}
               </Text>
+              {activeTab === 'posts' && !profile.is_own_profile && (
+                <Text style={[styles.emptyHint, { color: theme.colors.textSecondary }]}>
+                  Ce profil n'a pas encore partagé de séance
+                </Text>
+              )}
             </View>
           ) : (
             <View style={styles.postsGrid}>
@@ -579,11 +594,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#fff',
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: 8,
   },
-  profileHeader: {
-    flexDirection: 'row',
+  avatarRow: {
     alignItems: 'center',
-    gap: 20,
     marginBottom: 16,
   },
   avatarContainer: {
@@ -627,22 +643,36 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   statsContainer: {
-    flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    marginHorizontal: 4,
   },
   statItem: {
+    flex: 1,
     alignItems: 'center',
   },
+  statDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 1,
+  },
   statValue: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '800',
     color: '#fff',
   },
   statLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: 'rgba(255,255,255,0.75)',
     marginTop: 2,
+    fontWeight: '600',
   },
   bioSection: {
     gap: 8,
@@ -672,6 +702,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255,255,255,0.85)',
     lineHeight: 20,
+  },
+  bioPlaceholder: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.5)',
+    fontStyle: 'italic',
   },
   likesRow: {
     flexDirection: 'row',
@@ -727,12 +762,21 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   messageBtn: {
-    width: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
     height: 48,
     borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  messageBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   contentSection: {
     paddingTop: 20,
@@ -740,10 +784,10 @@ const styles = StyleSheet.create({
   tabsContainer: {
     flexDirection: 'row',
     marginHorizontal: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    marginBottom: 20,
+    borderRadius: 14,
+    backgroundColor: 'transparent',
+    marginBottom: 24,
+    position: 'relative',
   },
   tab: {
     flex: 1,
@@ -752,11 +796,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 14,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    zIndex: 1,
   },
-  tabActive: {
-    borderBottomWidth: 2,
+  tabActive: {},
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    height: 3,
+    borderRadius: 2,
   },
   tabText: {
     fontSize: 14,
@@ -764,14 +811,14 @@ const styles = StyleSheet.create({
   },
   emptyPosts: {
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: 48,
     paddingHorizontal: 32,
-    gap: 12,
+    gap: 14,
   },
   emptyIconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
@@ -779,11 +826,18 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 18,
     fontWeight: '700',
+    textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 14,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 21,
+  },
+  emptyHint: {
+    fontSize: 13,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 4,
   },
   postsGrid: {
     flexDirection: 'row',

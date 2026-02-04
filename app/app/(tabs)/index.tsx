@@ -672,13 +672,7 @@ export default function HomeScreen() {
                   <View style={[styles.drawerItemIcon, { backgroundColor: '#f59e0b20' }]}>
                     <Ionicons name="flag" size={22} color="#f59e0b" />
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>{t('objectives')}</Text>
-                    <Text style={[styles.drawerItemSubtext, { color: theme.colors.textSecondary }]}>
-                      {stats.completedThisWeek}/{goalSessions} {t('sessions')} {t('thisWeek')}
-                      {stats.completedThisWeek >= goalSessions ? ' ✅' : ''}
-                    </Text>
-                  </View>
+                  <Text style={[styles.drawerItemText, { color: theme.colors.textPrimary }]}>{t('objectives')}</Text>
                   <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
                 </Pressable>
 

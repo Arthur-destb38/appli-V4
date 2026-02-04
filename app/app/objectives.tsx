@@ -342,6 +342,36 @@ export default function ObjectivesScreen() {
     return '#6b7280';
   };
 
+  const showConfirm = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    confirmLabel: string = 'Supprimer'
+  ) => {
+    if (typeof window !== 'undefined' && 'confirm' in window) {
+      if (window.confirm(`${title}\n\n${message}`)) {
+        onConfirm();
+      }
+    } else {
+      Alert.alert(title, message, [
+        { text: 'Annuler', style: 'cancel' },
+        { text: confirmLabel, style: 'destructive', onPress: onConfirm },
+      ]);
+    }
+  };
+
+  const handleDeleteObjective = (objective: Objective) => {
+    showConfirm(
+      'Supprimer l\'objectif',
+      `Veux-tu vraiment supprimer "${objective.title}" ?`,
+      async () => {
+        const updated = objectives.filter(obj => obj.id !== objective.id);
+        await saveObjectives(updated);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      }
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
@@ -399,6 +429,20 @@ export default function ObjectivesScreen() {
                         <Ionicons name="checkmark-circle" size={24} color="#10b981" />
                       </View>
                     )}
+                    <Pressable
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                        handleDeleteObjective(objective);
+                      }}
+                      style={({ pressed }) => [
+                        styles.deleteButton,
+                        { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.8 : 1 },
+                      ]}
+                      hitSlop={8}
+                    >
+                      <Ionicons name="trash-outline" size={22} color="#ef4444" />
+                    </Pressable>
                   </View>
                 </View>
 
@@ -761,6 +805,13 @@ const styles = StyleSheet.create({
   },
   completedBadge: {
     marginLeft: 12,
+  },
+  deleteButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   progressSection: {
     gap: 8,

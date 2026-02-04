@@ -140,7 +140,7 @@ export default function SettingsScreen() {
               equipment_available: userData.equipment_available ? JSON.parse(userData.equipment_available) : [],
             }));
           }
-        } catch (error) {
+    } catch (error) {
           console.log('Données complètes non disponibles, utilisation des données de base');
         }
       }
@@ -223,7 +223,7 @@ export default function SettingsScreen() {
             try {
               await logout();
               router.replace('/login');
-            } catch (error) {
+    } catch (error) {
               console.error('Erreur déconnexion:', error);
               router.replace('/login');
             }
@@ -239,7 +239,7 @@ export default function SettingsScreen() {
   };
 
   if (loading) {
-    return (
+  return (
       <View style={[styles.container, styles.centered, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.accent} />
         <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
@@ -265,7 +265,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>{t('settings')}</Text>
           <View style={styles.headerSpacer} />
-        </View>
+            </View>
       </LinearGradient>
 
       <KeyboardAvoidingView
@@ -285,11 +285,11 @@ export default function SettingsScreen() {
               <View style={styles.sectionHeaderLeft}>
                 <View style={[styles.sectionIcon, { backgroundColor: '#6366f1' + '20' }]}>
                   <Ionicons name="person" size={20} color="#6366f1" />
-                </View>
+          </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
                   {t('basicInfo')}
-                </Text>
-              </View>
+              </Text>
+            </View>
               <Ionicons
                 name={expandedSection === 'basic' ? 'chevron-up' : 'chevron-down'}
                 size={20}
@@ -309,13 +309,13 @@ export default function SettingsScreen() {
                     onChangeText={setUsername}
                     placeholder={t('yourUsername')}
                     placeholderTextColor={theme.colors.textSecondary}
-                  />
-                </View>
+            />
+          </View>
 
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
                     {t('bio')}
-                  </Text>
+              </Text>
                   <TextInput
                     style={[styles.input, styles.textArea, { backgroundColor: theme.colors.background, color: theme.colors.textPrimary, borderColor: theme.colors.border }]}
                     value={bio}
@@ -325,7 +325,7 @@ export default function SettingsScreen() {
                     multiline
                     numberOfLines={3}
                   />
-                </View>
+            </View>
 
                 <View style={styles.inputGroup}>
                   <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
@@ -354,7 +354,7 @@ export default function SettingsScreen() {
                         </Text>
                       </TouchableOpacity>
                     ))}
-                  </View>
+          </View>
                 </View>
 
                 <TouchableOpacity
@@ -392,8 +392,8 @@ export default function SettingsScreen() {
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
                   {t('personalInfo')}
-                </Text>
-              </View>
+              </Text>
+            </View>
               <Ionicons
                 name={expandedSection === 'personal' ? 'chevron-up' : 'chevron-down'}
                 size={20}
@@ -413,10 +413,10 @@ export default function SettingsScreen() {
                     onChangeText={(text) => updateField('location', text)}
                     placeholder={t('locationPlaceholder')}
                     placeholderTextColor={theme.colors.textSecondary}
-                  />
-                </View>
+            />
+          </View>
 
-                <View style={styles.row}>
+          <View style={styles.row}>
                   <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
                     <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
                       {t('height')} ({t('cm')})
@@ -429,7 +429,7 @@ export default function SettingsScreen() {
                       placeholderTextColor={theme.colors.textSecondary}
                       keyboardType="numeric"
                     />
-                  </View>
+            </View>
                   <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
                     <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
                       {t('weight')} ({t('kg')})
@@ -441,8 +441,8 @@ export default function SettingsScreen() {
                       placeholder={t('weightPlaceholder')}
                       placeholderTextColor={theme.colors.textSecondary}
                       keyboardType="numeric"
-                    />
-                  </View>
+            />
+          </View>
                 </View>
 
                 <View style={styles.inputGroup}>
@@ -473,10 +473,10 @@ export default function SettingsScreen() {
                           ]}
                         >
                           {t(gender.labelKey as any)}
-                        </Text>
+              </Text>
                       </TouchableOpacity>
                     ))}
-                  </View>
+            </View>
                 </View>
               </View>
             )}
@@ -491,7 +491,7 @@ export default function SettingsScreen() {
               <View style={styles.sectionHeaderLeft}>
                 <View style={[styles.sectionIcon, { backgroundColor: '#f59e0b' + '20' }]}>
                   <Ionicons name="fitness" size={20} color="#f59e0b" />
-                </View>
+          </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
                   {t('fitnessGoals')}
                 </Text>
@@ -569,7 +569,7 @@ export default function SettingsScreen() {
                           ]}
                         >
                           {freq}
-                        </Text>
+            </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -601,7 +601,7 @@ export default function SettingsScreen() {
                           }}
                         >
                           <Text
-                            style={[
+              style={[
                               styles.equipmentText,
                               { color: theme.colors.textPrimary },
                               isSelected && { color: theme.colors.accent },
@@ -612,9 +612,9 @@ export default function SettingsScreen() {
                         </TouchableOpacity>
                       );
                     })}
-                  </View>
-                </View>
               </View>
+              </View>
+            </View>
             )}
           </View>
 
@@ -630,7 +630,7 @@ export default function SettingsScreen() {
                 </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
                   {t('appearance')}
-                </Text>
+            </Text>
               </View>
               <Ionicons
                 name={expandedSection === 'appearance' ? 'chevron-up' : 'chevron-down'}
@@ -668,7 +668,7 @@ export default function SettingsScreen() {
                   </Text>
                   <View style={styles.colorGrid}>
                     {Object.entries(accentColors).map(([key, color]) => (
-                      <Pressable
+                  <Pressable
                         key={key}
                         style={[
                           styles.colorOption,
@@ -683,7 +683,7 @@ export default function SettingsScreen() {
                         {preferences.accentColor === key && (
                           <Ionicons name="checkmark" size={16} color="#FFFFFF" />
                         )}
-                      </Pressable>
+                  </Pressable>
                     ))}
                   </View>
                 </View>
@@ -695,7 +695,7 @@ export default function SettingsScreen() {
                   </Text>
                   <View style={styles.colorGrid}>
                     {Object.entries(heroColors).map(([key, color]) => (
-                      <Pressable
+                  <Pressable
                         key={key}
                         style={[
                           styles.heroColorOption,
@@ -715,10 +715,10 @@ export default function SettingsScreen() {
                             <Ionicons name="checkmark" size={12} color="#FFFFFF" />
                           </View>
                         )}
-                      </Pressable>
+                  </Pressable>
                     ))}
-                  </View>
                 </View>
+              </View>
               </View>
             )}
           </View>
@@ -752,7 +752,7 @@ export default function SettingsScreen() {
                     {t('language')}
                   </Text>
                   <View style={styles.languageGrid}>
-                    <Pressable
+                  <Pressable
                       style={[
                         styles.languageOption,
                         { backgroundColor: theme.colors.background, borderColor: theme.colors.border },
@@ -771,7 +771,7 @@ export default function SettingsScreen() {
                       ]}>
                         Français
                       </Text>
-                    </Pressable>
+                  </Pressable>
                     
                     <Pressable
                       style={[
@@ -791,7 +791,7 @@ export default function SettingsScreen() {
                         preferences.language === 'en' && { color: theme.colors.accent },
                       ]}>
                         English
-                      </Text>
+                  </Text>
                     </Pressable>
                   </View>
                 </View>
@@ -802,7 +802,7 @@ export default function SettingsScreen() {
                     {t('unitSystem')}
                   </Text>
                   <View style={styles.languageGrid}>
-                    <Pressable
+                  <Pressable
                       style={[
                         styles.languageOption,
                         { backgroundColor: theme.colors.background, borderColor: theme.colors.border },
@@ -826,7 +826,7 @@ export default function SettingsScreen() {
                           kg, cm
                         </Text>
                       </View>
-                    </Pressable>
+                  </Pressable>
                     
                     <Pressable
                       style={[
@@ -851,13 +851,13 @@ export default function SettingsScreen() {
                         <Text style={[styles.languageSubtext, { color: theme.colors.textSecondary }]}>
                           lbs, ft
                         </Text>
-                      </View>
-                    </Pressable>
-                  </View>
                 </View>
+                    </Pressable>
+              </View>
+            </View>
               </View>
             )}
-          </View>
+              </View>
 
           {/* Préférences */}
           <View style={[styles.section, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
@@ -868,11 +868,11 @@ export default function SettingsScreen() {
               <View style={styles.sectionHeaderLeft}>
                 <View style={[styles.sectionIcon, { backgroundColor: '#8b5cf6' + '20' }]}>
                   <Ionicons name="settings" size={20} color="#8b5cf6" />
-                </View>
+            </View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
                   {t('preferences')}
                 </Text>
-              </View>
+          </View>
               <Ionicons
                 name={expandedSection === 'preferences' ? 'chevron-up' : 'chevron-down'}
                 size={20}
@@ -892,7 +892,7 @@ export default function SettingsScreen() {
                       <Text style={[styles.switchDescription, { color: theme.colors.textSecondary }]}>
                         {t('publicShareDesc')}
                       </Text>
-                    </View>
+        </View>
                   </View>
                   <Switch
                     value={profileData.consent_to_public_share}
