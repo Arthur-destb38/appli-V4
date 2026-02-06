@@ -3,9 +3,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   Alert,
+  Pressable,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -121,22 +122,32 @@ export default function ChallengeDetailScreen() {
   };
 
   const handleLeave = () => {
-    Alert.alert(
-      'Quitter le défi ?',
-      'Tu perdras ta progression si tu quittes maintenant.',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Quitter',
-          style: 'destructive',
-          onPress: () => {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
-            setIsJoined(false);
-          },
-        },
-      ]
-    );
+    const doLeave = () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+      setIsJoined(false);
+    };
+
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm('Quitter le défi ? Tu perdras ta progression si tu quittes maintenant.')) {
+        doLeave();
+      }
+    } else {
+      Alert.alert(
+        'Quitter le défi ?',
+        'Tu perdras ta progression si tu quittes maintenant.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Quitter', style: 'destructive', onPress: doLeave },
+        ]
+      );
+    }
   };
+
+  const difficultyConfig = {
+    Facile: { bg: '#10B981', label: 'Facile' },
+    Moyen: { bg: '#F59E0B', label: 'Moyen' },
+    Difficile: { bg: '#EF4444', label: 'Difficile' },
+  }[challenge.difficulty];
 
   return (
     <>
@@ -149,110 +160,148 @@ export default function ChallengeDetailScreen() {
           headerTintColor: '#fff',
         }}
       />
-      <ScrollView 
+      <ScrollView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
+        showsVerticalScrollIndicator={false}
       >
         {/* Hero */}
         <LinearGradient
           colors={challenge.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.hero, { paddingTop: insets.top + 60 }]}
+          style={[styles.hero, { paddingTop: insets.top + 56 }]}
         >
-          <Text style={styles.heroIcon}>{challenge.icon}</Text>
+          <View style={styles.heroIconWrap}>
+            <Text style={styles.heroIcon}>{challenge.icon}</Text>
+          </View>
           <Text style={styles.heroTitle}>{challenge.title}</Text>
           <View style={styles.heroStats}>
             <View style={styles.heroStat}>
-              <Ionicons name="people" size={18} color="rgba(255,255,255,0.9)" />
+              <Ionicons name="people-outline" size={18} color="rgba(255,255,255,0.95)" />
               <Text style={styles.heroStatText}>{challenge.participants} participants</Text>
             </View>
             <View style={styles.heroStat}>
-              <Ionicons name="time" size={18} color="rgba(255,255,255,0.9)" />
+              <Ionicons name="time-outline" size={18} color="rgba(255,255,255,0.95)" />
               <Text style={styles.heroStatText}>{challenge.duration}</Text>
             </View>
           </View>
-          <View style={[styles.difficultyBadge, { 
-            backgroundColor: challenge.difficulty === 'Facile' ? '#10B981' 
-              : challenge.difficulty === 'Moyen' ? '#F59E0B' : '#EF4444' 
-          }]}>
-            <Text style={styles.difficultyText}>{challenge.difficulty}</Text>
+          <View style={[styles.difficultyBadge, { backgroundColor: difficultyConfig.bg }]}>
+            <Text style={styles.difficultyText}>{difficultyConfig.label}</Text>
           </View>
         </LinearGradient>
 
-        {/* Description */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-            Description
-          </Text>
-          <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
-            {challenge.description}
-          </Text>
-        </View>
-
-        {/* Règles */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-            📋 Règles
-          </Text>
-          {challenge.rules.map((rule, index) => (
-            <View key={index} style={styles.ruleItem}>
-              <View style={[styles.ruleBullet, { backgroundColor: theme.colors.accent }]}>
-                <Text style={styles.ruleBulletText}>{index + 1}</Text>
+        {/* Carte de contenu (chevauche le hero) */}
+        <View style={[styles.contentCard, { backgroundColor: theme.colors.background }]}>
+          {/* Description */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: theme.colors.surfaceMuted }]}>
+                <Ionicons name="document-text-outline" size={18} color={theme.colors.accent} />
               </View>
-              <Text style={[styles.ruleText, { color: theme.colors.textPrimary }]}>
-                {rule}
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
+                Description
               </Text>
             </View>
-          ))}
-        </View>
+            <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
+              {challenge.description}
+            </Text>
+          </View>
 
-        {/* Récompenses */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-            🎁 Récompenses
-          </Text>
-          {challenge.rewards.map((reward, index) => (
-            <View key={index} style={[styles.rewardItem, { backgroundColor: theme.colors.surface }]}>
-              <Text style={[styles.rewardText, { color: theme.colors.textPrimary }]}>
-                {reward}
+          {/* Règles */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: theme.colors.surfaceMuted }]}>
+                <Ionicons name="list-outline" size={18} color={theme.colors.accent} />
+              </View>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
+                Règles
               </Text>
             </View>
-          ))}
-        </View>
-
-        {/* Bouton d'action */}
-        <View style={styles.actionContainer}>
-          {isJoined ? (
-            <>
-              <View style={[styles.joinedBadge, { backgroundColor: theme.colors.accent + '20' }]}>
-                <Ionicons name="checkmark-circle" size={24} color={theme.colors.accent} />
-                <Text style={[styles.joinedText, { color: theme.colors.accent }]}>
-                  Tu participes à ce défi !
+            {challenge.rules.map((rule, index) => (
+              <View key={index} style={styles.ruleRow}>
+                <LinearGradient
+                  colors={challenge.gradient}
+                  style={styles.ruleBullet}
+                >
+                  <Text style={styles.ruleBulletText}>{index + 1}</Text>
+                </LinearGradient>
+                <Text style={[styles.ruleText, { color: theme.colors.textPrimary }]}>
+                  {rule}
                 </Text>
               </View>
-              <TouchableOpacity
-                style={[styles.leaveBtn, { borderColor: theme.colors.error }]}
-                onPress={handleLeave}
-              >
-                <Text style={[styles.leaveBtnText, { color: theme.colors.error }]}>
-                  Quitter le défi
-                </Text>
-              </TouchableOpacity>
-            </>
-          ) : (
-            <TouchableOpacity onPress={handleJoin} activeOpacity={0.9}>
-              <LinearGradient
-                colors={challenge.gradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.joinBtn}
-              >
-                <Ionicons name="flash" size={20} color="#fff" />
-                <Text style={styles.joinBtnText}>Rejoindre le défi</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
+            ))}
+          </View>
+
+          {/* Récompenses */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.sectionIconWrap, { backgroundColor: theme.colors.surfaceMuted }]}>
+                <Ionicons name="gift-outline" size={18} color={theme.colors.accent} />
+              </View>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
+                Récompenses
+              </Text>
+            </View>
+            <View style={styles.rewardsGrid}>
+              {challenge.rewards.map((reward, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.rewardCard,
+                    { backgroundColor: theme.colors.surface },
+                    index === challenge.rewards.length - 1 && { marginBottom: 0 },
+                  ]}
+                >
+                  <Ionicons
+                    name={index === 0 ? 'medal-outline' : index === 1 ? 'flash-outline' : 'podium-outline'}
+                    size={20}
+                    color={theme.colors.accent}
+                  />
+                  <Text style={[styles.rewardText, { color: theme.colors.textPrimary }]} numberOfLines={2}>
+                    {reward}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Bouton d'action */}
+          <View style={[styles.actionContainer, { paddingBottom: insets.bottom + 24 }]}>
+            {isJoined ? (
+              <>
+                <View style={[styles.joinedBadge, { backgroundColor: theme.colors.accent + '18' }]}>
+                  <Ionicons name="checkmark-circle" size={22} color={theme.colors.accent} />
+                  <Text style={[styles.joinedText, { color: theme.colors.accent }]}>
+                    Tu participes à ce défi
+                  </Text>
+                </View>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.leaveBtn,
+                    { borderColor: theme.colors.error, opacity: pressed ? 0.8 : 1 },
+                  ]}
+                  onPress={handleLeave}
+                >
+                  <Text style={[styles.leaveBtnText, { color: theme.colors.error }]}>
+                    Quitter le défi
+                  </Text>
+                </Pressable>
+              </>
+            ) : (
+              <Pressable onPress={handleJoin} style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}>
+                <LinearGradient
+                  colors={challenge.gradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.joinBtn}
+                >
+                  <Ionicons name="flash" size={22} color="#fff" />
+                  <Text style={styles.joinBtnText}>Rejoindre le défi</Text>
+                </LinearGradient>
+              </Pressable>
+            )}
+          </View>
         </View>
       </ScrollView>
     </>
@@ -265,75 +314,102 @@ const styles = StyleSheet.create({
   },
   hero: {
     paddingHorizontal: 24,
-    paddingBottom: 32,
+    paddingBottom: 40,
     alignItems: 'center',
-    gap: 12,
+  },
+  heroIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   heroIcon: {
-    fontSize: 64,
-    marginBottom: 8,
+    fontSize: 44,
   },
   heroTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '800',
     color: '#fff',
     textAlign: 'center',
+    letterSpacing: -0.5,
   },
   heroStats: {
     flexDirection: 'row',
-    gap: 24,
-    marginTop: 8,
+    gap: 28,
+    marginTop: 10,
   },
   heroStat: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
   heroStatText: {
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.95)',
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   difficultyBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    marginTop: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 14,
   },
   difficultyText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
   },
-  section: {
+  contentCard: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -20,
+    paddingTop: 28,
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    overflow: 'hidden',
+  },
+  section: {
+    marginBottom: 28,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 14,
+  },
+  sectionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 12,
   },
   description: {
     fontSize: 15,
     lineHeight: 24,
   },
-  ruleItem: {
+  ruleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
-    marginBottom: 12,
+    gap: 14,
+    marginBottom: 14,
   },
   ruleBullet: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ruleBulletText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
   },
   ruleText: {
@@ -341,27 +417,38 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
-  rewardItem: {
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 8,
+  rewardsGrid: {
+    gap: 10,
+  },
+  rewardCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 16,
+    borderRadius: 14,
+    marginBottom: 10,
   },
   rewardText: {
+    flex: 1,
     fontSize: 15,
     fontWeight: '500',
   },
   actionContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 8,
     gap: 12,
   },
   joinBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 16,
+    gap: 12,
+    paddingVertical: 18,
     borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   joinBtnText: {
     color: '#fff',
@@ -382,9 +469,9 @@ const styles = StyleSheet.create({
   },
   leaveBtn: {
     alignItems: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
   },
   leaveBtnText: {
     fontSize: 14,

@@ -17,7 +17,6 @@ import {
   Easing,
   ScrollView,
   Pressable,
-  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,16 +29,6 @@ import { useAppTheme } from '@/theme/ThemeProvider';
 import { FeedCard } from '@/components/FeedCard';
 import { getComments, addComment, Comment, toggleCommentLike } from '@/services/likesApi';
 import { useUserProfile } from '@/hooks/useUserProfile';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-// Quick action items for stories section
-const QUICK_ACTIONS = [
-  { id: 'workout', icon: 'add', label: 'Séance', gradient: ['#10b981', '#059669'] },
-  { id: 'challenge', icon: 'trophy', label: 'Défi', gradient: ['#f59e0b', '#d97706'] },
-  { id: 'pr', icon: 'flame', label: 'PR', gradient: ['#ef4444', '#dc2626'] },
-  { id: 'streak', icon: 'flash', label: 'Streak', gradient: ['#8b5cf6', '#7c3aed'] },
-];
 
 // Composant pour afficher un commentaire avec like
 const CommentItem: React.FC<{
@@ -146,7 +135,6 @@ const FeedScreen: React.FC = () => {
   const { profile } = useUserProfile();
   const [refreshing, setRefreshing] = useState(false);
   const headerAnim = useRef(new Animated.Value(0)).current;
-  const storiesAnim = useRef(new Animated.Value(0)).current;
   const fabAnim = useRef(new Animated.Value(1)).current;
 
   const currentUserId = profile?.id || 'guest-user';
@@ -168,20 +156,12 @@ const FeedScreen: React.FC = () => {
   const [postingComment, setPostingComment] = useState(false);
 
   useEffect(() => {
-    Animated.stagger(100, [
-      Animated.timing(headerAnim, {
-        toValue: 1,
-        duration: 500,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-      Animated.timing(storiesAnim, {
-        toValue: 1,
-        duration: 400,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.timing(headerAnim, {
+      toValue: 1,
+      duration: 500,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
 
     // FAB pulse animation
     Animated.loop(
@@ -244,69 +224,6 @@ const FeedScreen: React.FC = () => {
       setPostingComment(false);
     }
   };
-
-  const handleQuickAction = (actionId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    if (actionId === 'workout') {
-      router.push('/workout/create');
-    }
-  };
-
-  // Stories/Quick Actions Component
-  const StoriesSection = () => (
-    <Animated.View
-      style={[
-        styles.storiesSection,
-        {
-          opacity: storiesAnim,
-          transform: [
-            { translateY: storiesAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
-          ],
-        },
-      ]}
-    >
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.storiesContent}
-      >
-        {/* Your story / Create */}
-        <Pressable
-          style={styles.storyItem}
-          onPress={() => handleQuickAction('workout')}
-        >
-          <LinearGradient
-            colors={['#6366f1', '#8b5cf6']}
-            style={styles.storyAvatarGradient}
-          >
-            <View style={[styles.storyAvatarInner, { backgroundColor: theme.colors.background }]}>
-              <Ionicons name="add" size={24} color="#6366f1" />
-            </View>
-          </LinearGradient>
-          <Text style={[styles.storyLabel, { color: theme.colors.textPrimary }]}>Ta story</Text>
-        </Pressable>
-
-        {/* Quick actions */}
-        {QUICK_ACTIONS.map((action) => (
-          <Pressable
-            key={action.id}
-            style={styles.storyItem}
-            onPress={() => handleQuickAction(action.id)}
-          >
-            <LinearGradient
-              colors={action.gradient as [string, string]}
-              style={styles.quickActionCircle}
-            >
-              <Ionicons name={action.icon as any} size={22} color="#FFFFFF" />
-            </LinearGradient>
-            <Text style={[styles.storyLabel, { color: theme.colors.textPrimary }]}>
-              {action.label}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-    </Animated.View>
-  );
 
   const renderItem = ({ item, index }: any) => (
     <FeedCard
@@ -433,7 +350,6 @@ const FeedScreen: React.FC = () => {
         </View>
       ) : items.length === 0 ? (
         <ScrollView contentContainerStyle={styles.emptyScrollContent}>
-          <StoriesSection />
           <View style={styles.emptyState}>
             <LinearGradient
               colors={['#6366f1', '#8b5cf6']}
@@ -491,7 +407,6 @@ const FeedScreen: React.FC = () => {
               tintColor="#6366f1"
             />
           }
-          ListHeaderComponent={<StoriesSection />}
           ListFooterComponent={
             nextCursor ? (
               <Pressable
@@ -769,42 +684,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 10,
     fontWeight: '700',
-  },
-  // Stories section
-  storiesSection: {
-    marginBottom: 16,
-  },
-  storiesContent: {
-    paddingHorizontal: 16,
-    gap: 16,
-  },
-  storyItem: {
-    alignItems: 'center',
-    gap: 6,
-  },
-  storyAvatarGradient: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    padding: 3,
-  },
-  storyAvatarInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 31,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quickActionCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  storyLabel: {
-    fontSize: 11,
-    fontWeight: '600',
   },
   listContent: {
     paddingHorizontal: 16,
