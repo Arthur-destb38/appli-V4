@@ -27,6 +27,7 @@ from .routes import sync
 from .routes import users
 from .routes import seed
 from .routes import messaging
+from .routes import admin
 from .seeds import seed_exercises
 from .services.exercise_loader import import_exercises_from_url
 from sqlmodel import Session, select, func
@@ -97,6 +98,7 @@ app.include_router(notifications.router)
 app.include_router(leaderboard.router)
 app.include_router(seed.router)
 app.include_router(messaging.router)
+app.include_router(admin.router)
 
 
 @app.get("/", tags=["meta"], summary="API metadata")
