@@ -19,6 +19,9 @@ _ENGINE: Optional[Engine] = None
 def _database_url() -> str:
     url = os.getenv("DATABASE_URL")
     if url:
+        # Render utilise postgres:// mais SQLAlchemy veut postgresql://
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
         return url
     return f"sqlite:///{DEFAULT_DB_PATH}"
 
@@ -61,51 +64,35 @@ def init_db() -> None:
 
 
 def _ensure_slug_column(engine: Engine) -> None:
-    from .models import Exercise, Share, Follower
+    from .models import Exercise
     from .utils.slug import make_exercise_slug
 
+    url = _database_url()
+    parsed_url = make_url(url)
+    is_sqlite = parsed_url.get_backend_name() == "sqlite"
+
     with engine.connect() as connection:
-        result = connection.execute(text("PRAGMA table_info(exercise)"))
-        columns = {row[1] for row in result}
-        if "slug" not in columns:
-            connection.execute(text("ALTER TABLE exercise ADD COLUMN slug TEXT"))
-            connection.execute(
-                text("CREATE UNIQUE INDEX IF NOT EXISTS ix_exercise_slug ON exercise (slug)")
-            )
-        result = connection.execute(text("PRAGMA table_info(share)"))
-        share_columns = {row[1] for row in result}
-        if "share_id" not in share_columns:
-            connection.execute(
-                text(
-                    "CREATE TABLE IF NOT EXISTS share ("
-                    "share_id TEXT PRIMARY KEY,"
-                    "owner_id TEXT NOT NULL,"
-                    "owner_username TEXT NOT NULL,"
-                    "workout_title TEXT NOT NULL,"
-                    "exercise_count INTEGER NOT NULL,"
-                    "set_count INTEGER NOT NULL,"
-                    "snapshot JSON NOT NULL,"
-                    "created_at INTEGER NOT NULL,"
-                    "FOREIGN KEY(owner_id) REFERENCES user(id)"
-                    ")"
+        if is_sqlite:
+            # SQLite: utiliser PRAGMA
+            result = connection.execute(text("PRAGMA table_info(exercise)"))
+            columns = {row[1] for row in result}
+            if "slug" not in columns:
+                connection.execute(text("ALTER TABLE exercise ADD COLUMN slug TEXT"))
+                connection.execute(
+                    text("CREATE UNIQUE INDEX IF NOT EXISTS ix_exercise_slug ON exercise (slug)")
                 )
-            )
-        result = connection.execute(text("PRAGMA table_info(follower)"))
-        follower_columns = {row[1] for row in result}
-        if "follower_id" not in follower_columns:
-            connection.execute(
-                text(
-                    "CREATE TABLE IF NOT EXISTS follower ("
-                    "follower_id TEXT NOT NULL,"
-                    "followed_id TEXT NOT NULL,"
-                    "created_at INTEGER NOT NULL,"
-                    "PRIMARY KEY (follower_id, followed_id),"
-                    "FOREIGN KEY(follower_id) REFERENCES user(id),"
-                    "FOREIGN KEY(followed_id) REFERENCES user(id)"
-                    ")"
+        else:
+            # PostgreSQL: utiliser information_schema
+            result = connection.execute(text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name='exercise'"
+            ))
+            columns = {row[0] for row in result}
+            if "slug" not in columns:
+                connection.execute(text("ALTER TABLE exercise ADD COLUMN slug TEXT"))
+                connection.execute(
+                    text("CREATE UNIQUE INDEX IF NOT EXISTS ix_exercise_slug ON exercise (slug)")
                 )
-            )
-        connection.commit()
         connection.commit()
 
     with Session(engine) as session:
@@ -121,9 +108,21 @@ def _ensure_slug_column(engine: Engine) -> None:
 
 
 def _ensure_workout_exercise_columns(engine: Engine) -> None:
+    url = _database_url()
+    parsed_url = make_url(url)
+    is_sqlite = parsed_url.get_backend_name() == "sqlite"
+    
     with engine.connect() as connection:
-        result = connection.execute(text("PRAGMA table_info(workoutexercise)"))
-        columns = {row[1] for row in result}
+        if is_sqlite:
+            result = connection.execute(text("PRAGMA table_info(workoutexercise)"))
+            columns = {row[1] for row in result}
+        else:
+            result = connection.execute(text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name='workoutexercise'"
+            ))
+            columns = {row[0] for row in result}
+            
         if "planned_sets" not in columns:
             connection.execute(text("ALTER TABLE workoutexercise ADD COLUMN planned_sets INTEGER"))
         connection.commit()
