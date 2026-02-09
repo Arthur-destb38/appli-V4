@@ -103,6 +103,7 @@ export default function LoginScreen() {
               placeholderTextColor={theme.colors.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="username"
               editable={!isLoading}
             />
           </View>
@@ -126,6 +127,7 @@ export default function LoginScreen() {
               placeholderTextColor={theme.colors.textSecondary}
               secureTextEntry
               autoCapitalize="none"
+              autoComplete="current-password"
               editable={!isLoading}
             />
           </View>

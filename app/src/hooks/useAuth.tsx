@@ -59,9 +59,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
 
   // Charger les données sauvegardées au démarrage
   useEffect(() => {
-    // NE RIEN CHARGER - forcer l'utilisateur à se connecter
-    console.log('🚫 Pas de chargement de session - connexion requise');
-    setIsLoading(false);
+    loadStoredAuth();
   }, []);
 
   const loadStoredAuth = async () => {

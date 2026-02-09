@@ -3,16 +3,10 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Index() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const { theme } = useAppTheme();
-
-  // 🧹 EFFACER LE STORAGE AU PREMIER LANCEMENT
-  useEffect(() => {
-    AsyncStorage.clear().then(() => console.log('🧹 Storage effacé'));
-  }, []);
 
   console.log('🏠 Index - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated, 'user:', user?.username);
 

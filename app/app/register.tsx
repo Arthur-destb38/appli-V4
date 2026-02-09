@@ -169,6 +169,7 @@ export default function RegisterScreen() {
               placeholderTextColor={theme.colors.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="username-new"
               editable={!isLoading}
             />
           </View>
@@ -193,6 +194,7 @@ export default function RegisterScreen() {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              autoComplete="email"
               editable={!isLoading}
             />
           </View>
@@ -219,6 +221,7 @@ export default function RegisterScreen() {
               placeholderTextColor={theme.colors.textSecondary}
               secureTextEntry
               autoCapitalize="none"
+              autoComplete="password-new"
               editable={!isLoading}
             />
           </View>
@@ -242,6 +245,7 @@ export default function RegisterScreen() {
               placeholderTextColor={theme.colors.textSecondary}
               secureTextEntry
               autoCapitalize="none"
+              autoComplete="password-new"
               editable={!isLoading}
             />
           </View>

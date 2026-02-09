@@ -107,13 +107,30 @@ def get_feed(
     session: Session = Depends(get_session),
     current_user: User = Depends(_get_current_user_required)
 ) -> FeedResponse:
-    # Mode démo: créer l'utilisateur s'il n'existe pas
-    user = current_user  # Use authenticated user
+    user = current_user
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
 
-    # Affiche les partages publics de tous les utilisateurs (simplifié pour le mode démo)
-    statement = select(Share)
+    # Récupérer les IDs des utilisateurs suivis
+    followed_ids = session.exec(
+        select(Follower.followed_id).where(Follower.follower_id == user.id)
+    ).all()
+    
+    # Construire la requête du feed
+    # Si l'utilisateur ne suit personne, afficher seulement ses propres posts
+    # Exception: le compte demo voit tout le monde pour la démo
+    if user.id == 'demo' or user.id == 'guest-user':
+        # Mode démo: afficher tous les posts publics
+        statement = select(Share)
+    elif followed_ids:
+        # Afficher les posts des utilisateurs suivis + ses propres posts
+        statement = select(Share).where(
+            Share.owner_id.in_(followed_ids + [user.id])
+        )
+    else:
+        # Pas de followers: afficher seulement ses propres posts
+        statement = select(Share).where(Share.owner_id == user.id)
+    
     parsed_cursor: Optional[datetime] = None
     if cursor:
         try:
