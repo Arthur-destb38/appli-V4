@@ -1,8 +1,8 @@
 """Routes d'administration."""
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
-from api.db import get_session
-from api.models import User
+from ..db import get_session
+from ..models import User
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
