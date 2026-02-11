@@ -758,7 +758,7 @@ export default function LibraryScreen() {
               {activeFilter === 'draft' && (
                 <Pressable
                   style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-                  onPress={() => router.push('/workout/create')}
+                  onPress={() => router.push('/create')}
                 >
                   <LinearGradient
                     colors={currentColors.accentGradient}
@@ -802,7 +802,7 @@ export default function LibraryScreen() {
           style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-            router.push('/workout/create');
+            router.push('/create');
           }}
         >
           <LinearGradient

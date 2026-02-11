@@ -66,7 +66,7 @@ export default function ProfileScreen() {
   const totalExercises = workouts.reduce((acc, w) => acc + w.exercises.length, 0);
 
   const menuItems = [
-    { label: 'Mon profil public', route: `/profile/${user?.id}`, icon: 'person' as const, color: '#6366f1' },
+    ...(user?.id ? [{ label: 'Mon profil public', route: `/profile/${user.id}`, icon: 'person' as const, color: '#6366f1' as const }] : []),
     { label: 'Progression', route: '/history', icon: 'trending-up' as const, color: '#10b981' },
     { label: 'Mon Programme', route: '/programme', icon: 'calendar' as const, color: '#f59e0b' },
     { label: 'Mes Objectifs', route: '/objectives', icon: 'flag' as const, color: '#ec4899' },

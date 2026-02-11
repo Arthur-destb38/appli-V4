@@ -383,7 +383,7 @@ const FeedScreen: React.FC = () => {
                   styles.emptySecondaryBtn,
                   { borderColor: theme.colors.border, opacity: pressed ? 0.7 : 1 },
                 ]}
-                onPress={() => router.push('/workout/create')}
+                onPress={() => router.push('/create')}
               >
                 <Ionicons name="add" size={18} color={theme.colors.textPrimary} />
                 <Text style={[styles.emptySecondaryText, { color: theme.colors.textPrimary }]}>
@@ -460,7 +460,7 @@ const FeedScreen: React.FC = () => {
           style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-            router.push('/workout/create');
+            router.push('/create');
           }}
         >
           <LinearGradient

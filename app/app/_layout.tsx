@@ -1,6 +1,7 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { View, StyleSheet } from 'react-native';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -9,6 +10,8 @@ import { UserProfileProvider } from '@/hooks/useUserProfile';
 import { AuthProvider } from '@/hooks/useAuth';
 import { PreferencesProvider } from '@/hooks/usePreferences';
 import { AppThemeProvider } from '@/theme/ThemeProvider';
+import { DemoProvider } from '../src/contexts/DemoContext';
+import { DemoTourOverlay } from '../src/components/DemoTourOverlay';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -20,7 +23,9 @@ export default function RootLayout() {
           <AuthProvider>
             <UserProfileProvider>
               <WorkoutsProvider>
-              <Stack screenOptions={{ headerShown: false }}>
+                <DemoProvider>
+                  <View style={styles.root}>
+                    <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen
                   name="create"
@@ -61,6 +66,10 @@ export default function RootLayout() {
                 <Stack.Screen
                   name="legal/privacy"
                   options={{ title: 'Politique de confidentialité', headerShown: true, headerBackTitle: 'Retour' }}
+                />
+                <Stack.Screen
+                  name="guide-utilisation"
+                  options={{ title: 'Guide d\'utilisation', headerShown: false }}
                 />
                 <Stack.Screen
                   name="profile/[id]"
@@ -122,7 +131,10 @@ export default function RootLayout() {
                   name="profile-setup-simple"
                   options={{ title: 'Configuration du profil', headerShown: false }}
                 />
-              </Stack>
+                  </Stack>
+                  <DemoTourOverlay />
+                </View>
+                </DemoProvider>
             </WorkoutsProvider>
           </UserProfileProvider>
         </AuthProvider>
@@ -132,3 +144,7 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});

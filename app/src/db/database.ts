@@ -8,6 +8,7 @@ export type WorkoutRow = {
   id: number;
   client_id: string | null;
   server_id: number | null;
+  user_id: string | null;
   title: string;
   status: string;
   created_at: number;
@@ -141,6 +142,7 @@ export const runMigrations = (db: DatabaseConnection) => {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         client_id TEXT,
         server_id INTEGER,
+        user_id TEXT,
         title TEXT NOT NULL,
         status TEXT NOT NULL,
         created_at INTEGER NOT NULL,
@@ -150,6 +152,7 @@ export const runMigrations = (db: DatabaseConnection) => {
     );
     ensureColumn('workouts', 'client_id', 'TEXT');
     ensureColumn('workouts', 'server_id', 'INTEGER');
+    ensureColumn('workouts', 'user_id', 'TEXT');
     ensureColumn('workouts', 'deleted_at', 'INTEGER');
     tx.executeSql(
       `CREATE TABLE IF NOT EXISTS workout_exercises (

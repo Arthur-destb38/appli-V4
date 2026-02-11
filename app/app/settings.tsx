@@ -20,6 +20,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useDemo } from '../src/contexts/DemoContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { usePreferences, accentColors, heroColors, translations, useTranslations } from '@/hooks/usePreferences';
@@ -92,6 +93,7 @@ export default function SettingsScreen() {
   const [profileData, setProfileData] = useState<ProfileSetupData>({
     consent_to_public_share: false,
   });
+  const { startDemo } = useDemo();
   
   // États pour les informations de base
   const [username, setUsername] = useState('');
@@ -926,6 +928,40 @@ export default function SettingsScreen() {
                 </TouchableOpacity>
               </View>
             )}
+          </View>
+
+          {/* Guide d'utilisation */}
+          <View style={[styles.section, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionHeaderLeft}>
+                <View style={[styles.sectionIcon, { backgroundColor: '#6366f1' + '20' }]}>
+                  <Ionicons name="book" size={20} color="#6366f1" />
+                </View>
+                <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
+                  {t('guideTitle')}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.sectionContent}>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: theme.colors.accent + '15' }]}
+                onPress={() => router.push('/guide-utilisation')}
+              >
+                <Ionicons name="play-circle-outline" size={20} color={theme.colors.accent} />
+                <Text style={[styles.actionButtonText, { color: theme.colors.accent }]}>
+                  {t('guideUsage')}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: '#10b981' + '15', marginTop: 10 }]}
+                onPress={() => { router.replace('/(tabs)' as any); startDemo(); }}
+              >
+                <Ionicons name="videocam-outline" size={20} color="#10b981" />
+                <Text style={[styles.actionButtonText, { color: '#10b981' }]}>
+                  {t('demoButton')}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Actions */}

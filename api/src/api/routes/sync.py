@@ -6,8 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select
 
 from ..db import get_session
-from ..models import SyncEvent, Workout
+from ..models import SyncEvent, User, Workout
 from ..schemas import SyncPullResponse, SyncPushRequest, SyncPushResponse
+from ..utils.dependencies import get_current_user
 
 router = APIRouter(prefix="/sync", tags=["sync"])
 
@@ -36,7 +37,11 @@ def _get_workout_for_payload(session: Session, payload: dict) -> Workout:
 
 
 @router.post("/push", response_model=SyncPushResponse, status_code=status.HTTP_200_OK)
-def push_mutations(payload: SyncPushRequest, session: Session = Depends(get_session)) -> SyncPushResponse:
+def push_mutations(
+    payload: SyncPushRequest,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> SyncPushResponse:
     if not payload.mutations:
         return SyncPushResponse(processed=0, server_time=datetime.now(timezone.utc), results=[])
 
@@ -48,10 +53,9 @@ def push_mutations(payload: SyncPushRequest, session: Session = Depends(get_sess
         payload_data = mutation.payload or {}
 
         if action == "create-workout":
-            # Utiliser le user_id du payload ou générer un ID par défaut
-            user_id = payload_data.get("user_id") or payload_data.get("userId") or "guest-user"
+            # Utiliser le user_id de l'utilisateur authentifié
             workout = Workout(
-                user_id=user_id,
+                user_id=current_user.id,
                 client_id=payload_data.get("client_id"),
                 title=payload_data.get("title", ""),
                 status=payload_data.get("status", "draft"),
@@ -65,14 +69,23 @@ def push_mutations(payload: SyncPushRequest, session: Session = Depends(get_sess
                 results.append({"queue_id": mutation.queue_id, "server_id": workout.id})
         elif action == "update-title":
             workout = _get_workout_for_payload(session, payload_data)
+            # Vérifier que le workout appartient à l'utilisateur
+            if workout.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Not authorized to modify this workout")
             workout.title = payload_data.get("title", workout.title)
             workout.updated_at = _ms_to_datetime(payload_data.get("updated_at"), created_at)
         elif action == "complete-workout":
             workout = _get_workout_for_payload(session, payload_data)
+            # Vérifier que le workout appartient à l'utilisateur
+            if workout.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Not authorized to modify this workout")
             workout.status = "completed"
             workout.updated_at = _ms_to_datetime(payload_data.get("updated_at"), created_at)
         elif action == "delete-workout":
             workout = _get_workout_for_payload(session, payload_data)
+            # Vérifier que le workout appartient à l'utilisateur
+            if workout.user_id != current_user.id:
+                raise HTTPException(status_code=403, detail="Not authorized to delete this workout")
             workout.deleted_at = _ms_to_datetime(payload_data.get("deleted_at"), created_at)
             workout.updated_at = _ms_to_datetime(payload_data.get("updated_at"), created_at)
         else:
@@ -93,11 +106,18 @@ def push_mutations(payload: SyncPushRequest, session: Session = Depends(get_sess
 def pull_changes(
     since: int = Query(0, ge=0),
     session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> SyncPullResponse:
     cutoff = datetime.fromtimestamp(since / 1000, tz=timezone.utc)
     events: list[dict] = []
 
-    workout_stmt = select(Workout).where(Workout.updated_at > cutoff).order_by(Workout.updated_at.asc())
+    # Filtrer les workouts par user_id
+    workout_stmt = (
+        select(Workout)
+        .where(Workout.user_id == current_user.id)
+        .where(Workout.updated_at > cutoff)
+        .order_by(Workout.updated_at.asc())
+    )
     workouts = session.exec(workout_stmt).all()
     for workout in workouts:
         events.append({
@@ -106,6 +126,7 @@ def pull_changes(
             "payload": {
                 "server_id": workout.id,
                 "client_id": workout.client_id,
+                "user_id": workout.user_id,
                 "title": workout.title,
                 "status": workout.status,
                 "created_at": workout.created_at.isoformat(),

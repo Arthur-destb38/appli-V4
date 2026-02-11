@@ -135,3 +135,14 @@ export const removeMutation = async (id: number): Promise<void> => {
 
   await runSql(`DELETE FROM mutation_queue WHERE id = ?`, [id]);
 };
+
+export const clearAllMutations = async (): Promise<void> => {
+  if (isUsingFallbackDatabase()) {
+    const store = getFallbackStore();
+    store.mutationQueue = [];
+    store.counters.mutation = 0;
+    return;
+  }
+
+  await runSql(`DELETE FROM mutation_queue`);
+};

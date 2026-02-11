@@ -379,11 +379,12 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     const bootstrap = async () => {
       await refreshPendingCount();
-      await pullFromServer();
+      // Forcer un pull complet depuis le début (timestamp 0)
+      await pullFromServer(0);
       await flushQueue();
     };
     bootstrap().catch((error) => console.warn('Failed to initialize sync', error));
-  }, [flushQueue, pullFromServer, refreshPendingCount]);
+  }, [flushQueue, pullFromServer, refreshPendingCount, profile?.id]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
@@ -426,13 +427,15 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
   const createDraft = useCallback(
     async (title = 'Nouvelle séance') => {
       const normalizedTitle = title.trim() || 'Nouvelle séance';
-      const { id, client_id, created_at, updated_at } = await createWorkout(normalizedTitle);
+      const userId = profile?.id || null;
+      const { id, client_id, created_at, updated_at } = await createWorkout(normalizedTitle, userId);
       let refreshedData: WorkoutWithRelations[] | undefined;
       await runMutation(
         'create-workout',
         {
           workoutId: id,
           client_id,
+          user_id: userId,
           title: normalizedTitle,
           status: 'draft',
           created_at,
@@ -447,7 +450,7 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
       }
       return refreshedData.find((item) => item.workout.id === id);
     },
-    [refresh, runMutation]
+    [profile, refresh, runMutation]
   );
 
   const updateTitleAction = useCallback(

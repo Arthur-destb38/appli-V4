@@ -3,6 +3,7 @@ export type WorkoutStatus = 'draft' | 'completed';
 export interface Workout {
   client_id?: string | null;
   server_id?: number | null;
+  user_id?: string | null;
   id: number;
   title: string;
   status: WorkoutStatus;

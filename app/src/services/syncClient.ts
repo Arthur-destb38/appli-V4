@@ -1,6 +1,4 @@
-import { buildApiUrl, getAuthHeaders } from '@/utils/api';
-
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'https://appli-v2.onrender.com';
+import { buildApiUrl, getAuthHeaders, getApiBaseUrl } from '@/utils/api';
 
 export type PushMutationPayload = {
   queue_id: number;
@@ -29,7 +27,8 @@ export const pushMutations = async (
   }
 
   const headers = await getAuthHeaders();
-  const response = await fetch(`${API_BASE_URL}/sync/push`, {
+  const url = buildApiUrl('/sync/push');
+  const response = await fetch(url, {
     method: 'POST',
     headers,
     body: JSON.stringify({ mutations }),
@@ -57,7 +56,8 @@ export type PullResponse = {
 
 export const pullChanges = async (since: number): Promise<PullResponse> => {
   const headers = await getAuthHeaders();
-  const response = await fetch(`${API_BASE_URL}/sync/pull?since=${since}`, {
+  const url = buildApiUrl(`/sync/pull?since=${since}`);
+  const response = await fetch(url, {
     headers,
   });
 

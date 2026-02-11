@@ -868,7 +868,7 @@ export default function ExploreScreen() {
               </Text>
               <Pressable
                 style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-                onPress={() => router.push('/workout/create')}
+                onPress={() => router.push('/create')}
               >
                 <LinearGradient
                   colors={['#6366f1', '#8b5cf6']}
@@ -899,7 +899,7 @@ export default function ExploreScreen() {
           style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
           onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-            router.push('/workout/create');
+            router.push('/create');
           }}
         >
           <LinearGradient

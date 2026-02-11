@@ -498,7 +498,7 @@ export const HistoryScreen: React.FC = () => {
           {!searchQuery && (
             <Pressable
               style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-              onPress={() => router.push('/workout/create')}
+              onPress={() => router.push('/create')}
             >
               <LinearGradient
                 colors={['#10b981', '#059669']}

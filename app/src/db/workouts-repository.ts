@@ -33,6 +33,7 @@ const mapWorkoutRow = (row: WorkoutRow): Workout => ({
   id: row.id,
   client_id: row.client_id,
   server_id: row.server_id,
+  user_id: row.user_id,
   title: row.title,
   status: row.status as WorkoutStatus,
   created_at: row.created_at,
@@ -93,13 +94,15 @@ const mapFallbackData = (): WorkoutWithRelations[] => {
   });
 };
 
-export const fetchWorkouts = async (): Promise<WorkoutWithRelations[]> => {
+export const fetchWorkouts = async (userId?: string | null): Promise<WorkoutWithRelations[]> => {
   if (isUsingFallbackDatabase()) {
     return mapFallbackData();
   }
 
+  // Ne pas filtrer par user_id localement - le filtrage se fait côté serveur
+  // La base locale contient uniquement les données de l'utilisateur connecté
   const workoutsResult = await runSql(
-    'SELECT * FROM workouts WHERE deleted_at IS NULL ORDER BY updated_at DESC'
+    `SELECT * FROM workouts WHERE deleted_at IS NULL ORDER BY updated_at DESC`
   );
   const exercisesResult = await runSql(
     'SELECT * FROM workout_exercises WHERE deleted_at IS NULL ORDER BY order_index ASC'
@@ -122,7 +125,8 @@ export const fetchWorkouts = async (): Promise<WorkoutWithRelations[]> => {
 };
 
 export const createWorkout = async (
-  title: string
+  title: string,
+  userId?: string | null
 ): Promise<{ id: number; client_id: string | null; created_at: number; updated_at: number }> => {
   if (isUsingFallbackDatabase()) {
     const store = getFallbackStore();
@@ -133,6 +137,7 @@ export const createWorkout = async (
       id,
       client_id: clientId,
       server_id: null,
+      user_id: userId || null,
       title,
       status: 'draft',
       created_at: now,
@@ -146,8 +151,8 @@ export const createWorkout = async (
   const now = Date.now();
   const clientId = generateClientId();
   const result = await runSql(
-    'INSERT INTO workouts (client_id, server_id, title, status, created_at, updated_at) VALUES (?, NULL, ?, ?, ?, ?)',
-    [clientId, title, 'draft', now, now]
+    'INSERT INTO workouts (client_id, server_id, user_id, title, status, created_at, updated_at) VALUES (?, NULL, ?, ?, ?, ?, ?)',
+    [clientId, userId || null, title, 'draft', now, now]
   );
   const insertedId = result.insertId ?? 0;
   return { id: insertedId, client_id: clientId, created_at: now, updated_at: now };
@@ -155,7 +160,8 @@ export const createWorkout = async (
 
 export const createWorkoutWithServerId = async (
   title: string,
-  serverId: string | number
+  serverId: string | number,
+  userId?: string | null
 ): Promise<{ id: number; client_id: string | null; created_at: number; updated_at: number }> => {
   if (isUsingFallbackDatabase()) {
     const store = getFallbackStore();
@@ -167,6 +173,7 @@ export const createWorkoutWithServerId = async (
       id,
       client_id: clientId,
       server_id: serverIdNum,
+      user_id: userId || null,
       title,
       status: 'draft',
       created_at: now,
@@ -181,8 +188,8 @@ export const createWorkoutWithServerId = async (
   const clientId = generateClientId();
   const serverIdNum = typeof serverId === 'string' ? parseInt(serverId, 10) : serverId;
   const result = await runSql(
-    'INSERT INTO workouts (client_id, server_id, title, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-    [clientId, serverIdNum, title, 'draft', now, now]
+    'INSERT INTO workouts (client_id, server_id, user_id, title, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [clientId, serverIdNum, userId || null, title, 'draft', now, now]
   );
   const insertedId = result.insertId ?? 0;
   return { id: insertedId, client_id: clientId, created_at: now, updated_at: now };

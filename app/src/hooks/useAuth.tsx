@@ -238,6 +238,20 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
         });
       }
 
+      // Effacer TOUTES les données locales
+      try {
+        const { clearAll } = await import('@/db/workouts-repository');
+        const { clearAllMutations } = await import('@/db/mutation-queue');
+        const { clearSyncState } = await import('@/db/sync-state');
+        
+        await clearAll();
+        await clearAllMutations();
+        await clearSyncState();
+        console.log('✅ Toutes les données locales effacées');
+      } catch (error) {
+        console.warn('⚠️ Erreur lors de l\'effacement des données locales:', error);
+      }
+
       // Effacer complètement la session
       await clearAuth();
       console.log('✅ Déconnexion réussie - session effacée');

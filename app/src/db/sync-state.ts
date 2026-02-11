@@ -37,3 +37,13 @@ export const setLastPullTimestamp = async (timestamp: number): Promise<void> => 
     [LAST_PULL_KEY, String(timestamp)]
   );
 };
+
+export const clearSyncState = async (): Promise<void> => {
+  if (isUsingFallbackDatabase()) {
+    const store = getFallbackStore();
+    store.syncState = {};
+    return;
+  }
+
+  await runSql(`DELETE FROM sync_state`);
+};
