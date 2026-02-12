@@ -279,7 +279,7 @@ def list_messages(
     # Marquer les messages comme lus
     for msg in messages:
         if msg.sender_id != user_id and msg.read_at is None:
-            msg.read_at = datetime.utcnow()
+            msg.read_at = datetime.now(timezone.utc)
     session.commit()
 
     # Inverser pour avoir l'ordre chronologique (ancien -> récent)
@@ -321,7 +321,7 @@ def send_message(
     session.add(message)
 
     # Mettre à jour la date du dernier message
-    conversation.last_message_at = datetime.utcnow()
+    conversation.last_message_at = datetime.now(timezone.utc)
     session.commit()
     session.refresh(message)
 
@@ -359,7 +359,7 @@ def mark_as_read(
     )
     unread_messages = session.exec(statement).all()
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     for msg in unread_messages:
         msg.read_at = now
     session.commit()

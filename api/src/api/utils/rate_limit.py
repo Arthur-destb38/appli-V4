@@ -16,7 +16,7 @@ def is_rate_limited(session: Session, username: str, ip_address: str) -> bool:
     cooldown_minutes = int(os.getenv("LOGIN_COOLDOWN_MINUTES", "15"))
     
     # Check attempts in the last cooldown period
-    cutoff_time = datetime.utcnow() - timedelta(minutes=cooldown_minutes)
+    cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=cooldown_minutes)
     
     # Count failed attempts for this username or IP
     username_attempts = session.exec(
@@ -59,7 +59,7 @@ def get_remaining_cooldown(session: Session, username: str, ip_address: str) -> 
         return None
     
     cooldown_minutes = int(os.getenv("LOGIN_COOLDOWN_MINUTES", "15"))
-    cutoff_time = datetime.utcnow() - timedelta(minutes=cooldown_minutes)
+    cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=cooldown_minutes)
     
     # Get the most recent failed attempt
     recent_attempt = session.exec(
@@ -76,7 +76,7 @@ def get_remaining_cooldown(session: Session, username: str, ip_address: str) -> 
     if not recent_attempt:
         return None
     
-    elapsed = datetime.utcnow() - recent_attempt.created_at
+    elapsed = datetime.now(timezone.utc) - recent_attempt.created_at
     remaining = cooldown_minutes - elapsed.total_seconds() / 60
     
     return max(0, int(remaining))
@@ -84,7 +84,7 @@ def get_remaining_cooldown(session: Session, username: str, ip_address: str) -> 
 
 def cleanup_old_attempts(session: Session) -> None:
     """Clean up old login attempts (older than 24 hours)."""
-    cutoff_time = datetime.utcnow() - timedelta(hours=24)
+    cutoff_time = datetime.now(timezone.utc) - timedelta(hours=24)
     
     old_attempts = session.exec(
         select(LoginAttempt).where(LoginAttempt.created_at < cutoff_time)
