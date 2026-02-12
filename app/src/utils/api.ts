@@ -6,13 +6,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const CLOUD_API_URL = 'https://appli-v2.onrender.com';
 
 // Pour le dev local
-const LOCAL_API_IP = 'http://192.168.1.175:8000';        
+const LOCAL_API_IP = 'http://192.168.1.138:8000';        
 const LOCAL_API_WEB = 'http://localhost:8000';       
 
 // Toggle pour basculer entre local et cloud
 // ⚠️ Pour APK/Production: mettre à false
 // ⚠️ Pour Expo Go local: mettre à true
-const USE_LOCAL_API = __DEV__ ? true : false;
+const USE_LOCAL_API = true; // 🔧 Retour au local (cloud a des problèmes)
 
 export const getApiBaseUrl = () => {
   // Mode dev local activé (seulement en développement)
