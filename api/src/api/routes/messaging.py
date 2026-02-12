@@ -1,7 +1,7 @@
 """Routes pour la messagerie privée entre utilisateurs."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status

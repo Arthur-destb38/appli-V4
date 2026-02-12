@@ -1,6 +1,6 @@
 """Rate limiting utilities for authentication."""
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from sqlmodel import Session, select, func
