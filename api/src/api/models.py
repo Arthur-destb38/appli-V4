@@ -1,6 +1,6 @@
 """Database models for the Fitness App."""
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlmodel import Field, SQLModel
@@ -10,12 +10,17 @@ def generate_uuid() -> str:
     return str(uuid.uuid4())
 
 
+def utcnow() -> datetime:
+    """Return current UTC time with timezone info."""
+    return datetime.now(timezone.utc)
+
+
 class User(SQLModel, table=True):
     id: str = Field(default_factory=generate_uuid, primary_key=True)
     username: str = Field(unique=True, index=True)
     email: str = Field(unique=True, index=True)
     password_hash: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
     consent_to_public_share: bool = Field(default=False)
     avatar_url: Optional[str] = Field(default=None)
     bio: Optional[str] = Field(default=None)
@@ -59,8 +64,8 @@ class Workout(SQLModel, table=True):
     started_at: Optional[datetime] = None
     ended_at: Optional[datetime] = None
     deleted_at: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
 
 
 class Exercise(SQLModel, table=True):
@@ -93,7 +98,7 @@ class Set(SQLModel, table=True):
     duration_seconds: Optional[int] = None
     completed: bool = Field(default=False)
     done_at: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class Program(SQLModel, table=True):
@@ -102,7 +107,7 @@ class Program(SQLModel, table=True):
     title: str = Field(default="Programme")
     objective: Optional[str] = None
     duration_weeks: int = Field(default=4)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class ProgramWorkout(SQLModel, table=True):
@@ -144,7 +149,7 @@ class Share(SQLModel, table=True):
     workout_title: str
     exercise_count: int = Field(default=0)
     set_count: int = Field(default=0)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class Like(SQLModel, table=True):
@@ -152,7 +157,7 @@ class Like(SQLModel, table=True):
     id: str = Field(default_factory=generate_uuid, primary_key=True)
     share_id: str = Field(index=True)
     user_id: str = Field(index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class Comment(SQLModel, table=True):
@@ -162,7 +167,7 @@ class Comment(SQLModel, table=True):
     user_id: str = Field(index=True)
     username: str
     content: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class CommentLike(SQLModel, table=True):
@@ -170,7 +175,7 @@ class CommentLike(SQLModel, table=True):
     id: str = Field(default_factory=generate_uuid, primary_key=True)
     comment_id: str = Field(index=True)
     user_id: str = Field(index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class Follower(SQLModel, table=True):
@@ -178,7 +183,7 @@ class Follower(SQLModel, table=True):
     id: str = Field(default_factory=generate_uuid, primary_key=True)
     follower_id: str = Field(index=True)
     followed_id: str = Field(index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class Notification(SQLModel, table=True):
@@ -191,7 +196,7 @@ class Notification(SQLModel, table=True):
     reference_id: Optional[str] = None  # ID du share/comment concerné
     message: str
     read: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class Story(SQLModel, table=True):
@@ -201,7 +206,7 @@ class Story(SQLModel, table=True):
     owner_username: str
     media_url: Optional[str] = None
     link: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class RefreshToken(SQLModel, table=True):
@@ -211,7 +216,7 @@ class RefreshToken(SQLModel, table=True):
     token: str = Field(unique=True, index=True)
     expires_at: datetime
     revoked: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class LoginAttempt(SQLModel, table=True):
@@ -220,7 +225,7 @@ class LoginAttempt(SQLModel, table=True):
     username: str = Field(index=True)
     ip_address: str = Field(index=True)
     success: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class SyncEvent(SQLModel, table=True):
@@ -231,7 +236,7 @@ class SyncEvent(SQLModel, table=True):
     entity_type: Optional[str] = Field(default=None)
     entity_id: Optional[str] = Field(default=None)
     payload: Optional[str] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class Conversation(SQLModel, table=True):
@@ -240,7 +245,7 @@ class Conversation(SQLModel, table=True):
     participant1_id: str = Field(index=True)
     participant2_id: str = Field(index=True)
     last_message_at: Optional[datetime] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
 
 class Message(SQLModel, table=True):
@@ -250,4 +255,4 @@ class Message(SQLModel, table=True):
     sender_id: str = Field(index=True)
     content: str
     read_at: Optional[datetime] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
