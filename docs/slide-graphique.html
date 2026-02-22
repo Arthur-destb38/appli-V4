@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gorillax – Slide graphique</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      padding: 2rem;
+    }
+    .slide {
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16/9;
+      background: rgba(255,255,255,0.97);
+      border-radius: 16px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+      padding: 2.5rem 3rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .slide-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 3px solid #e94560;
+    }
+    .slide-header span {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #e94560;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .slide h1 {
+      font-size: 1.75rem;
+      color: #1a1a2e;
+      font-weight: 700;
+    }
+    .chart-wrap {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 0;
+    }
+    .chart-wrap canvas {
+      max-height: 100%;
+      max-width: 100%;
+    }
+    .slide-footer {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <div class="slide-header">
+      <span>Gorillax</span>
+    </div>
+    <h1>Progression & engagement</h1>
+    <div class="chart-wrap">
+      <canvas id="chart"></canvas>
+    </div>
+    <p class="slide-footer">Données indicatives · App fitness Gorillax</p>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('chart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Sem. 1', 'Sem. 2', 'Sem. 3', 'Sem. 4', 'Sem. 5', 'Sem. 6'],
+        datasets: [{
+          label: 'Séances réalisées',
+          data: [3, 5, 4, 7, 6, 8],
+          backgroundColor: 'rgba(233, 69, 96, 0.85)',
+          borderColor: '#e94560',
+          borderWidth: 1,
+          borderRadius: 6,
+        }, {
+          label: 'Objectif',
+          data: [4, 4, 4, 4, 4, 4],
+          type: 'line',
+          borderColor: '#1a1a2e',
+          borderWidth: 2,
+          borderDash: [6, 4],
+          fill: false,
+          pointRadius: 4,
+          pointBackgroundColor: '#1a1a2e',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: { font: { size: 12 }, padding: 16 }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 10,
+            grid: { color: 'rgba(0,0,0,0.06)' },
+            ticks: { font: { size: 11 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 11 } }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

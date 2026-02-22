@@ -114,24 +114,42 @@ def _ensure_slug_column(engine: Engine) -> None:
             session.commit()
 
 
+def _get_table_columns(connection, table_name: str, is_sqlite: bool) -> set[str]:
+    quoted = f'"{table_name}"'
+    if is_sqlite:
+        result = connection.execute(text(f"PRAGMA table_info({quoted})"))
+        return {row[1] for row in result}
+    result = connection.execute(text(
+        "SELECT column_name FROM information_schema.columns "
+        f"WHERE table_name='{table_name}'"
+    ))
+    return {row[0] for row in result}
+
+
 def _ensure_workout_exercise_columns(engine: Engine) -> None:
     url = _database_url()
     parsed_url = make_url(url)
     is_sqlite = parsed_url.get_backend_name() == "sqlite"
-    
+
     with engine.connect() as connection:
-        if is_sqlite:
-            result = connection.execute(text("PRAGMA table_info(workoutexercise)"))
-            columns = {row[1] for row in result}
-        else:
-            result = connection.execute(text(
-                "SELECT column_name FROM information_schema.columns "
-                "WHERE table_name='workoutexercise'"
-            ))
-            columns = {row[0] for row in result}
-            
-        if "planned_sets" not in columns:
+        we_cols = _get_table_columns(connection, "workoutexercise", is_sqlite)
+        if "planned_sets" not in we_cols:
             connection.execute(text("ALTER TABLE workoutexercise ADD COLUMN planned_sets INTEGER"))
+        if "client_id" not in we_cols:
+            connection.execute(text("ALTER TABLE workoutexercise ADD COLUMN client_id TEXT"))
+        if "created_at" not in we_cols:
+            connection.execute(text("ALTER TABLE workoutexercise ADD COLUMN created_at TIMESTAMP"))
+        if "updated_at" not in we_cols:
+            connection.execute(text("ALTER TABLE workoutexercise ADD COLUMN updated_at TIMESTAMP"))
+
+        set_cols = _get_table_columns(connection, "set", is_sqlite)
+        if "client_id" not in set_cols:
+            connection.execute(text('ALTER TABLE "set" ADD COLUMN client_id TEXT'))
+        if "created_at" not in set_cols:
+            connection.execute(text('ALTER TABLE "set" ADD COLUMN created_at TIMESTAMP'))
+        if "updated_at" not in set_cols:
+            connection.execute(text('ALTER TABLE "set" ADD COLUMN updated_at TIMESTAMP'))
+
         connection.commit()
 
 

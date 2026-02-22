@@ -28,30 +28,38 @@ router = APIRouter(prefix="/messaging", tags=["messaging"])
 def get_or_create_user(session: Session, user_id: str) -> User:
     """Récupère ou crée un utilisateur (mode démo)."""
     user = session.get(User, user_id)
-    if user is None:
-        # Générer un nom d'utilisateur unique
-        base_username = f"User_{user_id[:8]}"
-        username = base_username
-        counter = 1
-        
-        # Vérifier l'unicité et ajouter un suffixe si nécessaire
-        while True:
-            existing = session.exec(select(User).where(User.username == username)).first()
-            if existing is None:
-                break
-            username = f"{base_username}_{counter}"
-            counter += 1
-        
+    if user is not None:
+        return user
+
+    base_username = f"User_{user_id[:8]}"
+    username = base_username
+    counter = 1
+    while True:
+        existing = session.exec(select(User).where(User.username == username)).first()
+        if existing is None:
+            break
+        username = f"{base_username}_{counter}"
+        counter += 1
+
+    email = f"{user_id}@temp.local"
+    email_existing = session.exec(select(User).where(User.email == email)).first()
+    if email_existing:
+        email = f"{user_id}_{counter}@temp.local"
+
+    try:
         user = User(
             id=user_id,
             username=username,
-            email=f"{user_id}@temp.local",
+            email=email,
             password_hash="temp_not_for_login",
             consent_to_public_share=True,
         )
         session.add(user)
         session.commit()
         session.refresh(user)
+    except Exception:
+        session.rollback()
+        user = session.get(User, user_id)
     return user
 
 

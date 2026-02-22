@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block container_class %}wide{% endblock %}
+
+{% block content %}
+<div class="user-card">
+    <div class="avatar">{{ current_user.username[0]|upper }}</div>
+    <h2>{{ current_user.username }}</h2>
+    <p>{{ current_user.email }}</p>
+</div>
+
+<div class="info-grid">
+    <div class="info-box">
+        <div class="label">Membre depuis</div>
+        <div class="value">{{ current_user.created_at.strftime('%d/%m/%Y') }}</div>
+    </div>
+    <div class="info-box">
+        <div class="label">Statut</div>
+        <div class="value" style="color: #68d391;">Connecté</div>
+    </div>
+</div>
+
+<a href="{{ url_for('logout') }}" class="btn btn-danger" style="margin-top: 1rem;">Se déconnecter</a>
+{% endblock %}
