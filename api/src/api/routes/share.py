@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import base64
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlmodel import Session, select
@@ -124,10 +126,8 @@ def share_workout(
     if workout is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="workout_not_found")
     
-    # Permettre le partage même des brouillons en mode démo
-    # (commenté la vérification du status)
-    # if workout.status != "completed":
-    #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="workout_not_completed")
+    if workout.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not_your_workout")
 
     # Compter les exercices et sets
     workout_exercises = session.exec(
@@ -140,6 +140,21 @@ def share_workout(
         sets = session.exec(select(Set).where(Set.workout_exercise_id == we.id)).all()
         set_count += len(sets)
 
+    image_url: Optional[str] = None
+    if payload.image_base64:
+        raw = payload.image_base64
+        b64_data = raw.split(",", 1)[1] if raw.startswith("data:") else raw
+        try:
+            decoded = base64.b64decode(b64_data)
+            if len(decoded) > 5 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail="image_too_large")
+        except Exception:
+            raise HTTPException(status_code=400, detail="invalid_base64")
+        image_url = raw if raw.startswith("data:") else f"data:image/jpeg;base64,{b64_data}"
+
+    caption = payload.caption[:2000] if payload.caption else None
+    color = payload.color if payload.color else None
+
     share = Share(
         share_id=_generate_share_id(),
         owner_id=user.id,
@@ -148,6 +163,9 @@ def share_workout(
         workout_title=workout.title,
         exercise_count=exercise_count,
         set_count=set_count,
+        caption=caption,
+        color=color,
+        image_url=image_url,
         created_at=datetime.now(timezone.utc),
     )
     session.add(share)
@@ -160,5 +178,8 @@ def share_workout(
         workout_title=share.workout_title,
         exercise_count=share.exercise_count,
         set_count=share.set_count,
+        caption=share.caption,
+        color=share.color,
+        image_url=share.image_url,
         created_at=share.created_at,
     )

@@ -231,11 +231,17 @@ class ShareResponse(BaseModel):
     workout_title: str
     exercise_count: int
     set_count: int
+    caption: Optional[str] = None
+    color: Optional[str] = None
+    image_url: Optional[str] = None
     created_at: datetime
 
 
 class ShareRequest(BaseModel):
     user_id: str
+    caption: Optional[str] = None
+    color: Optional[str] = None
+    image_base64: Optional[str] = None
 
 
 class FollowRequest(BaseModel):
@@ -255,6 +261,9 @@ class FeedItem(BaseModel):
     workout_title: str
     exercise_count: int
     set_count: int
+    caption: Optional[str] = None
+    color: Optional[str] = None
+    image_url: Optional[str] = None
     created_at: datetime
     like_count: int = 0
     comment_count: int = 0

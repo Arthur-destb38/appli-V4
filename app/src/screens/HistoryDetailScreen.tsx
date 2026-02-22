@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 
 import { findExerciseById } from '@/data/exercises';
 import { useWorkouts } from '@/hooks/useWorkouts';
+import { useAuth } from '@/hooks/useAuth';
 import { WorkoutSet } from '@/types/workout';
 import {
   calculateExerciseVolume,
@@ -52,6 +53,7 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
   const { findWorkout, duplicateWorkout } = useWorkouts();
+  const { isAuthenticated } = useAuth();
   const [isDuplicating, setIsDuplicating] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -153,6 +155,27 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
   const handleRelaunch = () => {
     Haptics.selectionAsync().catch(() => {});
     router.push(`/track/${workout.workout.id}`);
+  };
+
+  const handleShare = () => {
+    if (!isAuthenticated) {
+      Alert.alert('Connexion requise', 'Connecte-toi pour partager ta séance sur le feed.');
+      return;
+    }
+    if (!workout.workout.server_id) {
+      Alert.alert('Synchronisation en cours', 'Réessaie dans quelques secondes.');
+      return;
+    }
+    Haptics.selectionAsync().catch(() => {});
+    router.push({
+      pathname: '/share-post',
+      params: {
+        workoutId: String(workout.workout.id),
+        workoutTitle: workout.workout.title,
+        exerciseCount: String(exercises.length),
+        setCount: String(summary.completedSets),
+      },
+    });
   };
 
   const handleOpenProgress = (exerciseId: string, exerciseName: string) => {
@@ -384,6 +407,24 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
           />
         </View>
 
+        {workout.workout.server_id && (
+          <Pressable
+            onPress={handleShare}
+            style={({ pressed }) => [
+              styles.shareButton,
+              {
+                backgroundColor: theme.colors.accent,
+                opacity: pressed ? 0.85 : 1,
+              },
+            ]}
+          >
+            <Ionicons name="paper-plane" size={18} color="#fff" />
+            <Text style={[styles.shareButtonText, { color: '#fff' }]}>
+              Partager sur le feed
+            </Text>
+          </Pressable>
+        )}
+
         {exercises.length === 0 ? (
           <AppCard style={styles.emptyExercises}>
             <Ionicons name="fitness-outline" size={48} color={theme.colors.textSecondary} />
@@ -504,6 +545,19 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+  },
+  shareButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
   },
   exerciseCard: {
     gap: 12,

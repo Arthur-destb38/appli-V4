@@ -12,13 +12,12 @@ const LOCAL_API_WEB = 'http://localhost:8000';
 // Toggle pour basculer entre local et cloud
 // ⚠️ Pour APK/Production: mettre à false
 // ⚠️ Pour Expo Go local: mettre à true
-const USE_LOCAL_API = true; // 🔧 Local (Expo Go)
+const USE_LOCAL_API = true; // ⚠️ false = Render (prod)
 
 export const getApiBaseUrl = () => {
   // Mode dev local activé (seulement en développement)
   if (USE_LOCAL_API && __DEV__) {
-    // Utiliser localhost pour web et mobile
-    return LOCAL_API_IP;
+    return Platform.OS === 'web' ? LOCAL_API_WEB : LOCAL_API_IP;
   }
   
   // 1. Variable d'environnement (pour développement local si besoin)

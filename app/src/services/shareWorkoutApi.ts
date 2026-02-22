@@ -7,14 +7,24 @@ export type ShareWorkoutResponse = {
   workout_title: string;
   exercise_count: number;
   set_count: number;
+  caption?: string | null;
+  color?: string | null;
+  image_url?: string | null;
   created_at: string;
+};
+
+export type ShareWorkoutPayload = {
+  user_id: string;
+  caption?: string | null;
+  color?: string | null;
+  image_base64?: string | null;
 };
 
 const shareWorkoutUrl = (workoutId: string) => buildApiUrl(`/share/workouts/${workoutId}`);
 
 export const shareWorkoutRemote = async (
   workoutId: string,
-  payload: { user_id: string }
+  payload: ShareWorkoutPayload
 ): Promise<ShareWorkoutResponse> => {
   const headers = await getAuthHeaders();
   const response = await fetch(shareWorkoutUrl(workoutId), {

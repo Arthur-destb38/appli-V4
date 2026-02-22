@@ -154,6 +154,9 @@ class Share(SQLModel, table=True):
     workout_title: str
     exercise_count: int = Field(default=0)
     set_count: int = Field(default=0)
+    caption: Optional[str] = Field(default=None)
+    color: Optional[str] = Field(default=None)
+    image_url: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=utcnow)
 
 

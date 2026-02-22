@@ -112,6 +112,10 @@ export default function RootLayout() {
                   options={{ title: 'Séance partagée', headerShown: true, headerBackTitle: 'Retour' }}
                 />
                 <Stack.Screen
+                  name="share-post"
+                  options={{ headerShown: false }}
+                />
+                <Stack.Screen
                   name="modal"
                   options={{ presentation: 'modal', title: 'Modal' }}
                 />

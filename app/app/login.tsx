@@ -18,14 +18,13 @@ export default function LoginScreen() {
   const router = useRouter();
   const { login, isLoading, isAuthenticated } = useAuth();
   const { theme } = useAppTheme();
-
-  // Déjà connecté → redirection directe (comme OPPS : if current_user.is_authenticated → dashboard)
-  if (isAuthenticated) {
-    return <Redirect href="/(tabs)" />;
-  }
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)" />;
+  }
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {

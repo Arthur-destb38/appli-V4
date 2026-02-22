@@ -1,13 +1,36 @@
 """API endpoints pour les notifications."""
-from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel
-from sqlmodel import Session, select
 from typing import Optional
 
-from ..db import get_session
-from ..models import Notification, User, Share, Like, Comment, Follower
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
+from pydantic import BaseModel
+from sqlmodel import Session, select
+
+from ..db import get_session, set_session_user_id
+from ..models import Notification, User
+from ..utils.auth import decode_token
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
+
+
+def _get_current_user_required(
+    authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
+) -> User:
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload = decode_token(token)
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
+        user_id = payload.get("sub")
+        user = session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
+        set_session_user_id(session, str(user.id))
+        return user
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
 
 
 class NotificationResponse(BaseModel):
@@ -33,9 +56,8 @@ def create_notification(
     actor_id: str,
     actor_username: str,
     message: str,
-    reference_id: Optional[str] = None
+    reference_id: Optional[str] = None,
 ) -> Notification:
-    """Créer une nouvelle notification."""
     notification = Notification(
         user_id=user_id,
         type=type,
@@ -51,23 +73,21 @@ def create_notification(
     return notification
 
 
-@router.get("/{user_id}", response_model=NotificationListResponse)
+@router.get("", response_model=NotificationListResponse)
 def get_notifications(
-    user_id: str,
     limit: int = Query(50, ge=1, le=100),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> NotificationListResponse:
-    """Récupérer les notifications d'un utilisateur."""
-    
     notifications = session.exec(
         select(Notification)
-        .where(Notification.user_id == user_id)
+        .where(Notification.user_id == current_user.id)
         .order_by(Notification.created_at.desc())
         .limit(limit)
     ).all()
-    
+
     unread_count = len([n for n in notifications if not n.read])
-    
+
     return NotificationListResponse(
         notifications=[
             NotificationResponse(
@@ -86,60 +106,58 @@ def get_notifications(
     )
 
 
-@router.post("/{user_id}/read-all")
+@router.post("/read-all")
 def mark_all_read(
-    user_id: str,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> dict:
-    """Marquer toutes les notifications comme lues."""
-    
     notifications = session.exec(
         select(Notification)
-        .where(Notification.user_id == user_id)
+        .where(Notification.user_id == current_user.id)
         .where(Notification.read == False)
     ).all()
-    
+
     for n in notifications:
         n.read = True
         session.add(n)
-    
+
     session.commit()
-    
+
     return {"marked_read": len(notifications)}
 
 
 @router.post("/{notification_id}/read")
 def mark_read(
     notification_id: str,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> dict:
-    """Marquer une notification comme lue."""
-    
     notification = session.get(Notification, notification_id)
-    if notification:
-        notification.read = True
-        session.add(notification)
-        session.commit()
-        return {"success": True}
-    
-    return {"success": False, "error": "Notification not found"}
+    if not notification:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="notification_not_found")
+
+    if notification.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not_your_notification")
+
+    notification.read = True
+    session.add(notification)
+    session.commit()
+    return {"success": True}
 
 
 @router.delete("/{notification_id}")
 def delete_notification(
     notification_id: str,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> dict:
-    """Supprimer une notification."""
-    
     notification = session.get(Notification, notification_id)
-    if notification:
-        session.delete(notification)
-        session.commit()
-        return {"success": True}
-    
-    return {"success": False, "error": "Notification not found"}
+    if not notification:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="notification_not_found")
 
+    if notification.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not_your_notification")
 
-
-
+    session.delete(notification)
+    session.commit()
+    return {"success": True}

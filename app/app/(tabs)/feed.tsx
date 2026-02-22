@@ -234,6 +234,9 @@ const FeedScreen: React.FC = () => {
       exerciseCount={item.exercise_count}
       setCount={item.set_count}
       createdAt={item.created_at}
+      caption={item.caption}
+      color={item.color}
+      imageUrl={item.image_url}
       currentUserId={currentUserId}
       initialLikeCount={item.like_count || 0}
       comments={item.comments || []}

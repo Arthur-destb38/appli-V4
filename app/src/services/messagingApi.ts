@@ -1,6 +1,5 @@
 import { buildApiUrl, getAuthHeaders } from '@/utils/api';
 
-// Types
 export type MessageRead = {
   id: string;
   conversation_id: string;
@@ -47,15 +46,12 @@ export type CreateConversationResponse = {
 
 const MESSAGING_BASE = buildApiUrl('/messaging');
 
-/**
- * Récupère la liste des conversations d'un utilisateur
- */
 export const listConversations = async (
-  userId: string,
+  _userId: string,
   limit = 20,
   cursor?: string
 ): Promise<ConversationListResponse> => {
-  const params = new URLSearchParams({ user_id: userId, limit: String(limit) });
+  const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) {
     params.append('cursor', cursor);
   }
@@ -69,15 +65,12 @@ export const listConversations = async (
   return (await response.json()) as ConversationListResponse;
 };
 
-/**
- * Crée une nouvelle conversation ou retourne l'existante
- */
 export const createOrGetConversation = async (
-  userId: string,
+  _userId: string,
   participantId: string
 ): Promise<CreateConversationResponse> => {
   const headers = await getAuthHeaders();
-  const response = await fetch(`${MESSAGING_BASE}/conversations?user_id=${userId}`, {
+  const response = await fetch(`${MESSAGING_BASE}/conversations`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ participant_id: participantId }),
@@ -89,16 +82,13 @@ export const createOrGetConversation = async (
   return (await response.json()) as CreateConversationResponse;
 };
 
-/**
- * Récupère les messages d'une conversation
- */
 export const listMessages = async (
   conversationId: string,
-  userId: string,
+  _userId: string,
   limit = 50,
   cursor?: string
 ): Promise<MessageListResponse> => {
-  const params = new URLSearchParams({ user_id: userId, limit: String(limit) });
+  const params = new URLSearchParams({ limit: String(limit) });
   if (cursor) {
     params.append('cursor', cursor);
   }
@@ -113,17 +103,14 @@ export const listMessages = async (
   return (await response.json()) as MessageListResponse;
 };
 
-/**
- * Envoie un message dans une conversation
- */
 export const sendMessage = async (
   conversationId: string,
-  userId: string,
+  _userId: string,
   content: string
 ): Promise<SendMessageResponse> => {
   const headers = await getAuthHeaders();
   const response = await fetch(
-    `${MESSAGING_BASE}/conversations/${conversationId}/messages?user_id=${userId}`,
+    `${MESSAGING_BASE}/conversations/${conversationId}/messages`,
     {
       method: 'POST',
       headers,
@@ -132,21 +119,18 @@ export const sendMessage = async (
   );
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || 'Impossible d\'envoyer le message');
+    throw new Error(error.detail || "Impossible d'envoyer le message");
   }
   return (await response.json()) as SendMessageResponse;
 };
 
-/**
- * Marque tous les messages d'une conversation comme lus
- */
 export const markConversationAsRead = async (
   conversationId: string,
-  userId: string
+  _userId: string
 ): Promise<void> => {
   const headers = await getAuthHeaders();
   const response = await fetch(
-    `${MESSAGING_BASE}/conversations/${conversationId}/read?user_id=${userId}`,
+    `${MESSAGING_BASE}/conversations/${conversationId}/read`,
     { method: 'POST', headers }
   );
   if (!response.ok) {
@@ -154,12 +138,9 @@ export const markConversationAsRead = async (
   }
 };
 
-/**
- * Récupère le nombre total de messages non lus
- */
-export const getUnreadCount = async (userId: string): Promise<number> => {
+export const getUnreadCount = async (_userId: string): Promise<number> => {
   const headers = await getAuthHeaders();
-  const response = await fetch(`${MESSAGING_BASE}/unread-count?user_id=${userId}`, {
+  const response = await fetch(`${MESSAGING_BASE}/unread-count`, {
     headers,
   });
   if (!response.ok) {
@@ -169,22 +150,16 @@ export const getUnreadCount = async (userId: string): Promise<number> => {
   return data.unread_count;
 };
 
-/**
- * Supprime une conversation
- */
 export const deleteConversation = async (
   conversationId: string,
-  userId: string
+  _userId: string
 ): Promise<void> => {
   const headers = await getAuthHeaders();
   const response = await fetch(
-    `${MESSAGING_BASE}/conversations/${conversationId}?user_id=${userId}`,
+    `${MESSAGING_BASE}/conversations/${conversationId}`,
     { method: 'DELETE', headers }
   );
   if (!response.ok) {
     throw new Error('Impossible de supprimer la conversation');
   }
 };
-
-
-

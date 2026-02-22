@@ -7,6 +7,9 @@ export type FeedItem = {
   workout_title: string;
   exercise_count: number;
   set_count: number;
+  caption?: string | null;
+  color?: string | null;
+  image_url?: string | null;
   created_at: string;
 };
 

@@ -16,14 +16,11 @@ export interface NotificationListResponse {
   unread_count: number;
 }
 
-/**
- * Récupérer les notifications d'un utilisateur
- */
-export async function getNotifications(userId: string, limit = 50): Promise<NotificationListResponse> {
+export async function getNotifications(_userId: string, limit = 50): Promise<NotificationListResponse> {
   const baseUrl = getApiBaseUrl();
   const headers = await getAuthHeaders();
 
-  const response = await fetch(`${baseUrl}/notifications/${userId}?limit=${limit}`, {
+  const response = await fetch(`${baseUrl}/notifications?limit=${limit}`, {
     method: 'GET',
     headers,
   });
@@ -35,14 +32,11 @@ export async function getNotifications(userId: string, limit = 50): Promise<Noti
   return response.json();
 }
 
-/**
- * Marquer toutes les notifications comme lues
- */
-export async function markAllRead(userId: string): Promise<{ marked_read: number }> {
+export async function markAllRead(_userId: string): Promise<{ marked_read: number }> {
   const baseUrl = getApiBaseUrl();
   const headers = await getAuthHeaders();
 
-  const response = await fetch(`${baseUrl}/notifications/${userId}/read-all`, {
+  const response = await fetch(`${baseUrl}/notifications/read-all`, {
     method: 'POST',
     headers,
   });
@@ -54,9 +48,6 @@ export async function markAllRead(userId: string): Promise<{ marked_read: number
   return response.json();
 }
 
-/**
- * Marquer une notification comme lue
- */
 export async function markRead(notificationId: string): Promise<{ success: boolean }> {
   const baseUrl = getApiBaseUrl();
   const headers = await getAuthHeaders();
@@ -73,9 +64,6 @@ export async function markRead(notificationId: string): Promise<{ success: boole
   return response.json();
 }
 
-/**
- * Supprimer une notification
- */
 export async function deleteNotification(notificationId: string): Promise<{ success: boolean }> {
   const baseUrl = getApiBaseUrl();
   const headers = await getAuthHeaders();
@@ -91,7 +79,3 @@ export async function deleteNotification(notificationId: string): Promise<{ succ
 
   return response.json();
 }
-
-
-
-

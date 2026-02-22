@@ -68,6 +68,7 @@ def init_db() -> None:
     SQLModel.metadata.create_all(engine)
     _ensure_slug_column(engine)
     _ensure_workout_exercise_columns(engine)
+    _ensure_share_columns(engine)
 
 
 def _ensure_slug_column(engine: Engine) -> None:
@@ -150,6 +151,22 @@ def _ensure_workout_exercise_columns(engine: Engine) -> None:
         if "updated_at" not in set_cols:
             connection.execute(text('ALTER TABLE "set" ADD COLUMN updated_at TIMESTAMP'))
 
+        connection.commit()
+
+
+def _ensure_share_columns(engine: Engine) -> None:
+    url = _database_url()
+    parsed_url = make_url(url)
+    is_sqlite = parsed_url.get_backend_name() == "sqlite"
+
+    with engine.connect() as connection:
+        cols = _get_table_columns(connection, "share", is_sqlite)
+        if "caption" not in cols:
+            connection.execute(text("ALTER TABLE share ADD COLUMN caption TEXT"))
+        if "color" not in cols:
+            connection.execute(text("ALTER TABLE share ADD COLUMN color TEXT"))
+        if "image_url" not in cols:
+            connection.execute(text("ALTER TABLE share ADD COLUMN image_url TEXT"))
         connection.commit()
 
 

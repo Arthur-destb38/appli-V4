@@ -67,7 +67,7 @@ interface WorkoutsContextValue {
   ) => Promise<void>;
   removeSet: (setId: number) => Promise<void>;
   duplicateWorkout: (id: number) => Promise<WorkoutWithRelations | undefined>;
-  shareWorkout: (id: number) => Promise<{ queued: boolean; shareId?: string }>;
+  shareWorkout: (id: number, opts?: { caption?: string; color?: string; image_base64?: string }) => Promise<{ queued: boolean; shareId?: string }>;
 }
 
 const WorkoutsContext = createContext<WorkoutsContextValue | undefined>(undefined);
@@ -745,7 +745,7 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
   );
 
   const shareWorkoutAction = useCallback(
-    async (id: number) => {
+    async (id: number, opts?: { caption?: string; color?: string; image_base64?: string }) => {
       const target = workouts.find((item) => item.workout.id === id);
       if (!target) {
         throw new Error('Séance introuvable');
@@ -753,26 +753,33 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
       if (!profile) {
         throw new Error('Profil utilisateur indisponible');
       }
+      if (!target.workout.server_id) {
+        throw new Error('Séance pas encore synchronisée. Attends quelques secondes et réessaie.');
+      }
 
-      const profileId = profile.id;
-      const workoutIdForApi = target.workout.client_id || String(id);
-      const payload = { workoutId: workoutIdForApi, userId: profileId };
+      const workoutIdForApi = target.workout.server_id;
+      const mutationPayload = { workoutId: workoutIdForApi, userId: profile.id };
 
       if (!isNavigatorOnline()) {
-        await enqueueMutation('share-workout', payload);
+        await enqueueMutation('share-workout', mutationPayload);
         await refreshPendingCount();
         return { queued: true } as const;
       }
 
       try {
-        const response = await shareWorkoutRemote(workoutIdForApi, { user_id: profileId });
+        const response = await shareWorkoutRemote(workoutIdForApi, {
+          user_id: profile.id,
+          caption: opts?.caption,
+          color: opts?.color,
+          image_base64: opts?.image_base64,
+        });
         return { queued: false, shareId: response.share_id } as const;
       } catch (error) {
         const code = (error as any)?.code;
-        if (code === 'user_without_consent' || code === 'user_not_found') {
+        if (code === 'user_without_consent' || code === 'user_not_found' || code === 'not_your_workout') {
           throw error;
         }
-        await enqueueMutation('share-workout', payload);
+        await enqueueMutation('share-workout', mutationPayload);
         await refreshPendingCount();
         return { queued: true } as const;
       }

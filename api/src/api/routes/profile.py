@@ -213,7 +213,7 @@ def follow_user(
             actor_id=follower_id,
             actor_username=current_user.username,  # ✅ MODIFIÉ: Utiliser l'utilisateur authentifié
             reference_id=None,
-            message=f"{follower.username} a commencé à te suivre",
+            message=f"{current_user.username} a commencé à te suivre",
         )
         session.add(notification)
         session.commit()
@@ -359,15 +359,15 @@ def upload_avatar(
 @router.delete("/{user_id}/avatar", status_code=status.HTTP_204_NO_CONTENT)
 def delete_avatar(
     user_id: str,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user),
 ):
     """Supprimer l'avatar d'un utilisateur."""
     
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="user_not_found")
+    if current_user.id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="can_only_delete_own_avatar")
     
-    user.avatar_url = None
-    session.add(user)
+    current_user.avatar_url = None
+    session.add(current_user)
     session.commit()
 

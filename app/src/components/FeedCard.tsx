@@ -1,7 +1,9 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import {
   Animated,
+  Image,
   Pressable,
+  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -32,6 +34,9 @@ interface FeedCardProps {
   exerciseCount: number;
   setCount: number;
   createdAt: string;
+  caption?: string | null;
+  color?: string | null;
+  imageUrl?: string | null;
   initialLiked?: boolean;
   initialLikeCount?: number;
   currentUserId: string;
@@ -84,6 +89,9 @@ export const FeedCard: React.FC<FeedCardProps> = ({
   exerciseCount,
   setCount,
   createdAt,
+  caption,
+  color,
+  imageUrl,
   initialLiked = false,
   initialLikeCount = 0,
   currentUserId,
@@ -148,7 +156,36 @@ export const FeedCard: React.FC<FeedCardProps> = ({
   };
 
   const avatarGradient = getAvatarGradient(ownerUsername);
-  const workoutGradient = getWorkoutGradient(workoutTitle, isDark);
+
+  const customColorGradient = React.useMemo<[string, string, string] | null>(() => {
+    if (!color) return null;
+    const num = parseInt(color.replace('#', ''), 16);
+    const r = (num >> 16) & 0xff;
+    const g = (num >> 8) & 0xff;
+    const b = num & 0xff;
+    if (isDark) {
+      const dr = Math.max(0, Math.round(r * 0.25));
+      const dg = Math.max(0, Math.round(g * 0.25));
+      const db = Math.max(0, Math.round(b * 0.25));
+      const c1 = `#${dr.toString(16).padStart(2, '0')}${dg.toString(16).padStart(2, '0')}${db.toString(16).padStart(2, '0')}`;
+      const mr = Math.max(0, Math.round(r * 0.4));
+      const mg = Math.max(0, Math.round(g * 0.4));
+      const mb = Math.max(0, Math.round(b * 0.4));
+      const c2 = `#${mr.toString(16).padStart(2, '0')}${mg.toString(16).padStart(2, '0')}${mb.toString(16).padStart(2, '0')}`;
+      const lr = Math.min(255, Math.round(r * 0.55));
+      const lg = Math.min(255, Math.round(g * 0.55));
+      const lb = Math.min(255, Math.round(b * 0.55));
+      const c3 = `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
+      return [c1, c2, c3];
+    }
+    const lr = Math.min(255, r + 40);
+    const lg = Math.min(255, g + 40);
+    const lb = Math.min(255, b + 40);
+    const lighter = `#${lr.toString(16).padStart(2, '0')}${lg.toString(16).padStart(2, '0')}${lb.toString(16).padStart(2, '0')}`;
+    return [color, color, lighter];
+  }, [color, isDark]);
+
+  const workoutGradient = customColorGradient ?? getWorkoutGradient(workoutTitle, isDark);
 
   const handleDoubleTap = useCallback(() => {
     const now = Date.now();
@@ -401,6 +438,11 @@ export const FeedCard: React.FC<FeedCardProps> = ({
             </LinearGradient>
           </Pressable>
 
+          {/* Post image */}
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.postImage} resizeMode="cover" />
+          ) : null}
+
           {/* Actions - Like, Comment, Share, Save */}
           <View style={styles.actions}>
             <View style={styles.leftActions}>
@@ -418,6 +460,12 @@ export const FeedCard: React.FC<FeedCardProps> = ({
               </Pressable>
               <Pressable
                 style={({ pressed }) => [styles.actionBtn, { opacity: pressed ? 0.6 : 1 }]}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  Share.share({
+                    message: `${ownerUsername} a partagé sa séance "${workoutTitle}" sur Gorillax ! ${exerciseCount} exercice${exerciseCount > 1 ? 's' : ''}, ${setCount} série${setCount > 1 ? 's' : ''}.`,
+                  }).catch(() => {});
+                }}
               >
                 <Ionicons name="paper-plane-outline" size={22} color={theme.colors.textSecondary} />
               </Pressable>
@@ -473,7 +521,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
             <View style={styles.caption}>
               <Text style={{ color: theme.colors.textPrimary, lineHeight: 20 }}>
                 <Text style={styles.captionUsername}>{ownerUsername}</Text>
-                {' '}a partagé sa séance 💪
+                {' '}{caption ? caption : 'a partagé sa séance 💪'}
               </Text>
             </View>
 
@@ -648,9 +696,14 @@ const styles = StyleSheet.create({
   },
   workoutPreview: {
     marginHorizontal: 14,
-    marginBottom: 12,
+    marginBottom: 0,
     borderRadius: 20,
     overflow: 'hidden',
+  },
+  postImage: {
+    width: '100%',
+    height: 240,
+    marginBottom: 0,
   },
   workoutGradient: {
     padding: 18,

@@ -4,11 +4,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
 from sqlalchemy import func, or_, and_
 from sqlmodel import Session, select
 
-from ..db import get_session
+from ..db import get_session, set_session_user_id
 from ..models import Conversation, Message, User
 from ..schemas import (
     ConversationListResponse,
@@ -21,52 +21,35 @@ from ..schemas import (
     SendMessageRequest,
     SendMessageResponse,
 )
+from ..utils.auth import decode_token
 
 router = APIRouter(prefix="/messaging", tags=["messaging"])
 
 
-def get_or_create_user(session: Session, user_id: str) -> User:
-    """Récupère ou crée un utilisateur (mode démo)."""
-    user = session.get(User, user_id)
-    if user is not None:
-        return user
-
-    base_username = f"User_{user_id[:8]}"
-    username = base_username
-    counter = 1
-    while True:
-        existing = session.exec(select(User).where(User.username == username)).first()
-        if existing is None:
-            break
-        username = f"{base_username}_{counter}"
-        counter += 1
-
-    email = f"{user_id}@temp.local"
-    email_existing = session.exec(select(User).where(User.email == email)).first()
-    if email_existing:
-        email = f"{user_id}_{counter}@temp.local"
-
+def _get_current_user_required(
+    authorization: Optional[str] = Header(None),
+    session: Session = Depends(get_session),
+) -> User:
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
+    token = authorization.split(" ", 1)[1]
     try:
-        user = User(
-            id=user_id,
-            username=username,
-            email=email,
-            password_hash="temp_not_for_login",
-            consent_to_public_share=True,
-        )
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-    except Exception:
-        session.rollback()
+        payload = decode_token(token)
+        if payload.get("type") != "access":
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
+        user_id = payload.get("sub")
         user = session.get(User, user_id)
-    return user
+        if not user:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
+        set_session_user_id(session, str(user.id))
+        return user
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
 
 
 def find_existing_conversation(
     session: Session, user1_id: str, user2_id: str
 ) -> Optional[Conversation]:
-    """Trouve une conversation existante entre deux utilisateurs."""
     statement = select(Conversation).where(
         or_(
             and_(
@@ -83,7 +66,6 @@ def find_existing_conversation(
 
 
 def get_other_participant(conversation: Conversation, user_id: str) -> str:
-    """Retourne l'ID de l'autre participant dans la conversation."""
     if conversation.participant1_id == user_id:
         return conversation.participant2_id
     return conversation.participant1_id
@@ -91,13 +73,12 @@ def get_other_participant(conversation: Conversation, user_id: str) -> str:
 
 @router.get("/conversations", response_model=ConversationListResponse)
 def list_conversations(
-    user_id: str,
     limit: int = Query(20, ge=1, le=50),
     cursor: Optional[str] = Query(None),
     session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> ConversationListResponse:
-    """Liste toutes les conversations d'un utilisateur."""
-    get_or_create_user(session, user_id)
+    user_id = current_user.id
 
     statement = select(Conversation).where(
         or_(
@@ -116,7 +97,6 @@ def list_conversations(
                 detail="Invalid cursor format",
             )
 
-    # Trier par date du dernier message (les plus récentes d'abord)
     statement = statement.order_by(Conversation.last_message_at.desc().nullslast())
     statement = statement.limit(limit + 1)
 
@@ -129,7 +109,6 @@ def list_conversations(
             next_cursor = last_conv.last_message_at.isoformat()
         conversations = conversations[:limit]
 
-    # Récupérer les infos des participants et les derniers messages
     result_conversations = []
     for conv in conversations:
         other_user_id = get_other_participant(conv, user_id)
@@ -138,7 +117,6 @@ def list_conversations(
         if other_user is None:
             continue
 
-        # Dernier message
         last_message_stmt = (
             select(Message)
             .where(Message.conversation_id == conv.id)
@@ -147,7 +125,6 @@ def list_conversations(
         )
         last_message = session.exec(last_message_stmt).first()
 
-        # Compteur de messages non lus
         unread_stmt = select(func.count(Message.id)).where(
             Message.conversation_id == conv.id,
             Message.sender_id != user_id,
@@ -178,25 +155,28 @@ def list_conversations(
 
 @router.post("/conversations", response_model=CreateConversationResponse)
 def create_or_get_conversation(
-    user_id: str,
     payload: CreateConversationRequest,
     session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> CreateConversationResponse:
-    """Crée une nouvelle conversation ou retourne l'existante."""
+    user_id = current_user.id
+
     if user_id == payload.participant_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="cannot_message_self",
         )
 
-    get_or_create_user(session, user_id)
-    other_user = get_or_create_user(session, payload.participant_id)
+    other_user = session.get(User, payload.participant_id)
+    if not other_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="user_not_found",
+        )
 
-    # Vérifier si une conversation existe déjà
     existing = find_existing_conversation(session, user_id, payload.participant_id)
-    
+
     if existing:
-        # Retourner la conversation existante
         return CreateConversationResponse(
             conversation=ConversationRead(
                 id=existing.id,
@@ -213,7 +193,6 @@ def create_or_get_conversation(
             created=False,
         )
 
-    # Créer une nouvelle conversation
     conversation = Conversation(
         participant1_id=user_id,
         participant2_id=payload.participant_id,
@@ -242,12 +221,12 @@ def create_or_get_conversation(
 @router.get("/conversations/{conversation_id}/messages", response_model=MessageListResponse)
 def list_messages(
     conversation_id: str,
-    user_id: str,
     limit: int = Query(50, ge=1, le=100),
     cursor: Optional[str] = Query(None),
     session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> MessageListResponse:
-    """Liste les messages d'une conversation."""
+    user_id = current_user.id
     conversation = session.get(Conversation, conversation_id)
     if conversation is None:
         raise HTTPException(
@@ -255,7 +234,6 @@ def list_messages(
             detail="conversation_not_found",
         )
 
-    # Vérifier que l'utilisateur fait partie de la conversation
     if user_id not in [conversation.participant1_id, conversation.participant2_id]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -274,7 +252,6 @@ def list_messages(
                 detail="Invalid cursor format",
             )
 
-    # Messages les plus récents d'abord
     statement = statement.order_by(Message.created_at.desc()).limit(limit + 1)
 
     messages = session.exec(statement).all()
@@ -284,13 +261,11 @@ def list_messages(
         next_cursor = messages[-1].created_at.isoformat()
         messages = messages[:limit]
 
-    # Marquer les messages comme lus
     for msg in messages:
         if msg.sender_id != user_id and msg.read_at is None:
             msg.read_at = datetime.now(timezone.utc)
     session.commit()
 
-    # Inverser pour avoir l'ordre chronologique (ancien -> récent)
     messages = list(reversed(messages))
 
     return MessageListResponse(
@@ -302,11 +277,11 @@ def list_messages(
 @router.post("/conversations/{conversation_id}/messages", response_model=SendMessageResponse)
 def send_message(
     conversation_id: str,
-    user_id: str,
     payload: SendMessageRequest,
     session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> SendMessageResponse:
-    """Envoie un message dans une conversation."""
+    user_id = current_user.id
     conversation = session.get(Conversation, conversation_id)
     if conversation is None:
         raise HTTPException(
@@ -314,7 +289,6 @@ def send_message(
             detail="conversation_not_found",
         )
 
-    # Vérifier que l'utilisateur fait partie de la conversation
     if user_id not in [conversation.participant1_id, conversation.participant2_id]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -328,7 +302,6 @@ def send_message(
     )
     session.add(message)
 
-    # Mettre à jour la date du dernier message
     conversation.last_message_at = datetime.now(timezone.utc)
     session.commit()
     session.refresh(message)
@@ -342,10 +315,10 @@ def send_message(
 @router.post("/conversations/{conversation_id}/read", status_code=status.HTTP_204_NO_CONTENT)
 def mark_as_read(
     conversation_id: str,
-    user_id: str,
     session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> None:
-    """Marque tous les messages d'une conversation comme lus."""
+    user_id = current_user.id
     conversation = session.get(Conversation, conversation_id)
     if conversation is None:
         raise HTTPException(
@@ -359,7 +332,6 @@ def mark_as_read(
             detail="not_participant",
         )
 
-    # Marquer tous les messages non lus (envoyés par l'autre utilisateur) comme lus
     statement = select(Message).where(
         Message.conversation_id == conversation_id,
         Message.sender_id != user_id,
@@ -375,13 +347,11 @@ def mark_as_read(
 
 @router.get("/unread-count")
 def get_unread_count(
-    user_id: str,
     session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> dict:
-    """Retourne le nombre total de messages non lus."""
-    get_or_create_user(session, user_id)
+    user_id = current_user.id
 
-    # Trouver toutes les conversations de l'utilisateur
     conv_statement = select(Conversation.id).where(
         or_(
             Conversation.participant1_id == user_id,
@@ -393,7 +363,6 @@ def get_unread_count(
     if not conversation_ids:
         return {"unread_count": 0}
 
-    # Compter les messages non lus
     unread_stmt = select(func.count(Message.id)).where(
         Message.conversation_id.in_(conversation_ids),
         Message.sender_id != user_id,
@@ -407,10 +376,10 @@ def get_unread_count(
 @router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_conversation(
     conversation_id: str,
-    user_id: str,
     session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
 ) -> None:
-    """Supprime une conversation et tous ses messages."""
+    user_id = current_user.id
     conversation = session.get(Conversation, conversation_id)
     if conversation is None:
         raise HTTPException(
@@ -424,15 +393,10 @@ def delete_conversation(
             detail="not_participant",
         )
 
-    # Supprimer tous les messages
     messages_stmt = select(Message).where(Message.conversation_id == conversation_id)
     messages = session.exec(messages_stmt).all()
     for msg in messages:
         session.delete(msg)
 
-    # Supprimer la conversation
     session.delete(conversation)
     session.commit()
-
-
-
