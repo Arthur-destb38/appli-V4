@@ -41,34 +41,52 @@ def _find_workout(session: Session, payload: dict, user_id: str) -> Optional[Wor
     return None
 
 
-def _find_exercise(session: Session, payload: dict) -> Optional[WorkoutExercise]:
-    """Find a workout exercise by client_id or server_id."""
+def _owns_exercise(session: Session, we: WorkoutExercise, user_id: str) -> bool:
+    """Check that the exercise belongs to a workout owned by user_id."""
+    workout = session.get(Workout, we.workout_id)
+    return workout is not None and workout.user_id == user_id
+
+
+def _find_exercise(session: Session, payload: dict, user_id: str) -> Optional[WorkoutExercise]:
+    """Find a workout exercise by client_id or server_id, ensuring ownership."""
     client_id = payload.get("exerciseClientId") or payload.get("client_id")
     if client_id:
         we = session.exec(
             select(WorkoutExercise).where(WorkoutExercise.client_id == client_id)
         ).first()
-        if we:
+        if we and _owns_exercise(session, we, user_id):
             return we
 
     server_id = payload.get("workoutExerciseServerId") or payload.get("workoutExerciseId")
     if server_id is not None:
-        return session.get(WorkoutExercise, str(server_id))
+        we = session.get(WorkoutExercise, str(server_id))
+        if we and _owns_exercise(session, we, user_id):
+            return we
 
     return None
 
 
-def _find_set(session: Session, payload: dict) -> Optional[Set]:
-    """Find a set by client_id or server_id."""
+def _owns_set(session: Session, s: Set, user_id: str) -> bool:
+    """Check that the set belongs to an exercise in a workout owned by user_id."""
+    we = session.get(WorkoutExercise, s.workout_exercise_id)
+    if we is None:
+        return False
+    return _owns_exercise(session, we, user_id)
+
+
+def _find_set(session: Session, payload: dict, user_id: str) -> Optional[Set]:
+    """Find a set by client_id or server_id, ensuring ownership."""
     client_id = payload.get("setClientId") or payload.get("client_id")
     if client_id:
         s = session.exec(select(Set).where(Set.client_id == client_id)).first()
-        if s:
+        if s and _owns_set(session, s, user_id):
             return s
 
     server_id = payload.get("setServerId") or payload.get("setId")
     if server_id is not None:
-        return session.get(Set, str(server_id))
+        s = session.get(Set, str(server_id))
+        if s and _owns_set(session, s, user_id):
+            return s
 
     return None
 
@@ -95,7 +113,9 @@ def push_mutations(
             existing = None
             if cid:
                 existing = session.exec(
-                    select(Workout).where(Workout.client_id == cid)
+                    select(Workout)
+                    .where(Workout.client_id == cid)
+                    .where(Workout.user_id == current_user.id)
                 ).first()
             if existing:
                 results.append({"queue_id": mutation.queue_id, "server_id": existing.id})
@@ -136,9 +156,7 @@ def push_mutations(
             ex_cid = data.get("client_id")
             existing_ex = None
             if ex_cid:
-                existing_ex = session.exec(
-                    select(WorkoutExercise).where(WorkoutExercise.client_id == ex_cid)
-                ).first()
+                existing_ex = _find_exercise(session, {"client_id": ex_cid}, current_user.id)
             if existing_ex:
                 results.append({"queue_id": mutation.queue_id, "server_id": existing_ex.id})
             else:
@@ -160,14 +178,14 @@ def push_mutations(
                         results.append({"queue_id": mutation.queue_id, "server_id": we.id})
 
         elif action == "update-exercise-plan":
-            we = _find_exercise(session, data)
+            we = _find_exercise(session, data, current_user.id)
             if we:
                 planned = data.get("plannedSets")
                 we.planned_sets = planned if isinstance(planned, int) else None
                 we.updated_at = now
 
         elif action == "remove-exercise":
-            we = _find_exercise(session, data)
+            we = _find_exercise(session, data, current_user.id)
             if we:
                 sets_to_delete = session.exec(
                     select(Set).where(Set.workout_exercise_id == we.id)
@@ -180,13 +198,11 @@ def push_mutations(
             set_cid = data.get("client_id")
             existing_set = None
             if set_cid:
-                existing_set = session.exec(
-                    select(Set).where(Set.client_id == set_cid)
-                ).first()
+                existing_set = _find_set(session, {"client_id": set_cid}, current_user.id)
             if existing_set:
                 results.append({"queue_id": mutation.queue_id, "server_id": existing_set.id})
             else:
-                we = _find_exercise(session, data)
+                we = _find_exercise(session, data, current_user.id)
                 if we:
                     set_payload = data.get("payload", {})
                     new_set = Set(
@@ -205,7 +221,7 @@ def push_mutations(
                         results.append({"queue_id": mutation.queue_id, "server_id": new_set.id})
 
         elif action == "update-set":
-            target_set = _find_set(session, data)
+            target_set = _find_set(session, data, current_user.id)
             if target_set:
                 updates = data.get("updates", {})
                 if "reps" in updates:
@@ -222,7 +238,7 @@ def push_mutations(
                 target_set.updated_at = now
 
         elif action == "remove-set":
-            target_set = _find_set(session, data)
+            target_set = _find_set(session, data, current_user.id)
             if target_set:
                 session.delete(target_set)
 

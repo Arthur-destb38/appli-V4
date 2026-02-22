@@ -136,6 +136,9 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     setIsLoading(true);
     try {
       console.log('🔐 Connexion en cours...');
+
+      await clearAllUserDataForLogout();
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
       const response = await fetch(buildApiUrl('/auth/login'), {
@@ -154,7 +157,6 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       const authTokens: AuthTokens = await response.json();
       console.log('✅ Tokens reçus');
 
-      // Récupérer le profil utilisateur
       const userData = await fetchUserProfile(authTokens.access_token);
       console.log('✅ Profil utilisateur récupéré');
 
@@ -178,6 +180,9 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     setIsLoading(true);
     try {
       console.log('📝 Inscription en cours...');
+
+      await clearAllUserDataForLogout();
+
       const response = await fetch(buildApiUrl('/auth/register-v2'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -192,7 +197,6 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       const authTokens: AuthTokens = await response.json();
       console.log('✅ Inscription réussie, tokens reçus');
 
-      // Récupérer le profil utilisateur
       const userData = await fetchUserProfile(authTokens.access_token);
       console.log('✅ Profil utilisateur récupéré');
 
