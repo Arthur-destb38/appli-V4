@@ -1,36 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlmodel import Session, select, func
 from typing import Optional
 
-from ..db import get_session, set_session_user_id
+from ..db import get_session
 from ..models import Like, Share, User, Comment, Notification, CommentLike
-from ..utils.auth import decode_token
+from ..utils.dependencies import get_current_user as _get_current_user_required
 
 router = APIRouter(prefix="/likes", tags=["likes"])
-
-
-def _get_current_user_required(
-    authorization: Optional[str] = Header(None),
-    session: Session = Depends(get_session),
-) -> User:
-    """Get current user from token, raise 401 if no valid token."""
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
-    token = authorization.split(" ", 1)[1]
-    try:
-        payload = decode_token(token)
-        if payload.get("type") != "access":
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
-        user_id = payload.get("sub")
-        user = session.get(User, user_id)
-        if not user:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
-        set_session_user_id(session, str(user.id))
-        return user
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
 
 
 class LikeRequest(BaseModel):

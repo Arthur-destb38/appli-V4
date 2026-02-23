@@ -8,7 +8,7 @@ from typing import Optional
 
 from ..db import get_session
 from ..models import User, Share, Follower, Like, Notification
-from ..routes.auth import _get_current_user  # ✅ AJOUTÉ: Import de la fonction d'authentification
+from ..utils.dependencies import get_current_user as _get_current_user
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 

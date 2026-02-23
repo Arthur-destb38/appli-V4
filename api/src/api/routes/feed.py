@@ -3,60 +3,17 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 from sqlalchemy import func
 from sqlmodel import Session, select
 
-from ..db import get_session, set_session_user_id
+from ..db import get_session
 from ..models import Follower, Share, User, Comment, Like
 from ..schemas import FeedResponse, FeedItem, FollowRequest
-from ..utils.auth import decode_token
+from ..utils.dependencies import get_current_user as _get_current_user_required, get_current_user_optional as _get_current_user_optional
 
 router = APIRouter(prefix="/feed", tags=["feed"])
-
-
-def _get_current_user_optional(
-    authorization: Optional[str] = Header(None),
-    session: Session = Depends(get_session),
-) -> Optional[User]:
-    """Get current user from token, return None if no valid token."""
-    if not authorization or not authorization.lower().startswith("bearer "):
-        return None
-    token = authorization.split(" ", 1)[1]
-    try:
-        payload = decode_token(token)
-        if payload.get("type") != "access":
-            return None
-        user_id = payload.get("sub")
-        user = session.get(User, user_id)
-        if user:
-            set_session_user_id(session, str(user.id))
-        return user
-    except Exception:
-        return None
-
-
-def _get_current_user_required(
-    authorization: Optional[str] = Header(None),
-    session: Session = Depends(get_session),
-) -> User:
-    """Get current user from token, raise 401 if no valid token."""
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
-    token = authorization.split(" ", 1)[1]
-    try:
-        payload = decode_token(token)
-        if payload.get("type") != "access":
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
-        user_id = payload.get("sub")
-        user = session.get(User, user_id)
-        if not user:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
-        set_session_user_id(session, str(user.id))
-        return user
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
 
 
 @router.post("/follow/{followed_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -120,13 +77,7 @@ def get_feed(
         select(Follower.followed_id).where(Follower.follower_id == user.id)
     ).all()
     
-    # Construire la requête du feed
-    # Si l'utilisateur ne suit personne, afficher seulement ses propres posts
-    # Exception: le compte demo voit tout le monde pour la démo
-    if user.id == 'demo' or user.id == 'guest-user':
-        # Mode démo: afficher tous les posts publics
-        statement = select(Share)
-    elif followed_ids:
+    if followed_ids:
         # Afficher les posts des utilisateurs suivis + ses propres posts
         statement = select(Share).where(
             Share.owner_id.in_(followed_ids + [user.id])

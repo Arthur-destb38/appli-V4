@@ -1,15 +1,18 @@
+from typing import Optional
+
 from fastapi import APIRouter, Body, Depends, HTTPException, status
 from pydantic import BaseModel
-from sqlmodel import select
+from sqlmodel import Session, select
 
 from ..db import get_session
-from ..models import Exercise
+from ..models import Exercise, User
 from ..schemas import (
     ExerciseCreate,
     ExerciseRead,
 )
 from ..utils.slug import make_exercise_slug
 from ..services.exercise_loader import import_exercises_from_url
+from ..utils.dependencies import get_current_user as _require_authenticated_user
 
 router = APIRouter(prefix="/exercises", tags=["exercises"])
 
@@ -45,6 +48,7 @@ def get_exercise(exercise_id: str, session=Depends(get_session)) -> ExerciseRead
 def create_exercise(
     payload: ExerciseCreate,
     session=Depends(get_session),
+    _current_user: User = Depends(_require_authenticated_user),
 ) -> ExerciseRead:
     slug = make_exercise_slug(payload.name, payload.muscle_group)
     existing = session.exec(select(Exercise).where(Exercise.slug == slug)).first()
@@ -77,6 +81,7 @@ def create_exercise(
 def create_exercises_bulk(
     payloads: list[ExerciseCreate] = Body(...),
     session=Depends(get_session),
+    _current_user: User = Depends(_require_authenticated_user),
 ) -> list[ExerciseRead]:
     exercises = []
     for payload in payloads:
@@ -109,6 +114,7 @@ def create_exercises_bulk(
 def import_exercises(
     payload: ImportExercisesRequest,
     session=Depends(get_session),
+    _current_user: User = Depends(_require_authenticated_user),
 ) -> dict:
     """Importe des exercices depuis une URL externe.
     

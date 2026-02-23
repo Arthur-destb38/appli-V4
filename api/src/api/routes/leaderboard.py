@@ -82,7 +82,7 @@ def get_volume_leaderboard(
             username=entry["username"],
             avatar_url=entry["avatar_url"],
             score=entry["score"],
-            change=0,  # TODO: calculer le changement
+            change=0,
         ))
         if current_user_id and entry["user_id"] == current_user_id:
             my_rank = rank

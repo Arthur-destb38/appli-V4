@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Header, Request
 from fastapi.responses import Response
 from sqlmodel import Session, select
 
-from ..db import get_session, set_session_user_id
+from ..db import get_session
 from ..models import User, RefreshToken
 from ..schemas import LoginRequest, RegisterRequest, RegisterRequestV2, TokenPair, MeResponse, ResetPasswordRequest, ResetPasswordConfirm, VerifyEmailRequest
 from ..utils.auth import (
@@ -16,26 +16,21 @@ from ..utils.auth import (
     verify_password,
 )
 from ..utils.rate_limit import record_login_attempt, cleanup_old_attempts
+from ..utils.dependencies import get_current_user as _get_current_user
 from ..services.email import send_verification_email, send_password_reset_email, generate_verification_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 def _get_client_ip(request: Request) -> str:
-    """Get client IP address from request."""
-    # Check for forwarded headers (for reverse proxies)
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
         return forwarded_for.split(",")[0].strip()
-    
     real_ip = request.headers.get("X-Real-IP")
     if real_ip:
         return real_ip
-    
-    # Fallback to direct connection
     if request.client:
         return request.client.host
-    
     return "unknown"
 
 
@@ -43,30 +38,6 @@ def _get_refresh_from_header(authorization: Optional[str]) -> str:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
     return authorization.split(" ", 1)[1]
-
-
-def _get_current_user(
-    authorization: Annotated[Optional[str], Header()] = None,
-    session: Session = Depends(get_session),
-) -> User:
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
-    token = authorization.split(" ", 1)[1]
-    try:
-        payload = decode_token(token)
-    except ValueError as e:
-        detail = "token_expired" if "token_expired" in str(e) else "invalid_token"
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
-    except Exception:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
-    if payload.get("type") != "access":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
-    user_id = payload.get("sub")
-    user = session.get(User, user_id)
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
-    set_session_user_id(session, str(user.id))
-    return user
 
 
 @router.post("/register-v2", response_model=TokenPair, status_code=status.HTTP_201_CREATED)
@@ -161,7 +132,11 @@ def register_v2(payload: RegisterRequestV2, request: Request, session: Session =
     client_ip = _get_client_ip(request)
     record_login_attempt(session, username, client_ip, success=True)
     
-    session.commit()
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="registration_failed")
     return TokenPair(access_token=access, refresh_token=refresh_token)
 
 
@@ -257,7 +232,11 @@ def register(payload: RegisterRequest, request: Request, session: Session = Depe
     client_ip = _get_client_ip(request)
     record_login_attempt(session, username, client_ip, success=True)
     
-    session.commit()
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="registration_failed")
     return TokenPair(access_token=access, refresh_token=refresh_token)
 
 
@@ -287,10 +266,14 @@ def login(payload: LoginRequest, request: Request, session: Session = Depends(ge
     record_login_attempt(session, username, client_ip, success=True)
     
     # Nettoyer les anciennes tentatives (occasionnellement)
-    if hash(username) % 100 == 0:  # 1% de chance
+    if hash(username) % 100 == 0:
         cleanup_old_attempts(session)
     
-    session.commit()
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="login_failed")
     return TokenPair(access_token=access, refresh_token=refresh_token)
 
 

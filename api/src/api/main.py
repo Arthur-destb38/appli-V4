@@ -28,6 +28,8 @@ from .routes import users
 from .routes import seed
 from .routes import messaging
 from .routes import admin
+
+_IS_PRODUCTION = os.getenv("ENVIRONMENT", "").lower() == "production"
 from .seeds import seed_exercises
 from .services.exercise_loader import import_exercises_from_url
 from sqlmodel import Session, select, func
@@ -110,10 +112,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Gorillax API", version="0.1.0", lifespan=lifespan)
 
-# Configuration CORS pour autoriser les requêtes depuis l'app mobile
 cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
-if os.getenv("ENVIRONMENT") == "production" and "*" in cors_origins:
-    print("⚠️  WARNING: CORS allows all origins in production. Set CORS_ORIGINS environment variable.")
+if _IS_PRODUCTION and "*" in cors_origins:
+    cors_origins = [
+        "https://appli-v2.onrender.com",
+        "https://gorillax.app",
+    ]
 
 app.add_middleware(
     CORSMiddleware,
@@ -139,9 +143,11 @@ app.include_router(profile.router)
 app.include_router(explore.router)
 app.include_router(notifications.router)
 app.include_router(leaderboard.router)
-app.include_router(seed.router)
 app.include_router(messaging.router)
-app.include_router(admin.router)
+
+if not _IS_PRODUCTION:
+    app.include_router(seed.router)
+    app.include_router(admin.router)
 
 
 @app.get("/", tags=["meta"], summary="API metadata")

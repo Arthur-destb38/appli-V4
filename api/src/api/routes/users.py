@@ -21,15 +21,12 @@ class UpdateProfileRequest(BaseModel):
 
 
 def _ensure_unique_username(session, username: str, exclude_id: Optional[str] = None) -> None:
-    print(f"DEBUG: Checking username uniqueness for '{username}', excluding ID: {exclude_id}")
     statement = select(User).where(User.username == username)
     if exclude_id is not None:
         statement = statement.where(User.id != exclude_id)
     existing = session.exec(statement).first()
     if existing is not None:
-        print(f"DEBUG: Username '{username}' already taken by user {existing.id}")
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="username_taken")
-    print(f"DEBUG: Username '{username}' is available")
 
 
 @router.post("/profile", response_model=UserProfileRead)
@@ -133,13 +130,7 @@ def update_profile(
     
     user = current_user
     
-    # Debug logging
-    print(f"DEBUG: Updating profile for user {user_id}")
-    print(f"DEBUG: Current username: {user.username}")
-    print(f"DEBUG: New username: {payload.username}")
-    
     if payload.username is not None and payload.username.strip() != user.username:
-        print(f"DEBUG: Username change detected: '{user.username}' -> '{payload.username.strip()}'")
         _ensure_unique_username(session, payload.username.strip(), exclude_id=user.id)
         user.username = payload.username.strip()
     

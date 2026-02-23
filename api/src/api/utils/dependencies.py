@@ -1,4 +1,8 @@
-"""Common dependencies for FastAPI routes."""
+"""Common dependencies for FastAPI routes.
+
+All route files should import auth dependencies from here
+instead of defining their own copies.
+"""
 from typing import Annotated, Optional
 from fastapi import Depends, HTTPException, status, Header
 from sqlmodel import Session
@@ -12,10 +16,10 @@ def get_current_user(
     authorization: Annotated[Optional[str], Header()] = None,
     session: Session = Depends(get_session),
 ) -> User:
-    """Get current user from Authorization header."""
+    """Require a valid access token. Raises 401 if missing/invalid."""
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
-    
+
     token = authorization.split(" ", 1)[1]
     try:
         payload = decode_token(token)
@@ -24,13 +28,34 @@ def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
     except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
-    
+
     if payload.get("type") != "access":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
-    
+
     user_id = payload.get("sub")
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
     set_session_user_id(session, str(user.id))
     return user
+
+
+def get_current_user_optional(
+    authorization: Annotated[Optional[str], Header()] = None,
+    session: Session = Depends(get_session),
+) -> Optional[User]:
+    """Try to get the current user, return None if no valid token."""
+    if not authorization or not authorization.lower().startswith("bearer "):
+        return None
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload = decode_token(token)
+        if payload.get("type") != "access":
+            return None
+        user_id = payload.get("sub")
+        user = session.get(User, user_id)
+        if user:
+            set_session_user_id(session, str(user.id))
+        return user
+    except Exception:
+        return None

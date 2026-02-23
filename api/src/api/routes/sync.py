@@ -255,7 +255,11 @@ def push_mutations(
             if event.id is not None:
                 results.append({"queue_id": mutation.queue_id, "server_id": event.id})
 
-    session.commit()
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="sync_push_failed")
     server_time = datetime.now(timezone.utc)
     return SyncPushResponse(processed=len(payload.mutations), server_time=server_time, results=results)
 

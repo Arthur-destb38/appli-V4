@@ -4,11 +4,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Header
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, and_
 from sqlmodel import Session, select
 
-from ..db import get_session, set_session_user_id
+from ..db import get_session
 from ..models import Conversation, Message, User
 from ..schemas import (
     ConversationListResponse,
@@ -21,30 +21,9 @@ from ..schemas import (
     SendMessageRequest,
     SendMessageResponse,
 )
-from ..utils.auth import decode_token
+from ..utils.dependencies import get_current_user as _get_current_user_required
 
 router = APIRouter(prefix="/messaging", tags=["messaging"])
-
-
-def _get_current_user_required(
-    authorization: Optional[str] = Header(None),
-    session: Session = Depends(get_session),
-) -> User:
-    if not authorization or not authorization.lower().startswith("bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
-    token = authorization.split(" ", 1)[1]
-    try:
-        payload = decode_token(token)
-        if payload.get("type") != "access":
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
-        user_id = payload.get("sub")
-        user = session.get(User, user_id)
-        if not user:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
-        set_session_user_id(session, str(user.id))
-        return user
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
 
 
 def find_existing_conversation(
@@ -301,10 +280,14 @@ def send_message(
         content=payload.content.strip(),
     )
     session.add(message)
-
     conversation.last_message_at = datetime.now(timezone.utc)
-    session.commit()
-    session.refresh(message)
+
+    try:
+        session.commit()
+        session.refresh(message)
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="send_message_failed")
 
     return SendMessageResponse(
         message=MessageRead.model_validate(message),
