@@ -50,8 +50,8 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`;
     }
-  } catch (error) {
-    console.error('Erreur lors de la récupération du token:', error);
+  } catch (_) {
+    // Token unavailable
   }
   
   return headers;
@@ -104,8 +104,8 @@ export const apiCall = async (
           });
         }
       }
-    } catch (error) {
-      console.error('Erreur lors du refresh du token:', error);
+    } catch (_) {
+      // Refresh failed silently
     }
   }
   

@@ -15,7 +15,6 @@ export default function ProfileSetupSimple() {
   const insets = useSafeAreaInsets();
 
   const goToApp = () => {
-    console.log('🚀 Navigation vers l\'app principale');
     router.replace('/(tabs)');
   };
 

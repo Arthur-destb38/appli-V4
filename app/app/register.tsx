@@ -66,28 +66,9 @@ export default function RegisterScreen() {
         email: email.trim(),
         password: password,
       });
-      console.log('✅ Inscription réussie, redirection vers profil...');
       router.replace('/profile-setup-simple');
     } catch (error) {
-      console.error('❌ Erreur d\'inscription:', error);
       setError(error instanceof Error ? error.message : 'Erreur lors de l\'inscription');
-    }
-  };
-
-  const handleQuickRegister = async () => {
-    setError('');
-    try {
-      const timestamp = Date.now();
-      await register({
-        username: `user${timestamp}`,
-        email: `test${timestamp}@example.com`,
-        password: 'TestPassword123',
-      });
-      console.log('✅ Inscription rapide réussie');
-      router.replace('/profile-setup-simple');
-    } catch (error) {
-      console.error('❌ Erreur inscription rapide:', error);
-      setError('Erreur lors de l\'inscription rapide');
     }
   };
 
@@ -217,14 +198,6 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.quickButton]}
-            onPress={handleQuickRegister}
-            disabled={isLoading}
-          >
-            <Text style={styles.buttonText}>🧪 Inscription Rapide</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={styles.linkButton}
             onPress={() => router.back()}
             disabled={isLoading}
@@ -296,9 +269,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
-  },
-  quickButton: {
-    backgroundColor: '#28a745',
   },
   buttonText: {
     color: 'white',

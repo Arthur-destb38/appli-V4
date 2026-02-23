@@ -78,10 +78,8 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
           token_type: 'bearer',
         });
         setUser(JSON.parse(storedUser));
-        console.log('✅ Session restaurée depuis le stockage');
       }
     } catch (error) {
-      console.error('❌ Erreur lors du chargement de la session:', error);
     } finally {
       setIsLoading(false);
     }
@@ -96,9 +94,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       ]);
       setTokens(authTokens);
       setUser(userData);
-      console.log('✅ Session sauvegardée');
     } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde:', error);
     }
   };
 
@@ -111,9 +107,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       ]);
       setTokens(null);
       setUser(null);
-      console.log('✅ Session effacée');
     } catch (error) {
-      console.error('❌ Erreur lors de l\'effacement:', error);
     }
   };
 
@@ -135,8 +129,6 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const handleLogin = useCallback(async (credentials: LoginRequest) => {
     setIsLoading(true);
     try {
-      console.log('🔐 Connexion en cours...');
-
       await clearAllUserDataForLogout();
 
       const controller = new AbortController();
@@ -155,15 +147,11 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       }
 
       const authTokens: AuthTokens = await response.json();
-      console.log('✅ Tokens reçus');
-
       const userData = await fetchUserProfile(authTokens.access_token);
-      console.log('✅ Profil utilisateur récupéré');
 
       await saveAuth(authTokens, userData);
       
     } catch (error: unknown) {
-      console.error('❌ Erreur login:', error);
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           throw new Error('Le serveur met trop de temps à répondre. Réessaie dans quelques secondes (serveur au réveil).');
@@ -179,8 +167,6 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const handleRegister = useCallback(async (credentials: RegisterRequest) => {
     setIsLoading(true);
     try {
-      console.log('📝 Inscription en cours...');
-
       await clearAllUserDataForLogout();
 
       const response = await fetch(buildApiUrl('/auth/register-v2'), {
@@ -195,15 +181,9 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       }
 
       const authTokens: AuthTokens = await response.json();
-      console.log('✅ Inscription réussie, tokens reçus');
-
       const userData = await fetchUserProfile(authTokens.access_token);
-      console.log('✅ Profil utilisateur récupéré');
-
       await saveAuth(authTokens, userData);
-      
     } catch (error) {
-      console.error('❌ Erreur register:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -223,16 +203,12 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
           },
         }).catch(() => {
           // Ignorer les erreurs de déconnexion côté serveur
-          console.log('⚠️ Erreur lors de la déconnexion côté serveur (ignorée)');
         });
       }
 
-      // Vider les données locales (séances, sync, file de mutations, profil) pour isoler les comptes
       await clearAllUserDataForLogout();
       await clearAuth();
-      console.log('✅ Déconnexion réussie');
     } catch (error) {
-      console.error('❌ Erreur logout:', error);
     } finally {
       setIsLoading(false);
     }
@@ -262,10 +238,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       if (user) {
         await saveAuth(newTokens, user);
       }
-      
-      console.log('✅ Tokens rafraîchis');
     } catch (error) {
-      console.error('❌ Erreur refresh:', error);
       // Si le refresh échoue, déconnecter l'utilisateur
       await clearAuth();
       throw error;
@@ -281,9 +254,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       const userData = await fetchUserProfile(tokens.access_token);
       setUser(userData);
       await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
-      console.log('✅ Profil mis à jour');
     } catch (error) {
-      console.error('❌ Erreur update profile:', error);
       throw error;
     }
   }, [tokens]);

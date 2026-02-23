@@ -51,14 +51,14 @@
 ### Bloquants
 
 - [x] **Corriger le bug de hooks dans `login.tsx`** — Les `useState` étaient après un `return <Redirect>` conditionnel, ce qui violait les règles des hooks React.
-- [ ] **Mettre `USE_LOCAL_API = false`** dans `app/src/utils/api.ts` — Actuellement à `true`, l'app pointe vers `localhost` au lieu de l'API Render.
-- [ ] **Ajouter des Error Boundaries React** — Si un composant crash, toute l'app plante sans message d'erreur. Ajouter un composant `ErrorBoundary` autour des sections principales.
+- [x] **Mettre `USE_LOCAL_API = false`** dans `app/src/utils/api.ts` — Commité et poussé, l'app pointe maintenant vers l'API Render.
+- [x] **Ajouter des Error Boundaries React** — Composant `ErrorBoundary` créé dans `src/components/ErrorBoundary.tsx`, wrappé autour de `AuthProvider` dans `_layout.tsx`.
 
 ### Nettoyage
 
-- [ ] **Supprimer les `console.log`** dans : `login.tsx`, `register.tsx`, `useAuth.tsx`, `authApi.ts`.
-- [ ] **Supprimer les credentials de démo hardcodées** visibles dans le code de `login.tsx`.
-- [ ] **Vérifier les loading/empty states** sur tous les écrans (certains comme `profile-setup-simple.tsx` n'en ont pas).
+- [x] **Supprimer les `console.log`** — Nettoyé dans `login.tsx`, `register.tsx`, `useAuth.tsx`, `authApi.ts`, `api.ts`, `profile.tsx`, `profile-setup-simple.tsx`.
+- [x] **Supprimer les credentials de démo hardcodées** — Bouton "Connexion Demo" supprimé de `login.tsx`, bouton "Inscription Rapide" supprimé de `register.tsx`.
+- [x] **Vérifier les loading/empty states** — Vérifié tous les écrans (tabs). `feed`, `index`, `messages`, `explore` ont des loading/empty states. `profile` est statique (menu). OK.
 
 ---
 

@@ -35,24 +35,9 @@ export default function LoginScreen() {
     setError('');
     try {
       await login({ username: username.trim(), password });
-      console.log('✅ Connexion réussie, redirection...');
       router.replace('/(tabs)');
     } catch (error) {
-      console.error('❌ Erreur de connexion:', error);
       setError(error instanceof Error ? error.message : 'Erreur de connexion');
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setError('');
-    try {
-      await login({ username: 'demo', password: 'DemoPassword123' });
-      console.log('✅ Connexion demo réussie');
-      router.replace('/(tabs)');
-    } catch (err) {
-      console.error('❌ Erreur connexion demo:', err);
-      const message = err instanceof Error ? err.message : 'Impossible de se connecter avec le compte demo';
-      setError(message);
     }
   };
 
@@ -135,18 +120,6 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.demoButton]}
-            onPress={handleDemoLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.buttonText}>🧪 Connexion Demo</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={styles.linkButton}
             onPress={() => router.push('/register')}
             disabled={isLoading}
@@ -218,9 +191,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
-  },
-  demoButton: {
-    backgroundColor: '#28a745',
   },
   buttonText: {
     color: 'white',

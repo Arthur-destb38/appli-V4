@@ -41,26 +41,18 @@ export interface User {
 
 export const login = async (payload: LoginRequest): Promise<TokenPair> => {
   const url = buildApiUrl('/auth/login');
-  console.log('🔗 URL de connexion:', url);
-  console.log('📤 Payload:', { username: payload.username, password: '***' });
-  
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
 
-  console.log('📥 Statut réponse:', response.status);
-  
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Erreur de connexion' }));
-    console.error('❌ Erreur login:', error);
     throw new Error(error.detail || 'Erreur de connexion');
   }
 
-  const data = await response.json();
-  console.log('✅ Login réussi, token reçu:', data.access_token.substring(0, 20) + '...');
-  return data;
+  return response.json();
 };
 
 export const register = async (payload: RegisterRequest): Promise<TokenPair> => {
@@ -96,9 +88,6 @@ export const refreshToken = async (refreshToken: string): Promise<TokenPair> => 
 
 export const getMe = async (accessToken: string): Promise<User> => {
   const url = buildApiUrl('/auth/me');
-  console.log('🔗 URL getMe:', url);
-  console.log('🔑 Token:', accessToken.substring(0, 20) + '...');
-  
   const response = await fetch(url, {
     method: 'GET',
     headers: {
@@ -106,16 +95,11 @@ export const getMe = async (accessToken: string): Promise<User> => {
     },
   });
 
-  console.log('📥 Statut getMe:', response.status);
-
   if (!response.ok) {
-    console.error('❌ Erreur getMe, statut:', response.status);
     throw new Error('Erreur de récupération du profil');
   }
 
-  const userData = await response.json();
-  console.log('✅ Données utilisateur récupérées:', userData);
-  return userData;
+  return response.json();
 };
 
 export const logout = async (refreshToken: string): Promise<void> => {

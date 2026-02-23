@@ -12,6 +12,7 @@ import { PreferencesProvider } from '@/hooks/usePreferences';
 import { AppThemeProvider } from '@/theme/ThemeProvider';
 import { DemoProvider } from '../src/contexts/DemoContext';
 import { DemoTourOverlay } from '../src/components/DemoTourOverlay';
+import { ErrorBoundary } from '../src/components/ErrorBoundary';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -20,6 +21,7 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <PreferencesProvider>
         <AppThemeProvider>
+          <ErrorBoundary>
           <AuthProvider>
             <UserProfileProvider>
               <WorkoutsProvider>
@@ -142,6 +144,7 @@ export default function RootLayout() {
             </WorkoutsProvider>
           </UserProfileProvider>
         </AuthProvider>
+          </ErrorBoundary>
       </AppThemeProvider>
       </PreferencesProvider>
       <StatusBar style="auto" />

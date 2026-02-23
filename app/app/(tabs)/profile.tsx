@@ -146,17 +146,12 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = async () => {
-    console.log('🔓 Demande de déconnexion...');
     try {
       await logout();
-      console.log('✅ Logout terminé, redirection vers login...');
-      // Attendre un peu pour que l'état soit bien mis à jour
       setTimeout(() => {
         router.replace('/login');
       }, 100);
-    } catch (error) {
-      console.error('❌ Erreur logout:', error);
-      // Même en cas d'erreur, rediriger vers login
+    } catch (_) {
       router.replace('/login');
     }
   };
