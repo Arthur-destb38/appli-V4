@@ -15,7 +15,7 @@ from ..utils.auth import (
     hash_password,
     verify_password,
 )
-from ..utils.rate_limit import record_login_attempt, cleanup_old_attempts
+from ..utils.rate_limit import is_rate_limited, record_login_attempt, cleanup_old_attempts, get_remaining_cooldown
 from ..utils.dependencies import get_current_user as _get_current_user
 from ..services.email import send_verification_email, send_password_reset_email, generate_verification_token
 
@@ -42,7 +42,10 @@ def _get_refresh_from_header(authorization: Optional[str]) -> str:
 
 @router.post("/register-v2", response_model=TokenPair, status_code=status.HTTP_201_CREATED)
 def register_v2(payload: RegisterRequestV2, request: Request, session: Session = Depends(get_session)) -> TokenPair:
-    # Validation manuelle supplémentaire
+    client_ip = _get_client_ip(request)
+    if is_rate_limited(session, payload.username.strip(), client_ip):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="too_many_attempts")
+
     username = payload.username.strip()
     email = payload.email.strip().lower()
     password = payload.password
@@ -142,7 +145,10 @@ def register_v2(payload: RegisterRequestV2, request: Request, session: Session =
 
 @router.post("/register", response_model=TokenPair, status_code=status.HTTP_201_CREATED)
 def register(payload: RegisterRequest, request: Request, session: Session = Depends(get_session)) -> TokenPair:
-    # Validation manuelle supplémentaire
+    client_ip = _get_client_ip(request)
+    if is_rate_limited(session, payload.username.strip(), client_ip):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="too_many_attempts")
+
     username = payload.username.strip()
     email = payload.email.strip().lower()
     password = payload.password
@@ -245,12 +251,17 @@ def login(payload: LoginRequest, request: Request, session: Session = Depends(ge
     client_ip = _get_client_ip(request)
     username = payload.username.strip()
 
-    # S'assurer que le compte démo existe et a le bon mot de passe à chaque tentative "demo"
+    if is_rate_limited(session, username, client_ip):
+        cooldown = get_remaining_cooldown(session, username, client_ip) or 15
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"too_many_attempts::{cooldown}",
+        )
+
     if username == "demo":
         from ..main import ensure_demo_user
         ensure_demo_user()
 
-    # Vérifier les credentials
     user = session.exec(select(User).where(User.username == username)).first()
     if not user or not verify_password(payload.password, user.password_hash):
         # Enregistrer la tentative échouée
@@ -372,8 +383,12 @@ def resend_verification(current_user: User = Depends(_get_current_user), session
 
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
-def reset_password(payload: ResetPasswordRequest, session: Session = Depends(get_session)):
+def reset_password(payload: ResetPasswordRequest, request: Request, session: Session = Depends(get_session)):
     """Request password reset."""
+    client_ip = _get_client_ip(request)
+    if is_rate_limited(session, payload.email.lower(), client_ip):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="too_many_attempts")
+
     user = session.exec(select(User).where(User.email == payload.email.lower())).first()
     
     # Toujours retourner succès pour éviter l'énumération d'emails

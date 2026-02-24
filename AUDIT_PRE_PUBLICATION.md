@@ -64,11 +64,11 @@
 
 ## ÉTAPE 3 — Sécurité
 
-- [ ] **Ajouter du rate limiting** sur les endpoints critiques : `POST /auth/login`, `POST /auth/register`, `POST /auth/reset-password`. Empêcher le brute force.
-- [x] **Configurer le CORS** avec les domaines exacts autorisés (pas `*`). Fait dans `main.py`.
-- [ ] **Générer un `AUTH_SECRET` sécurisé** pour la production (min 32 caractères, jamais commité). Vérifier qu'il est bien dans les variables d'environnement Render.
-- [ ] **Vérifier que `.env` n'est pas commité** — Le `.gitignore` l'exclut mais faire un double check avec `git log`.
-- [ ] **Envisager le stockage externe des images** — Actuellement les images (avatars, photos de post) sont en base64 directement dans la base de données. Pour la scalabilité, migrer vers un stockage type Supabase Storage ou S3.
+- [x] **Ajouter du rate limiting** — `is_rate_limited()` branché sur `POST /auth/login`, `POST /auth/register`, `POST /auth/register-v2` et `POST /auth/reset-password`. 5 tentatives max / 15 min par username ou IP.
+- [x] **Configurer le CORS** avec les domaines exacts autorisés (pas `*`). Fait dans `main.py` + `CORS_ORIGINS` configuré sur Render.
+- [x] **`AUTH_SECRET` sécurisé** — Présent sur Render. Le code vérifie min 32 chars et rejette les valeurs par défaut.
+- [x] **`.env` non commité** — Vérifié via `git log`. Jamais ajouté au repo. `.gitignore` couvre `.env`, `.env.*`, `api/.env`.
+- [ ] **Envisager le stockage externe des images** — Actuellement les images sont en base64 dans la DB. Fonctionne pour le lancement, mais à migrer vers Supabase Storage ou S3 pour la scalabilité (post-v1).
 
 ---
 
