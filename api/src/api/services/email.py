@@ -1,6 +1,7 @@
 """Email service for sending verification and reset emails."""
 import os
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
@@ -24,45 +25,53 @@ def is_email_enabled() -> bool:
         return False
 
 
-def send_email(to_email: str, subject: str, html_content: str, text_content: Optional[str] = None) -> bool:
-    """Send an email using SMTP configuration."""
-    if not is_email_enabled():
-        print(f"📧 Email disabled - Would send to {to_email}: {subject}")
-        return True  # Simulate success when email is not configured
-    
+def _send_email_sync(to_email: str, subject: str, msg: MIMEMultipart) -> None:
+    """Actually send the email (runs in a background thread)."""
     try:
         smtp_host = os.getenv("SMTP_HOST")
         smtp_port = int(os.getenv("SMTP_PORT", "587"))
         smtp_user = os.getenv("SMTP_USER")
         smtp_password = os.getenv("SMTP_PASSWORD")
+
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+
+        print(f"✅ Email sent to {to_email}: {subject}")
+    except Exception as e:
+        print(f"❌ Failed to send email to {to_email}: {e}")
+
+
+def send_email(to_email: str, subject: str, html_content: str, text_content: Optional[str] = None) -> bool:
+    """Send an email in a background thread so it never blocks the API response."""
+    if not is_email_enabled():
+        print(f"📧 Email disabled - Would send to {to_email}: {subject}")
+        return True
+
+    try:
+        smtp_user = os.getenv("SMTP_USER")
         from_email = os.getenv("FROM_EMAIL", smtp_user)
-        
-        # Create message
+
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = from_email
         msg["To"] = to_email
-        
-        # Add text and HTML parts
+
         if text_content:
-            text_part = MIMEText(text_content, "plain")
-            msg.attach(text_part)
-        
-        html_part = MIMEText(html_content, "html")
-        msg.attach(html_part)
-        
-        # Send email
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.send_message(msg)
-        
-        print(f"✅ Email sent to {to_email}: {subject}")
+            msg.attach(MIMEText(text_content, "plain"))
+        msg.attach(MIMEText(html_content, "html"))
+
+        threading.Thread(
+            target=_send_email_sync,
+            args=(to_email, subject, msg),
+            daemon=True,
+        ).start()
+
         return True
-        
     except Exception as e:
-        print(f"❌ Failed to send email to {to_email}: {e}")
-        return True  # Return True anyway to not block registration
+        print(f"❌ Failed to prepare email to {to_email}: {e}")
+        return True
 
 
 def send_verification_email(email: str, username: str, token: str) -> bool:

@@ -39,6 +39,7 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
+  demoLogin: () => Promise<void>;
   register: (credentials: RegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
@@ -164,6 +165,40 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     }
   }, []);
 
+  const handleDemoLogin = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await clearAllUserDataForLogout();
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      const response = await fetch(buildApiUrl('/auth/demo-login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error('Impossible de se connecter au compte demo');
+      }
+
+      const authTokens: AuthTokens = await response.json();
+      const userData = await fetchUserProfile(authTokens.access_token);
+      await saveAuth(authTokens, userData);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new Error('Le serveur met trop de temps à répondre. Réessaie dans quelques secondes.');
+        }
+        throw error;
+      }
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const handleRegister = useCallback(async (credentials: RegisterRequest) => {
     setIsLoading(true);
     try {
@@ -267,6 +302,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
         isLoading,
         isAuthenticated: !!user && !!tokens,
         login: handleLogin,
+        demoLogin: handleDemoLogin,
         register: handleRegister,
         logout: handleLogout,
         refreshAuth: handleRefresh,

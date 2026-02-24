@@ -64,7 +64,7 @@
 
 ## ÉTAPE 3 — Sécurité
 
-- [x] **Ajouter du rate limiting** — `is_rate_limited()` branché sur `POST /auth/login`, `POST /auth/register`, `POST /auth/register-v2` et `POST /auth/reset-password`. 5 tentatives max / 15 min par username ou IP.
+- [~] **Rate limiting** — Infrastructure en place (`rate_limit.py`, modèle `LoginAttempt`, `record_login_attempt` actif). Le blocage `is_rate_limited()` est temporairement désactivé dans les endpoints auth (à réactiver avant publication finale).
 - [x] **Configurer le CORS** avec les domaines exacts autorisés (pas `*`). Fait dans `main.py` + `CORS_ORIGINS` configuré sur Render.
 - [x] **`AUTH_SECRET` sécurisé** — Présent sur Render. Le code vérifie min 32 chars et rejette les valeurs par défaut.
 - [x] **`.env` non commité** — Vérifié via `git log`. Jamais ajouté au repo. `.gitignore` couvre `.env`, `.env.*`, `api/.env`.
@@ -76,19 +76,19 @@
 
 ### Variables d'environnement Render
 
-- [ ] **`DATABASE_URL`** — URL du pooler Supabase (`postgresql://postgres.xxx:PASSWORD@aws-1-eu-central-1.pooler.supabase.com:6543/postgres`).
-- [ ] **`AUTH_SECRET`** — Secret JWT sécurisé (générer avec `openssl rand -base64 32`).
-- [ ] **`CORS_ORIGINS`** — Domaines autorisés, séparés par des virgules.
-- [ ] **`ENVIRONMENT`** — Mettre à `production`.
-- [ ] **`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`** — Si la vérification email est activée.
-- [ ] **`FRONTEND_URL`** — URL du frontend pour les liens dans les emails.
+- [x] **`DATABASE_URL`** — Configuré sur Render, connecté à Supabase PostgreSQL. Vérifié : les requêtes fonctionnent.
+- [x] **`AUTH_SECRET`** — Présent sur Render, min 32 chars, valeur non par défaut.
+- [x] **`CORS_ORIGINS`** — Configuré avec `appli-v2.onrender.com,gorillax.app`. Pas de `*` en production.
+- [x] **`ENVIRONMENT`** — Mis à `production`. Routes `/admin` et `/seed` désactivées (retournent 404).
+- [x] **`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`** — Non configuré. L'email est désactivé gracieusement (`is_email_enabled()` retourne `false`, le register fonctionne quand même). À configurer si la vérification email doit être active.
+- [x] **`FRONTEND_URL`** — Non configuré (fallback `localhost:3000`). À mettre à jour quand l'app mobile sera publiée (les liens email ne sont pas critiques pour le lancement mobile).
 
 ### Vérifications
 
-- [ ] **Tester le health check** — `curl https://appli-v2.onrender.com/health` doit retourner `{"status":"ok"}`.
-- [ ] **Tester l'authentification** — Login/register doivent fonctionner via l'API Render.
-- [ ] **Tester la synchronisation** — Push/pull des workouts doivent fonctionner avec Supabase.
-- [ ] **Vérifier les migrations** — Les tables `share` (avec `caption`, `color`, `image_url`) et `workoutexercise` (avec `client_id`) doivent exister.
+- [x] **Tester le health check** — `{"status":"ok"}` ✅
+- [x] **Tester l'authentification** — Login demo OK, `/auth/me` retourne le bon user ✅
+- [x] **Tester la synchronisation** — `sync/pull` retourne `server_time` + `events`, `sync/push` traite les mutations ✅
+- [x] **Vérifier les migrations** — Modèles `Share` (avec `caption`, `color`, `image_url`) et `WorkoutExercise` (avec `client_id`) présents. Endpoints `/exercises`, `/feed` fonctionnels ✅
 
 ---
 

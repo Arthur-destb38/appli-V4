@@ -135,7 +135,7 @@ const FeedScreen: React.FC = () => {
   const { profile } = useUserProfile();
   const [refreshing, setRefreshing] = useState(false);
   const headerAnim = useRef(new Animated.Value(0)).current;
-  const fabAnim = useRef(new Animated.Value(1)).current;
+
 
   const currentUserId = profile?.id || 'guest-user';
   const isDark = mode === 'dark';
@@ -163,23 +163,6 @@ const FeedScreen: React.FC = () => {
       useNativeDriver: true,
     }).start();
 
-    // FAB pulse animation
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(fabAnim, {
-          toValue: 1.05,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(fabAnim, {
-          toValue: 1,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
   }, []);
 
   useEffect(() => {
@@ -449,31 +432,7 @@ const FeedScreen: React.FC = () => {
         />
       )}
 
-      {/* Floating Action Button */}
-      <Animated.View
-        style={[
-          styles.fabContainer,
-          {
-            bottom: insets.bottom + 90,
-            transform: [{ scale: fabAnim }],
-          },
-        ]}
-      >
-        <Pressable
-          style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-            router.push('/create');
-          }}
-        >
-          <LinearGradient
-            colors={['#6366f1', '#8b5cf6']}
-            style={styles.fab}
-          >
-            <Ionicons name="add" size={28} color="#FFFFFF" />
-          </LinearGradient>
-        </Pressable>
-      </Animated.View>
+
 
       {error ? (
         <View style={[styles.errorBanner, { backgroundColor: theme.colors.error + '20' }]}>
@@ -812,22 +771,6 @@ const styles = StyleSheet.create({
   endText: {
     fontSize: 13,
     fontWeight: '600',
-  },
-  fabContainer: {
-    position: 'absolute',
-    right: 20,
-  },
-  fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#6366f1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
   },
   errorBanner: {
     flexDirection: 'row',

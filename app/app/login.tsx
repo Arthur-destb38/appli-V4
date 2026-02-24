@@ -16,7 +16,7 @@ import { useAppTheme } from '@/theme/ThemeProvider';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, isLoading, isAuthenticated } = useAuth();
+  const { login, demoLogin, isLoading, isAuthenticated } = useAuth();
   const { theme } = useAppTheme();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -38,6 +38,16 @@ export default function LoginScreen() {
       router.replace('/(tabs)');
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Erreur de connexion');
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setError('');
+    try {
+      await demoLogin();
+      router.replace('/(tabs)');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Impossible de se connecter au compte demo');
     }
   };
 
@@ -120,6 +130,18 @@ export default function LoginScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            style={[styles.button, styles.demoButton]}
+            onPress={handleDemoLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Essayer avec le compte Demo</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
             style={styles.linkButton}
             onPress={() => router.push('/register')}
             disabled={isLoading}
@@ -191,6 +213,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
+  },
+  demoButton: {
+    backgroundColor: '#6366f1',
   },
   buttonText: {
     color: 'white',

@@ -345,7 +345,7 @@ export default function ExploreScreen() {
   // Animations
   const headerAnim = useRef(new Animated.Value(0)).current;
   const searchFocusAnim = useRef(new Animated.Value(0)).current;
-  const fabAnim = useRef(new Animated.Value(1)).current;
+
 
   useEffect(() => {
     Animated.timing(headerAnim, {
@@ -355,23 +355,6 @@ export default function ExploreScreen() {
       useNativeDriver: true,
     }).start();
 
-    // FAB pulse
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(fabAnim, {
-          toValue: 1.05,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(fabAnim, {
-          toValue: 1,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
   }, []);
 
   const handleSearchFocus = (focused: boolean) => {
@@ -885,31 +868,6 @@ export default function ExploreScreen() {
         </ScrollView>
       )}
 
-      {/* Floating Action Button */}
-      <Animated.View
-        style={[
-          styles.fabContainer,
-          {
-            bottom: insets.bottom + 90,
-            transform: [{ scale: fabAnim }],
-          },
-        ]}
-      >
-        <Pressable
-          style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-            router.push('/create');
-          }}
-        >
-          <LinearGradient
-            colors={['#6366f1', '#8b5cf6']}
-            style={styles.fab}
-          >
-            <Ionicons name="add" size={28} color="#FFFFFF" />
-          </LinearGradient>
-        </Pressable>
-      </Animated.View>
     </View>
   );
 }
@@ -1476,21 +1434,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '700',
-  },
-  fabContainer: {
-    position: 'absolute',
-    right: 20,
-  },
-  fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#6366f1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
   },
 });
