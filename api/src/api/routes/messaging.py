@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlalchemy import func, or_, and_
 from sqlmodel import Session, select
 
@@ -354,6 +355,63 @@ def get_unread_count(
     unread_count = session.exec(unread_stmt).one()
 
     return {"unread_count": unread_count}
+
+
+class DirectSendRequest(BaseModel):
+    recipient_id: str
+    content: str
+
+
+@router.post("/send", response_model=SendMessageResponse)
+def send_direct_message(
+    payload: DirectSendRequest,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user_required),
+) -> SendMessageResponse:
+    """Send a message to a user, creating a conversation if needed."""
+    user_id = current_user.id
+
+    if user_id == payload.recipient_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="cannot_message_self",
+        )
+
+    other_user = session.get(User, payload.recipient_id)
+    if not other_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="user_not_found",
+        )
+
+    conversation = find_existing_conversation(session, user_id, payload.recipient_id)
+    if not conversation:
+        conversation = Conversation(
+            participant1_id=user_id,
+            participant2_id=payload.recipient_id,
+        )
+        session.add(conversation)
+        session.flush()
+
+    message = Message(
+        conversation_id=conversation.id,
+        sender_id=user_id,
+        content=payload.content.strip(),
+    )
+    session.add(message)
+    conversation.last_message_at = datetime.now(timezone.utc)
+
+    try:
+        session.commit()
+        session.refresh(message)
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="send_message_failed")
+
+    return SendMessageResponse(
+        message=MessageRead.model_validate(message),
+        conversation_id=conversation.id,
+    )
 
 
 @router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
