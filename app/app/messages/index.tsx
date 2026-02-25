@@ -204,7 +204,9 @@ export default function MessagesScreen() {
                 ]}
                 numberOfLines={1}
               >
-                {conversation.last_message?.content || 'Aucun message'}
+                {conversation.last_message?.content?.startsWith('💪 Séance partagée')
+                  ? `🏋️ Séance partagée : ${conversation.last_message.content.split('"')[1] || ''}`
+                  : conversation.last_message?.content || 'Aucun message'}
               </Text>
               {hasUnread && (
                 <View style={[styles.unreadBadge, { backgroundColor: theme.colors.primary }]}>

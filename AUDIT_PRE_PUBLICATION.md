@@ -94,6 +94,8 @@
 
 ## ÉTAPE 5 — Build Mobile (EAS / Expo)
 
+- [ ] **Intégrer un terminal de paiements (peut etre stripe)**
+
 ### Pré-requis
 
 - [ ] **Compte Apple Developer** (99$/an) — Nécessaire pour l'App Store.

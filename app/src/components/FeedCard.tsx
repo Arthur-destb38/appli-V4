@@ -3,7 +3,6 @@ import {
   Animated,
   Image,
   Pressable,
-  Share,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -11,14 +10,18 @@ import {
   Modal,
   Alert,
   Easing,
+  FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { LikeButton, DoubleTapHeart } from './LikeButton';
 import { toggleLike } from '@/services/likesApi';
+import { buildApiUrl, getAuthHeaders } from '@/utils/api';
 
 interface CommentPreview {
   id: string;
@@ -106,6 +109,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
   index = 0,
 }) => {
   const { theme, mode } = useAppTheme();
+  const router = useRouter();
   const isDark = mode === 'dark';
   const [liked, setLiked] = useState(initialLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
@@ -113,6 +117,10 @@ export const FeedCard: React.FC<FeedCardProps> = ({
   const [hidden, setHidden] = useState(false);
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [shareUsers, setShareUsers] = useState<{id: string; username: string}[]>([]);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareSent, setShareSent] = useState<string | null>(null);
   const lastTapRef = useRef<number>(0);
   const cardScaleAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -241,6 +249,73 @@ export const FeedCard: React.FC<FeedCardProps> = ({
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     Alert.alert('✅ Merci', 'Ton signalement a été envoyé. Nous allons examiner ce post.');
     onReport?.(shareId);
+  };
+
+  const handleShareInApp = async () => {
+    Haptics.selectionAsync().catch(() => {});
+    setShareModalVisible(true);
+    setShareLoading(true);
+    setShareSent(null);
+    try {
+      const headers = await getAuthHeaders();
+      const allUsers: {id: string; username: string}[] = [];
+      const seen = new Set<string>();
+
+      const followingRes = await fetch(buildApiUrl(`/profile/${currentUserId}/following`), { headers });
+      if (followingRes.ok) {
+        const data = await followingRes.json();
+        for (const u of data.following || []) {
+          if (u.id !== currentUserId && !seen.has(u.id)) { seen.add(u.id); allUsers.push(u); }
+        }
+      }
+
+      const suggestedRes = await fetch(buildApiUrl('/explore/suggested-users?limit=20'), { headers });
+      if (suggestedRes.ok) {
+        const data = await suggestedRes.json();
+        for (const u of data) {
+          if (u.id !== currentUserId && !seen.has(u.id)) { seen.add(u.id); allUsers.push(u); }
+        }
+      }
+
+      setShareUsers(allUsers);
+    } catch { /* ignore */ }
+    setShareLoading(false);
+  };
+
+  const sendShareMessage = async (recipientId: string, recipientUsername: string) => {
+    setShareSent(recipientId);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    try {
+      const headers = await getAuthHeaders();
+
+      let detail = '';
+      try {
+        const res = await fetch(buildApiUrl(`/workouts/shared/${shareId}`), { headers });
+        if (res.ok) {
+          const data = await res.json();
+          const lines: string[] = [];
+          for (const ex of data.exercises || []) {
+            const setsInfo = (ex.sets || [])
+              .map((s: any) => `${s.reps} reps × ${s.weight}kg`)
+              .join(', ');
+            lines.push(`  • ${ex.name}${setsInfo ? ' — ' + setsInfo : ''}`);
+          }
+          if (lines.length > 0) detail = '\n\n' + lines.join('\n');
+        }
+      } catch { /* ignore, send without detail */ }
+
+      const message = `💪 Séance partagée : "${workoutTitle}" par ${ownerUsername}${detail}`;
+
+      await fetch(buildApiUrl('/messaging/send'), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          recipient_id: recipientId,
+          content: message,
+        }),
+      });
+    } catch { /* ignore */ }
+    setTimeout(() => setShareModalVisible(false), 800);
   };
 
   const handlePressIn = () => {
@@ -460,12 +535,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
               </Pressable>
               <Pressable
                 style={({ pressed }) => [styles.actionBtn, { opacity: pressed ? 0.6 : 1 }]}
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  Share.share({
-                    message: `${ownerUsername} a partagé sa séance "${workoutTitle}" sur Gorillax ! ${exerciseCount} exercice${exerciseCount > 1 ? 's' : ''}, ${setCount} série${setCount > 1 ? 's' : ''}.`,
-                  }).catch(() => {});
-                }}
+                onPress={handleShareInApp}
               >
                 <Ionicons name="paper-plane-outline" size={22} color={theme.colors.textSecondary} />
               </Pressable>
@@ -553,6 +623,49 @@ export const FeedCard: React.FC<FeedCardProps> = ({
           </View>
         </Animated.View>
       </Pressable>
+
+      {/* Share in-app modal */}
+      <Modal visible={shareModalVisible} transparent animationType="slide" onRequestClose={() => setShareModalVisible(false)}>
+        <Pressable style={styles.shareOverlay} onPress={() => setShareModalVisible(false)}>
+          <Pressable style={[styles.shareModal, { backgroundColor: theme.colors.surface }]} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.shareHeader}>
+              <Text style={[styles.shareTitle, { color: theme.colors.textPrimary }]}>Envoyer à...</Text>
+              <TouchableOpacity onPress={() => setShareModalVisible(false)} hitSlop={12}>
+                <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            {shareLoading ? (
+              <View style={styles.shareLoadingContainer}>
+                <ActivityIndicator size="small" color={theme.colors.accent} />
+              </View>
+            ) : shareUsers.length === 0 ? (
+              <Text style={[styles.shareEmptyText, { color: theme.colors.textSecondary }]}>Aucun utilisateur trouvé</Text>
+            ) : (
+              <FlatList
+                data={shareUsers}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[styles.shareUserRow, { borderBottomColor: theme.colors.border }]}
+                    onPress={() => sendShareMessage(item.id, item.username)}
+                    disabled={shareSent === item.id}
+                  >
+                    <LinearGradient colors={getAvatarGradient(item.username)} style={styles.shareUserAvatar}>
+                      <Text style={styles.shareUserAvatarText}>{item.username.charAt(0).toUpperCase()}</Text>
+                    </LinearGradient>
+                    <Text style={[styles.shareUserName, { color: theme.colors.textPrimary }]}>{item.username}</Text>
+                    {shareSent === item.id ? (
+                      <Ionicons name="checkmark-circle" size={24} color="#10b981" />
+                    ) : (
+                      <Ionicons name="paper-plane" size={20} color={theme.colors.textSecondary} />
+                    )}
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </Animated.View>
   );
 };
@@ -871,5 +984,61 @@ const styles = StyleSheet.create({
   viewComments: {
     fontSize: 13,
     fontWeight: '500',
+  },
+  shareOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  shareModal: {
+    maxHeight: '50%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingBottom: 34,
+  },
+  shareHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    paddingBottom: 12,
+  },
+  shareTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  shareLoadingContainer: {
+    padding: 40,
+    alignItems: 'center',
+  },
+  shareEmptyText: {
+    textAlign: 'center',
+    padding: 40,
+    fontSize: 14,
+  },
+  shareUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 12,
+  },
+  shareUserAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shareUserAvatarText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  shareUserName: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
   },
 });

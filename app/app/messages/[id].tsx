@@ -283,16 +283,42 @@ export default function ChatScreen() {
                         isMe
                           ? { backgroundColor: theme.colors.primary }
                           : { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, borderWidth: 1 },
+                        message.content.startsWith('💪 Séance partagée') && styles.workoutBubble,
                       ]}
                     >
-                      <Text
-                        style={[
-                          styles.messageText,
-                          { color: isMe ? '#FFFFFF' : theme.colors.textPrimary },
-                        ]}
-                      >
-                        {message.content}
-                      </Text>
+                      {message.content.startsWith('💪 Séance partagée') ? (
+                        <View>
+                          <View style={styles.workoutHeader}>
+                            <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.workoutIcon}>
+                              <Ionicons name="barbell" size={16} color="#fff" />
+                            </LinearGradient>
+                            <Text style={[styles.workoutTitle, { color: isMe ? '#fff' : theme.colors.textPrimary }]}>
+                              {message.content.split('"')[1] || 'Séance'}
+                            </Text>
+                          </View>
+                          {message.content.includes('•') && (
+                            <View style={[styles.workoutDetails, { borderTopColor: isMe ? 'rgba(255,255,255,0.15)' : theme.colors.border }]}>
+                              {message.content.split('\n').filter((l: string) => l.trim().startsWith('•')).map((line: string, i: number) => (
+                                <Text key={i} style={[styles.workoutExercise, { color: isMe ? 'rgba(255,255,255,0.9)' : theme.colors.textSecondary }]}>
+                                  {line.trim()}
+                                </Text>
+                              ))}
+                            </View>
+                          )}
+                          <Text style={[styles.workoutBy, { color: isMe ? 'rgba(255,255,255,0.6)' : theme.colors.textSecondary }]}>
+                            par {message.content.split(' par ')[1]?.split('\n')[0] || ''}
+                          </Text>
+                        </View>
+                      ) : (
+                        <Text
+                          style={[
+                            styles.messageText,
+                            { color: isMe ? '#FFFFFF' : theme.colors.textPrimary },
+                          ]}
+                        >
+                          {message.content}
+                        </Text>
+                      )}
                       <View style={styles.messageFooter}>
                         <Text
                           style={[
@@ -499,6 +525,44 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 18,
     maxWidth: '100%',
+  },
+  workoutBubble: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 16,
+    minWidth: 240,
+  },
+  workoutHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  workoutIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  workoutTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    flex: 1,
+  },
+  workoutDetails: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 8,
+    marginBottom: 6,
+    gap: 3,
+  },
+  workoutExercise: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  workoutBy: {
+    fontSize: 12,
+    marginTop: 4,
   },
   messageText: {
     fontSize: 15,

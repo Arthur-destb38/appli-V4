@@ -299,6 +299,71 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
       const shareMutations = mutations.filter((mutation) => mutation.action === 'share-workout');
       const otherMutations = mutations.filter((mutation) => mutation.action !== 'share-workout');
 
+      // Push exercises, sets, and other mutations FIRST so the server has all data
+      if (otherMutations.length) {
+        const mutationByQueueId = new Map<number, (typeof otherMutations)[number]>(
+          otherMutations.map((mutation) => [mutation.id, mutation])
+        );
+
+        try {
+          const pushResponse = await pushMutations(
+            otherMutations.map((mutation) => ({
+              queue_id: mutation.id,
+              action: mutation.action,
+              payload: mutation.payload,
+              created_at: mutation.created_at,
+            }))
+          );
+
+          if (pushResponse) {
+            const serverTimestamp = Date.parse(pushResponse.server_time);
+            if (!Number.isNaN(serverTimestamp)) {
+              await setLastPullTimestamp(serverTimestamp);
+            }
+            for (const ack of pushResponse.results ?? []) {
+              const original = mutationByQueueId.get(ack.queue_id);
+              if (!original) {
+                continue;
+              }
+              if (original.action === 'create-workout') {
+                const clientId = (original.payload as any)?.client_id;
+                if (typeof clientId === 'string') {
+                  await setWorkoutServerId(clientId, ack.server_id);
+                }
+              } else if (original.action === 'add-exercise') {
+                const clientId = (original.payload as any)?.client_id;
+                if (typeof clientId === 'string') {
+                  await setWorkoutExerciseServerId(clientId, ack.server_id);
+                }
+              } else if (original.action === 'add-set') {
+                const clientId = (original.payload as any)?.client_id;
+                if (typeof clientId === 'string') {
+                  await setWorkoutSetServerId(clientId, ack.server_id);
+                }
+              }
+            }
+          }
+
+          await Promise.all(
+            otherMutations.map(async (mutation) => {
+              await markMutationCompleted(mutation.id);
+              await removeMutation(mutation.id);
+            })
+          );
+        } catch (error) {
+          await Promise.all(
+            otherMutations.map((mutation) =>
+              markMutationFailed(
+                mutation.id,
+                error instanceof Error ? error.message : String(error)
+              )
+            )
+          );
+          break;
+        }
+      }
+
+      // Process share mutations AFTER data mutations so exercises/sets exist on server
       if (shareMutations.length) {
         for (const shareMutation of shareMutations) {
           const payload = shareMutation.payload as {
@@ -321,70 +386,9 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
         }
       }
 
-      if (!otherMutations.length) {
+      if (!otherMutations.length && !shareMutations.length) {
         iterations += 1;
         continue;
-      }
-
-      const mutationByQueueId = new Map<number, (typeof otherMutations)[number]>(
-        otherMutations.map((mutation) => [mutation.id, mutation])
-      );
-
-      try {
-        const pushResponse = await pushMutations(
-          otherMutations.map((mutation) => ({
-            queue_id: mutation.id,
-            action: mutation.action,
-            payload: mutation.payload,
-            created_at: mutation.created_at,
-          }))
-        );
-
-        if (pushResponse) {
-          const serverTimestamp = Date.parse(pushResponse.server_time);
-          if (!Number.isNaN(serverTimestamp)) {
-            await setLastPullTimestamp(serverTimestamp);
-          }
-          for (const ack of pushResponse.results ?? []) {
-            const original = mutationByQueueId.get(ack.queue_id);
-            if (!original) {
-              continue;
-            }
-            if (original.action === 'create-workout') {
-              const clientId = (original.payload as any)?.client_id;
-              if (typeof clientId === 'string') {
-                await setWorkoutServerId(clientId, ack.server_id);
-              }
-            } else if (original.action === 'add-exercise') {
-              const clientId = (original.payload as any)?.client_id;
-              if (typeof clientId === 'string') {
-                await setWorkoutExerciseServerId(clientId, ack.server_id);
-              }
-            } else if (original.action === 'add-set') {
-              const clientId = (original.payload as any)?.client_id;
-              if (typeof clientId === 'string') {
-                await setWorkoutSetServerId(clientId, ack.server_id);
-              }
-            }
-          }
-        }
-
-        await Promise.all(
-          otherMutations.map(async (mutation) => {
-            await markMutationCompleted(mutation.id);
-            await removeMutation(mutation.id);
-          })
-        );
-      } catch (error) {
-        await Promise.all(
-          otherMutations.map((mutation) =>
-            markMutationFailed(
-              mutation.id,
-              error instanceof Error ? error.message : String(error)
-            )
-          )
-        );
-        break;
       }
 
     iterations += 1;
@@ -765,6 +769,9 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
         await refreshPendingCount();
         return { queued: true } as const;
       }
+
+      // Flush pending mutations (exercises, sets) before sharing
+      await flushQueue();
 
       try {
         const response = await shareWorkoutRemote(workoutIdForApi, {

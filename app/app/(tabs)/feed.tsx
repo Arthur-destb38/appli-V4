@@ -432,8 +432,6 @@ const FeedScreen: React.FC = () => {
         />
       )}
 
-
-
       {error ? (
         <View style={[styles.errorBanner, { backgroundColor: theme.colors.error + '20' }]}>
           <Ionicons name="warning" size={18} color={theme.colors.error} />
@@ -506,7 +504,7 @@ const FeedScreen: React.FC = () => {
                 <CommentItem
                   comment={item}
                   theme={theme}
-                  currentUserId={CURRENT_USER_ID}
+                  currentUserId={currentUserId}
                   index={index}
                 />
               )}
