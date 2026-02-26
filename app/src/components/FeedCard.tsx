@@ -304,7 +304,7 @@ export const FeedCard: React.FC<FeedCardProps> = ({
         }
       } catch { /* ignore, send without detail */ }
 
-      const message = `💪 Séance partagée : "${workoutTitle}" par ${ownerUsername}${detail}`;
+      const message = `💪 Séance partagée : "${workoutTitle}" par ${ownerUsername}${detail}\n[share:${shareId}]`;
 
       await fetch(buildApiUrl('/messaging/send'), {
         method: 'POST',
