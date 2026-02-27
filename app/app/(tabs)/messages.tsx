@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -82,6 +83,12 @@ export default function MessagesTabScreen() {
   useEffect(() => {
     loadConversations();
   }, [loadConversations]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (profile?.id) loadConversations();
+    }, [profile?.id, loadConversations])
+  );
 
   useEffect(() => {
     Animated.stagger(100, [

@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
   RefreshControl,
   StyleSheet,
   Text,
@@ -10,6 +9,7 @@ import {
   Animated,
   Easing,
   SectionList,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,14 +18,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Notification,
   getNotifications,
   markAllRead,
   markRead,
 } from '@/services/notificationsApi';
-
-const CURRENT_USER_ID = 'guest-user';
 
 function formatTimeAgo(dateString: string): string {
   const date = new Date(dateString);
@@ -117,7 +116,6 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ item, index, onPres
   const config = getNotificationConfig(item.type);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -138,81 +136,63 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ item, index, onPres
     ]).start();
   }, []);
 
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.98,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      friction: 3,
-      useNativeDriver: true,
-    }).start();
-  };
-
   return (
     <Animated.View
-      style={[
-        {
-          opacity: fadeAnim,
-          transform: [{ translateX: slideAnim }, { scale: scaleAnim }],
-        },
-      ]}
+      style={{
+        opacity: fadeAnim,
+        transform: [{ translateX: slideAnim }],
+      }}
     >
-      <TouchableOpacity
-        style={[
+      <Pressable
+        style={({ pressed }) => [
           styles.notificationCard,
           {
             backgroundColor: item.read ? theme.colors.surface : theme.colors.surfaceMuted,
-            borderColor: item.read ? theme.colors.border : config.color + '30',
+            borderColor: item.read ? theme.colors.border : config.color + '40',
+            opacity: pressed ? 0.92 : 1,
           },
         ]}
         onPress={() => onPress(item)}
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        activeOpacity={1}
       >
-        {/* Icône avec gradient */}
         <LinearGradient colors={config.gradient} style={styles.iconGradient}>
-          <Ionicons name={config.icon as any} size={20} color="#fff" />
+          <Ionicons name={config.icon as any} size={22} color="#fff" />
         </LinearGradient>
 
-        {/* Contenu */}
         <View style={styles.contentContainer}>
           <View style={styles.contentHeader}>
-            <View style={[styles.typeBadge, { backgroundColor: config.color + '15' }]}>
-              <Text style={[styles.typeBadgeText, { color: config.color }]}>{config.label}</Text>
-            </View>
+            <Text style={[styles.actorName, { color: theme.colors.textPrimary }]} numberOfLines={1}>
+              {item.actor_username || 'Quelqu\'un'}
+            </Text>
             <Text style={[styles.time, { color: theme.colors.textSecondary }]}>
               {formatTimeAgo(item.created_at)}
             </Text>
+          </View>
+          <View style={[styles.typeBadge, { backgroundColor: config.color + '18', alignSelf: 'flex-start' }]}>
+            <Text style={[styles.typeBadgeText, { color: config.color }]}>{config.label}</Text>
           </View>
           <Text style={[styles.message, { color: theme.colors.textPrimary }]} numberOfLines={2}>
             {item.message}
           </Text>
         </View>
 
-        {/* Indicateur non lu */}
         {!item.read && (
           <View style={styles.unreadIndicator}>
-            <LinearGradient colors={config.gradient} style={styles.unreadDot} />
+            <View style={[styles.unreadDot, { backgroundColor: config.color }]} />
           </View>
         )}
 
-        {/* Chevron */}
         <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
-      </TouchableOpacity>
+      </Pressable>
     </Animated.View>
   );
 };
 
 export default function NotificationsScreen() {
   const router = useRouter();
-  const { theme } = useAppTheme();
+  const { theme, mode } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const userId = user?.id ?? '';
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -220,6 +200,7 @@ export default function NotificationsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const headerAnim = useRef(new Animated.Value(0)).current;
+  const isDark = mode === 'dark';
 
   useEffect(() => {
     Animated.timing(headerAnim, {
@@ -231,8 +212,13 @@ export default function NotificationsScreen() {
   }, []);
 
   const loadNotifications = async () => {
+    if (!userId) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
-      const data = await getNotifications(CURRENT_USER_ID);
+      const data = await getNotifications(userId);
       setNotifications(data.notifications);
       setUnreadCount(data.unread_count);
     } catch (error) {
@@ -245,12 +231,13 @@ export default function NotificationsScreen() {
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+  }, [userId]);
 
   const handleMarkAllRead = async () => {
+    if (!userId) return;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     try {
-      await markAllRead(CURRENT_USER_ID);
+      await markAllRead(userId);
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {
@@ -275,7 +262,13 @@ export default function NotificationsScreen() {
 
     if (notification.type === 'follow') {
       router.push(`/profile/${notification.actor_id}`);
-    } else if (notification.reference_id) {
+    } else if (
+      notification.reference_id &&
+      (notification.type === 'like' || notification.type === 'comment') &&
+      notification.reference_id.startsWith('sh_')
+    ) {
+      router.push(`/shared-workout/${notification.reference_id}`);
+    } else if (notification.actor_id) {
       router.push(`/profile/${notification.actor_id}`);
     }
   };
@@ -295,14 +288,18 @@ export default function NotificationsScreen() {
     );
   }
 
+  const bgColor = isDark ? '#0a0a0f' : '#f5f5fa';
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: bgColor }]}>
       {/* Header */}
       <Animated.View
         style={[
           styles.header,
-          { paddingTop: insets.top + 8 },
           {
+            paddingTop: insets.top + 10,
+            backgroundColor: isDark ? '#111118' : '#ffffff',
+            borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
             opacity: headerAnim,
             transform: [
               {
@@ -315,16 +312,16 @@ export default function NotificationsScreen() {
           },
         ]}
       >
-        <TouchableOpacity
-          style={[styles.backButton, { backgroundColor: theme.colors.surfaceMuted }]}
+        <Pressable
+          style={({ pressed }) => [styles.backButton, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 }]}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={22} color={theme.colors.textPrimary} />
-        </TouchableOpacity>
+          <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+        </Pressable>
 
         <View style={styles.headerCenter}>
           <LinearGradient colors={['#ec4899', '#f43f5e']} style={styles.headerIcon}>
-            <Ionicons name="notifications" size={18} color="#fff" />
+            <Ionicons name="notifications" size={20} color="#fff" />
           </LinearGradient>
           <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
             Notifications
@@ -337,14 +334,14 @@ export default function NotificationsScreen() {
         </View>
 
         {unreadCount > 0 ? (
-          <TouchableOpacity
-            style={[styles.markAllButton, { backgroundColor: theme.colors.surfaceMuted }]}
+          <Pressable
+            style={({ pressed }) => [styles.markAllButton, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 }]}
             onPress={handleMarkAllRead}
           >
-            <Ionicons name="checkmark-done" size={20} color="#6366f1" />
-          </TouchableOpacity>
+            <Ionicons name="checkmark-done" size={22} color="#6366f1" />
+          </Pressable>
         ) : (
-          <View style={{ width: 44 }} />
+          <View style={styles.placeholderHeaderRight} />
         )}
       </Animated.View>
 
@@ -359,29 +356,29 @@ export default function NotificationsScreen() {
                 {
                   translateY: headerAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [20, 0],
+                    outputRange: [16, 0],
                   }),
                 },
               ],
             },
           ]}
         >
-          <View style={[styles.statCard, { backgroundColor: '#ec489915' }]}>
-            <Ionicons name="heart" size={16} color="#ec4899" />
+          <View style={[styles.statCard, { backgroundColor: isDark ? '#ec489918' : '#ec489912' }]}>
+            <Ionicons name="heart" size={18} color="#ec4899" />
             <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
               {notifications.filter((n) => n.type === 'like').length}
             </Text>
             <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Likes</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: '#6366f115' }]}>
-            <Ionicons name="chatbubble" size={16} color="#6366f1" />
+          <View style={[styles.statCard, { backgroundColor: isDark ? '#6366f118' : '#6366f112' }]}>
+            <Ionicons name="chatbubble" size={18} color="#6366f1" />
             <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
               {notifications.filter((n) => n.type === 'comment').length}
             </Text>
             <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Commentaires</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: '#10b98115' }]}>
-            <Ionicons name="person-add" size={16} color="#10b981" />
+          <View style={[styles.statCard, { backgroundColor: isDark ? '#10b98118' : '#10b98112' }]}>
+            <Ionicons name="person-add" size={18} color="#10b981" />
             <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
               {notifications.filter((n) => n.type === 'follow').length}
             </Text>
@@ -403,7 +400,7 @@ export default function NotificationsScreen() {
           />
         )}
         renderSectionHeader={({ section: { title } }) => (
-          <View style={[styles.sectionHeader, { backgroundColor: theme.colors.background }]}>
+          <View style={[styles.sectionHeader, { backgroundColor: bgColor }]}>
             <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>{title}</Text>
           </View>
         )}
@@ -430,7 +427,7 @@ export default function NotificationsScreen() {
               Pas de notifications
             </Text>
             <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-              Tu recevras des notifications quand quelqu&apos;un interagit avec tes séances
+              Tu recevras des notifications quand quelqu'un interagit avec tes séances
             </Text>
             <TouchableOpacity
               style={styles.emptyButton}
@@ -471,7 +468,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
   },
   backButton: {
     width: 44,
@@ -516,28 +514,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  placeholderHeaderRight: {
+    width: 44,
+  },
   statsRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    gap: 10,
-    marginBottom: 16,
+    gap: 12,
+    marginBottom: 20,
   },
   statCard: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 14,
-    gap: 6,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderRadius: 16,
+    gap: 4,
   },
   statValue: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '800',
   },
   statLabel: {
     fontSize: 11,
-    display: 'none',
+    fontWeight: '600',
+    textTransform: 'capitalize',
   },
   listContent: {
     paddingHorizontal: 16,
@@ -577,6 +580,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  actorName: {
+    fontSize: 14,
+    fontWeight: '700',
+    flex: 1,
+    marginRight: 8,
   },
   typeBadge: {
     paddingHorizontal: 8,
@@ -595,7 +605,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   unreadIndicator: {
-    marginRight: 4,
+    marginRight: 6,
   },
   unreadDot: {
     width: 10,

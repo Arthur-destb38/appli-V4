@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
   Animated,
@@ -15,6 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
@@ -44,6 +46,7 @@ export default function HomeScreen() {
   const [goalSessions, setGoalSessions] = useState(3);
   const [editGoalModal, setEditGoalModal] = useState(false);
   const [goalInput, setGoalInput] = useState('3');
+  const [objectivesMilestone, setObjectivesMilestone] = useState<{ target: number; label: string; type: 'sessions' | 'streak' } | null>(null);
   const drawerAnim = useRef(new Animated.Value(0)).current;
   const insets = useSafeAreaInsets();
 
@@ -52,23 +55,50 @@ export default function HomeScreen() {
   const displayProfile = profile || { username: 'Utilisateur' };
   const displayUser = user || { username: 'Utilisateur' };
 
-  // Charger l'objectif sauvegardé
-  useEffect(() => {
-    const loadGoal = async () => {
-      try {
-        const saved = await AsyncStorage.getItem('goal_sessions_per_week');
-        if (saved) {
-          const parsed = parseInt(saved, 10);
-          if (!isNaN(parsed) && parsed > 0) {
-            setGoalSessions(parsed);
-          }
+  const objectivesStorageKey = `user_objectives_${user?.id || 'anonymous'}`;
+
+  // Charger les objectifs (même source que la page Mes Objectifs) pour garder les mêmes montants
+  const loadObjectivesForHome = async () => {
+    try {
+      const saved = await AsyncStorage.getItem(objectivesStorageKey);
+      if (saved) {
+        const list = JSON.parse(saved) as Array<{ id: string; type: string; target: number; title: string }>;
+        const weekly = list.find((o) => o.id === 'weekly_sessions');
+        const monthly = list.find((o) => o.id === 'monthly_sessions');
+        const streakGoal = list.find((o) => o.id === 'streak_goal');
+        if (weekly && typeof weekly.target === 'number' && weekly.target > 0) {
+          setGoalSessions(weekly.target);
         }
-      } catch (error) {
-        console.warn('Failed to load goal', error);
+        if (monthly && typeof monthly.target === 'number') {
+          setObjectivesMilestone({ target: monthly.target, label: monthly.title || 'Séances par mois', type: 'sessions' });
+        } else if (streakGoal && typeof streakGoal.target === 'number') {
+          setObjectivesMilestone({ target: streakGoal.target, label: streakGoal.title || 'Jours de suite', type: 'streak' });
+        } else {
+          setObjectivesMilestone(null);
+        }
+      } else {
+        setObjectivesMilestone(null);
+        const fallback = await AsyncStorage.getItem('goal_sessions_per_week');
+        if (fallback) {
+          const parsed = parseInt(fallback, 10);
+          if (!isNaN(parsed) && parsed > 0) setGoalSessions(parsed);
+        }
       }
-    };
-    loadGoal();
-  }, []);
+    } catch (e) {
+      console.warn('Failed to load objectives for home', e);
+      setObjectivesMilestone(null);
+    }
+  };
+
+  useEffect(() => {
+    loadObjectivesForHome();
+  }, [objectivesStorageKey]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadObjectivesForHome();
+    }, [objectivesStorageKey])
+  );
 
   const handleEditGoal = () => {
     setGoalInput(String(goalSessions));
@@ -84,6 +114,12 @@ export default function HomeScreen() {
     try {
       await AsyncStorage.setItem('goal_sessions_per_week', String(parsed));
       setGoalSessions(parsed);
+      const saved = await AsyncStorage.getItem(objectivesStorageKey);
+      if (saved) {
+        const list = JSON.parse(saved) as Array<{ id: string; target: number; [k: string]: unknown }>;
+        const updated = list.map((o) => (o.id === 'weekly_sessions' ? { ...o, target: parsed } : o));
+        await AsyncStorage.setItem(objectivesStorageKey, JSON.stringify(updated));
+      }
       setEditGoalModal(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (error) {
@@ -100,6 +136,7 @@ export default function HomeScreen() {
         drafts: 0,
         completionRate: 0,
         completedThisWeek: 0,
+        completedThisMonth: 0,
         liftedThisWeek: 0,
         volume7d: 0,
         sessions7d: 0,
@@ -116,6 +153,10 @@ export default function HomeScreen() {
     const completedThisWeek = completed.filter((item) => {
       const diff = Date.now() - item.workout.updated_at;
       return diff <= 7 * 24 * 60 * 60 * 1000;
+    }).length;
+    const completedThisMonth = completed.filter((item) => {
+      const diff = Date.now() - item.workout.updated_at;
+      return diff <= 30 * 24 * 60 * 60 * 1000;
     }).length;
 
     const liftedThisWeek = displayWorkouts.reduce((sum, record) => {
@@ -185,6 +226,7 @@ export default function HomeScreen() {
       drafts: drafts.length,
       completionRate: total ? Math.round((completed.length / total) * 100) : 0,
       completedThisWeek,
+      completedThisMonth,
       liftedThisWeek,
       volume7d,
       sessions7d,
@@ -402,6 +444,21 @@ export default function HomeScreen() {
             goal: goalSessions,
           }}
           nextMilestone={(() => {
+            if (objectivesMilestone) {
+              if (objectivesMilestone.type === 'sessions') {
+                const current = stats.completedThisMonth ?? 0;
+                const target = objectivesMilestone.target;
+                if (current < target) {
+                  return { type: 'sessions' as const, current, target, label: objectivesMilestone.label };
+                }
+              } else {
+                const current = stats.streak;
+                const target = objectivesMilestone.target;
+                if (current < target) {
+                  return { type: 'streak' as const, current, target, label: objectivesMilestone.label };
+                }
+              }
+            }
             if (stats.completed < 10) return {
               type: 'sessions' as const,
               current: stats.completed,
@@ -438,8 +495,8 @@ export default function HomeScreen() {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionHeaderRow}>
-              <View style={[styles.sectionIconContainer, { backgroundColor: '#F9731620' }]}>
-                <Ionicons name="create-outline" size={18} color="#F97316" />
+              <View style={[styles.sectionIconContainer, { backgroundColor: 'rgba(249,115,22,0.18)' }]}>
+                <Ionicons name="create-outline" size={20} color="#F97316" />
               </View>
               <View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
@@ -463,22 +520,46 @@ export default function HomeScreen() {
           </View>
 
           {!latestDraft.length ? (
-            <View style={[styles.emptyState, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-              <View style={[styles.emptyIconContainer, { backgroundColor: '#F9731620' }]}>
-                <Ionicons name="document-text-outline" size={32} color="#F97316" />
-              </View>
-              <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                {t('noWorkoutInProgress')}
-              </Text>
-              <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                {t('createFirstWorkout')}
-              </Text>
-              <AppButton
-                title={t('createWorkout')}
-                onPress={handleCreate}
-                style={styles.emptyButton}
+            <Pressable
+              onPress={handleCreate}
+              style={({ pressed }) => [
+                styles.emptyStateCard,
+                { backgroundColor: theme.colors.surface, opacity: pressed ? 0.96 : 1 },
+              ]}
+            >
+              <LinearGradient
+                colors={['#F9731612', '#EA580C08', 'transparent']}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
               />
-            </View>
+              <View style={styles.emptyStateContent}>
+                <View style={styles.emptyStateIconWrap}>
+                  <View style={styles.emptyStateIconCircle}>
+                    <Ionicons name="barbell-outline" size={36} color="#F97316" />
+                  </View>
+                  <View style={[styles.emptyStateDeco, styles.emptyStateDeco1]} />
+                  <View style={[styles.emptyStateDeco, styles.emptyStateDeco2]} />
+                </View>
+                <Text style={[styles.emptyStateTitle, { color: theme.colors.textPrimary }]}>
+                  {t('noWorkoutInProgress')}
+                </Text>
+                <Text style={[styles.emptyStateSubtitle, { color: theme.colors.textSecondary }]}>
+                  {t('createFirstWorkout')}
+                </Text>
+                <View style={styles.emptyStateCta}>
+                  <LinearGradient
+                    colors={['#F97316', '#EA580C']}
+                    style={styles.emptyStateCtaGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                  >
+                    <Ionicons name="add-circle" size={20} color="#fff" />
+                    <Text style={styles.emptyStateCtaText}>{t('createWorkout')}</Text>
+                  </LinearGradient>
+                </View>
+              </View>
+            </Pressable>
           ) : (
             latestDraft.map((item) => (
               <WorkoutCard
@@ -498,8 +579,8 @@ export default function HomeScreen() {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionHeaderRow}>
-              <View style={[styles.sectionIconContainer, { backgroundColor: '#22C55E20' }]}>
-                <Ionicons name="checkmark-circle-outline" size={18} color="#22C55E" />
+              <View style={[styles.sectionIconContainer, { backgroundColor: 'rgba(34,197,94,0.18)' }]}>
+                <Ionicons name="checkmark-circle-outline" size={20} color="#22C55E" />
               </View>
               <View>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
@@ -523,16 +604,39 @@ export default function HomeScreen() {
           </View>
 
           {!latestCompleted.length ? (
-            <View style={[styles.emptyState, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-              <View style={[styles.emptyIconContainer, { backgroundColor: '#22C55E20' }]}>
-                <Ionicons name="trophy-outline" size={32} color="#22C55E" />
+            <View style={[styles.emptyStateCardCompleted, { backgroundColor: theme.colors.surface }]}>
+              <LinearGradient
+                colors={['#22C55E12', '#16A34A08', 'transparent']}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <View style={styles.emptyStateContent}>
+                <View style={styles.emptyStateIconWrap}>
+                  <View style={styles.emptyStateIconCircleCompleted}>
+                    <Ionicons name="trophy-outline" size={36} color="#22C55E" />
+                  </View>
+                  <View style={[styles.emptyStateDecoCompleted, styles.emptyStateDecoCompleted1]} />
+                  <View style={[styles.emptyStateDecoCompleted, styles.emptyStateDecoCompleted2]} />
+                </View>
+                <Text style={[styles.emptyStateTitle, { color: theme.colors.textPrimary }]}>
+                  {t('noCompletedWorkout')}
+                </Text>
+                <Text style={[styles.emptyStateSubtitle, { color: theme.colors.textSecondary }]}>
+                  {t('completeWorkoutToSee')}
+                </Text>
+                <Pressable
+                  onPress={() => handleCreate()}
+                  style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+                >
+                  <View style={styles.emptyStateCtaSecondary}>
+                    <Ionicons name="play" size={18} color="#22C55E" />
+                    <Text style={[styles.emptyStateCtaSecondaryText, { color: '#22C55E' }]}>
+                      Commencer une séance
+                    </Text>
+                  </View>
+                </Pressable>
               </View>
-              <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                {t('noCompletedWorkout')}
-              </Text>
-              <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                {t('completeWorkoutToSee')}
-              </Text>
             </View>
           ) : (
             latestCompleted.map((item) => (
@@ -793,36 +897,39 @@ const styles = StyleSheet.create({
   sectionContainer: {
     marginHorizontal: 16,
     marginBottom: 32,
-    marginTop: 8,
+    marginTop: 4,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
+    paddingVertical: 4,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     flex: 1,
+    minWidth: 0,
   },
   sectionIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    letterSpacing: -0.3,
+    letterSpacing: -0.25,
     marginBottom: 2,
   },
   sectionSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
+    opacity: 0.85,
   },
   seeAllLink: {
     fontSize: 14,
@@ -858,6 +965,123 @@ const styles = StyleSheet.create({
   },
   emptyButton: {
     marginTop: 12,
+  },
+  emptyStateCard: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(249, 115, 22, 0.25)',
+    overflow: 'hidden',
+  },
+  emptyStateContent: {
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  emptyStateIconWrap: {
+    position: 'relative',
+    marginBottom: 20,
+  },
+  emptyStateIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(249, 115, 22, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateDeco: {
+    position: 'absolute',
+    borderRadius: 999,
+    backgroundColor: 'rgba(249, 115, 22, 0.08)',
+  },
+  emptyStateDeco1: {
+    width: 48,
+    height: 48,
+    top: -8,
+    right: -12,
+  },
+  emptyStateDeco2: {
+    width: 32,
+    height: 32,
+    bottom: -4,
+    left: -16,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 6,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
+  emptyStateCta: {
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
+  emptyStateCtaGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+  },
+  emptyStateCtaText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  emptyStateCardCompleted: {
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.25)',
+    overflow: 'hidden',
+  },
+  emptyStateIconCircleCompleted: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateDecoCompleted: {
+    position: 'absolute',
+    borderRadius: 999,
+    backgroundColor: 'rgba(34, 197, 94, 0.08)',
+  },
+  emptyStateDecoCompleted1: {
+    width: 48,
+    height: 48,
+    top: -8,
+    right: -12,
+  },
+  emptyStateDecoCompleted2: {
+    width: 32,
+    height: 32,
+    bottom: -4,
+    left: -16,
+  },
+  emptyStateCtaSecondary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginTop: 8,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: 'rgba(34, 197, 94, 0.4)',
+  },
+  emptyStateCtaSecondaryText: {
+    fontSize: 15,
+    fontWeight: '700',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

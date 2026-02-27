@@ -41,21 +41,21 @@ const StatCard: React.FC<{
   onPress?: () => void;
 }> = ({ icon, iconColor, title, value, subtitle, progress, isHighlight, onPress }) => {
   const { theme } = useAppTheme();
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const scaleAnim = useRef(new Animated.Value(0.98)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.spring(scaleAnim, {
         toValue: 1,
-        tension: 100,
-        friction: 8,
+        tension: 80,
+        friction: 10,
         useNativeDriver: true,
       }),
       Animated.timing(progressAnim, {
-        toValue: progress || 0,
-        duration: 1000,
-        delay: 200,
+        toValue: progress ?? 0,
+        duration: 800,
+        delay: 150,
         easing: Easing.out(Easing.ease),
         useNativeDriver: false,
       }),
@@ -68,52 +68,47 @@ const StatCard: React.FC<{
       style={({ pressed }) => [
         styles.statCard,
         {
-          backgroundColor: isHighlight ? iconColor + '15' : theme.colors.surface,
-          borderColor: isHighlight ? iconColor + '30' : theme.colors.border,
-          opacity: pressed ? 0.8 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          backgroundColor: theme.colors.surface,
+          borderColor: isHighlight ? `${iconColor}40` : theme.colors.border,
+          opacity: pressed ? 0.92 : 1,
         },
       ]}
     >
       <Animated.View style={[styles.statContent, { transform: [{ scale: scaleAnim }] }]}>
-        <View style={[styles.iconContainer, { backgroundColor: iconColor + '20' }]}>
-          <Ionicons name={icon} size={20} color={iconColor} />
+        <View style={[styles.iconContainer, { backgroundColor: `${iconColor}18` }]}>
+          <Ionicons name={icon} size={22} color={iconColor} />
         </View>
-        
         <View style={styles.statInfo}>
-          <Text style={[styles.statTitle, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.statTitle, { color: theme.colors.textSecondary }]} numberOfLines={1}>
             {title}
           </Text>
           <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
             {value}
           </Text>
-          {subtitle && (
-            <Text style={[styles.statSubtitle, { color: theme.colors.textSecondary }]}>
+          {subtitle ? (
+            <Text style={[styles.statSubtitle, { color: theme.colors.textSecondary }]} numberOfLines={1}>
               {subtitle}
             </Text>
-          )}
+          ) : null}
         </View>
-
-        {progress !== undefined && (
-          <View style={styles.progressContainer}>
-            <View style={[styles.progressTrack, { backgroundColor: theme.colors.surfaceMuted }]}>
-              <Animated.View
-                style={[
-                  styles.progressFill,
-                  {
-                    backgroundColor: iconColor,
-                    width: progressAnim.interpolate({
-                      inputRange: [0, 100],
-                      outputRange: ['0%', '100%'],
-                      extrapolate: 'clamp',
-                    }),
-                  },
-                ]}
-              />
-            </View>
-          </View>
-        )}
       </Animated.View>
+      {progress !== undefined && (
+        <View style={[styles.progressWrap, { backgroundColor: theme.colors.surfaceMuted }]}>
+          <Animated.View
+            style={[
+              styles.progressFill,
+              {
+                backgroundColor: iconColor,
+                width: progressAnim.interpolate({
+                  inputRange: [0, 100],
+                  outputRange: ['0%', '100%'],
+                  extrapolate: 'clamp',
+                }),
+              },
+            ]}
+          />
+        </View>
+      )}
     </Pressable>
   );
 };
@@ -202,51 +197,52 @@ export const PersonalStats: React.FC<PersonalStatsProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
-    marginBottom: 20,
-    gap: 12,
+    marginBottom: 24,
+    gap: 14,
   },
   statCard: {
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 16,
+    padding: 18,
+    overflow: 'hidden',
   },
   statContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   statInfo: {
     flex: 1,
+    minWidth: 0,
   },
   statTitle: {
     fontSize: 13,
     fontWeight: '500',
-    marginBottom: 2,
+    marginBottom: 4,
+    letterSpacing: 0.2,
   },
   statValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
+    letterSpacing: -0.3,
     marginBottom: 2,
   },
   statSubtitle: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
+    opacity: 0.85,
   },
-  progressContainer: {
-    width: 60,
-    alignItems: 'flex-end',
-  },
-  progressTrack: {
-    width: 60,
+  progressWrap: {
     height: 6,
     borderRadius: 3,
+    marginTop: 14,
     overflow: 'hidden',
   },
   progressFill: {
