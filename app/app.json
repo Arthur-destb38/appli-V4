@@ -10,7 +10,9 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.gorillax.gym"
+      "bundleIdentifier": "com.gorillax.gym",
+      "usesNonExemptEncryption": false,
+      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
     },
     "android": {
       "package": "com.gorillax.gym",
