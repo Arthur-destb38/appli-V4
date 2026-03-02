@@ -12,7 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.gorillax.gym",
       "usesNonExemptEncryption": false,
-      "infoPlist": { "ITSAppUsesNonExemptEncryption": false }
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.gorillax.gym",
@@ -56,6 +58,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/182df57d-f5e4-4de5-845d-c9ac8a63f4fe"
     }
   }
 }

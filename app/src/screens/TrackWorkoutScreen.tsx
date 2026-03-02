@@ -589,9 +589,11 @@ const StepperModern: React.FC<StepperModernProps> = ({
         <TouchableOpacity onPress={onDecrement} style={styles.stepperModernBtn}>
           <Ionicons name="remove" size={16} color={theme.colors.textSecondary} />
         </TouchableOpacity>
-        <Text style={[styles.stepperModernValue, { color: theme.colors.textPrimary }]}>
-          {Number.isFinite(value) ? value : 0}{suffix ? ` ${suffix}` : ''}
-        </Text>
+        <View style={styles.stepperModernValueWrap}>
+          <Text style={[styles.stepperModernValue, { color: theme.colors.textPrimary }]} numberOfLines={1} adjustsFontSizeToFit>
+            {Number.isFinite(value) ? value : 0}{suffix ? ` ${suffix}` : ''}
+          </Text>
+        </View>
         <TouchableOpacity onPress={onIncrement} style={styles.stepperModernBtn}>
           <Ionicons name="add" size={16} color={theme.colors.textSecondary} />
         </TouchableOpacity>
@@ -921,7 +923,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     paddingVertical: 8,
-    paddingHorizontal: 6,
+    paddingHorizontal: 10,
   },
   stepperModernBtn: {
     width: 28,
@@ -930,10 +932,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  stepperModernValueWrap: {
+    flex: 1,
+    minWidth: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
   stepperModernValue: {
     fontSize: 15,
     fontWeight: '700',
-    minWidth: 45,
     textAlign: 'center',
   },
   setFooter: {

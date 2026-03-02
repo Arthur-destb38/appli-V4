@@ -28,6 +28,7 @@ import { useFeed } from '@/hooks/useFeed';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { FeedCard } from '@/components/FeedCard';
 import { getComments, addComment, Comment, toggleCommentLike } from '@/services/likesApi';
+import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 
 // Composant pour afficher un commentaire avec like
@@ -132,12 +133,13 @@ const FeedScreen: React.FC = () => {
   const { theme, mode } = useAppTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const { profile } = useUserProfile();
   const [refreshing, setRefreshing] = useState(false);
   const headerAnim = useRef(new Animated.Value(0)).current;
 
-
-  const currentUserId = profile?.id || 'guest-user';
+  // Priorité à user?.id (auth) pour commentaires/likes, puis profile (chargé après)
+  const currentUserId = user?.id ?? profile?.id ?? 'guest-user';
   const isDark = mode === 'dark';
 
   // Comments modal state
@@ -386,6 +388,10 @@ const FeedScreen: React.FC = () => {
           renderItem={renderItem}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 100 }]}
+          initialNumToRender={6}
+          maxToRenderPerBatch={6}
+          windowSize={8}
+          removeClippedSubviews={true}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

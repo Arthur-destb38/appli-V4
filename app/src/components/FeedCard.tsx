@@ -84,7 +84,7 @@ const getWorkoutGradient = (title: string, isDark: boolean): [string, string, st
   return (isDark ? gradient.dark : gradient.colors) as [string, string, string];
 };
 
-export const FeedCard: React.FC<FeedCardProps> = ({
+const FeedCardInner: React.FC<FeedCardProps> = ({
   shareId,
   ownerId,
   ownerUsername,
@@ -669,6 +669,8 @@ export const FeedCard: React.FC<FeedCardProps> = ({
     </Animated.View>
   );
 };
+
+export const FeedCard = React.memo(FeedCardInner);
 
 const styles = StyleSheet.create({
   card: {

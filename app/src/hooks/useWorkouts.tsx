@@ -762,7 +762,11 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
       }
 
       const workoutIdForApi = target.workout.server_id;
-      const mutationPayload = { workoutId: workoutIdForApi, userId: profile.id };
+      const userId = profile?.id;
+      if (!userId) {
+        throw new Error('Profil utilisateur indisponible');
+      }
+      const mutationPayload = { workoutId: workoutIdForApi, userId };
 
       if (!isNavigatorOnline()) {
         await enqueueMutation('share-workout', mutationPayload);
@@ -775,7 +779,7 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
 
       try {
         const response = await shareWorkoutRemote(workoutIdForApi, {
-          user_id: profile.id,
+          user_id: userId,
           caption: opts?.caption,
           color: opts?.color,
           image_base64: opts?.image_base64,

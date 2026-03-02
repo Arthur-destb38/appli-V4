@@ -5,9 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 // URL de l'API cloud (Render)
 const CLOUD_API_URL = 'https://appli-v2.onrender.com';
 
-// Pour le dev local
-const LOCAL_API_IP = 'http://192.168.1.45:8000';        
-const LOCAL_API_WEB = 'http://localhost:8000';       
+// Pour le dev local (téléphone sur le même Wi‑Fi que la machine)
+// Option 1 : définir EXPO_PUBLIC_API_URL dans app/.env (ex: http://192.168.1.45:8000)
+// Option 2 : USE_LOCAL_API = true et mettre l’IP de ta machine ci‑dessous
+const LOCAL_API_IP = 'http://192.168.1.45:8000';
+const LOCAL_API_WEB = 'http://localhost:8000';
 
 // Toggle pour basculer entre local et cloud
 // ⚠️ Pour APK/Production: mettre à false
@@ -57,57 +59,80 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
   return headers;
 };
 
-// Fonction utilitaire pour les appels API authentifiés
+const DEFAULT_REQUEST_TIMEOUT_MS = 25000;
+
+// Fonction utilitaire pour les appels API authentifiés (avec timeout pour éviter blocages sur mobile)
 export const apiCall = async (
-  endpoint: string, 
-  options: RequestInit = {}
+  endpoint: string,
+  options: RequestInit = {},
+  timeoutMs: number = DEFAULT_REQUEST_TIMEOUT_MS
 ): Promise<Response> => {
   const url = buildApiUrl(endpoint);
   const headers = await getAuthHeaders();
-  
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   const config: RequestInit = {
     ...options,
+    signal: options.signal ?? controller.signal,
     headers: {
       ...headers,
       ...options.headers,
     },
   };
-  
-  const response = await fetch(url, config);
-  
-  // Si le token est expiré (401), essayer de le rafraîchir
-  if (response.status === 401 && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
-    try {
-      const refreshToken = await AsyncStorage.getItem('@gorillax_refresh_token');
-      if (refreshToken) {
-        const refreshResponse = await fetch(buildApiUrl('/auth/refresh'), {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${refreshToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        
-        if (refreshResponse.ok) {
-          const newTokens = await refreshResponse.json();
-          await AsyncStorage.setItem('@gorillax_access_token', newTokens.access_token);
-          await AsyncStorage.setItem('@gorillax_refresh_token', newTokens.refresh_token);
-          
-          // Refaire l'appel original avec le nouveau token
-          const newHeaders = await getAuthHeaders();
-          return fetch(url, {
-            ...config,
+
+  try {
+    let response = await fetch(url, config);
+    clearTimeout(timeoutId);
+
+    // Si le token est expiré (401), essayer de le rafraîchir
+    if (response.status === 401 && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
+      try {
+        const refreshToken = await AsyncStorage.getItem('@gorillax_refresh_token');
+        if (refreshToken) {
+          const refreshController = new AbortController();
+          const refreshTimeoutId = setTimeout(() => refreshController.abort(), 10000);
+          const refreshResponse = await fetch(buildApiUrl('/auth/refresh'), {
+            method: 'POST',
             headers: {
-              ...newHeaders,
-              ...options.headers,
+              'Authorization': `Bearer ${refreshToken}`,
+              'Content-Type': 'application/json',
             },
+            signal: refreshController.signal,
           });
+          clearTimeout(refreshTimeoutId);
+
+          if (refreshResponse.ok) {
+            const newTokens = await refreshResponse.json();
+            await AsyncStorage.setItem('@gorillax_access_token', newTokens.access_token);
+            await AsyncStorage.setItem('@gorillax_refresh_token', newTokens.refresh_token);
+
+            const newHeaders = await getAuthHeaders();
+            const retryController = new AbortController();
+            const retryTimeoutId = setTimeout(() => retryController.abort(), timeoutMs);
+            response = await fetch(url, {
+              ...config,
+              signal: retryController.signal,
+              headers: {
+                ...newHeaders,
+                ...options.headers,
+              },
+            });
+            clearTimeout(retryTimeoutId);
+          }
         }
+      } catch (_) {
+        // Refresh failed silently
       }
-    } catch (_) {
-      // Refresh failed silently
     }
+
+    return response;
+  } catch (err: unknown) {
+    clearTimeout(timeoutId);
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error('La requête a pris trop de temps. Vérifie ta connexion et réessaie.');
+    }
+    throw err;
   }
-  
-  return response;
 };

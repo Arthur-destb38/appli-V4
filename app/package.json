@@ -10,10 +10,10 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "build:android": "eas build --platform android --profile preview",
-    "build:android:prod": "eas build --platform android --profile production",
-    "build:ios": "eas build --platform ios --profile production",
-    "build:all": "eas build --platform all --profile production"
+    "build:android": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform android --profile preview",
+    "build:android:prod": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform android --profile production",
+    "build:ios": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform ios --profile production",
+    "build:all": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform all --profile production"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -36,6 +36,7 @@
     "expo-status-bar": "~3.0.9",
     "expo-symbols": "~1.0.8",
     "expo-system-ui": "~6.0.9",
+    "expo-updates": "~29.0.16",
     "expo-web-browser": "~15.0.10",
     "react": "19.1.0",
     "react-dom": "19.1.0",
