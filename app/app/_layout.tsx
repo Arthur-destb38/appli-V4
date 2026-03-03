@@ -82,6 +82,10 @@ export default function RootLayout() {
                   options={{ title: 'Mes Objectifs', headerShown: true, headerBackTitle: 'Retour' }}
                 />
                 <Stack.Screen
+                  name="pass-salle"
+                  options={{ title: 'Carte membre', headerShown: true, headerBackTitle: 'Retour' }}
+                />
+                <Stack.Screen
                   name="notifications"
                   options={{ title: 'Notifications', headerShown: true, headerBackTitle: 'Retour' }}
                 />

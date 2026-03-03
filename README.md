@@ -240,6 +240,17 @@ uv run python scripts/seed_demo.py
 
 ---
 
+## Gorillax Salles (intégration salles de sport)
+
+Le projet **Gorillax Salles** (pass Wallet en salle, lecteur, affichage sur les machines) est documenté et développé à part :
+
+- **Dans ce repo** : dossier [`gorillax-salles/`](./gorillax-salles/) (vision, roadmap, contrat API, contexte).
+- **En dépôt séparé** : si tu clones uniquement le projet « salles », ce dépôt contient toute la doc nécessaire pour être autonome (voir `gorillax-salles/README.md` et `gorillax-salles/CONTEXTE.md`).
+
+L’app et l’API Gorillax (pass, endpoint resolve-token, etc.) restent dans appli_V3 ; le **système déployé en salle** (backend salle, lecteur, écran machine) vit dans le projet gorillax-salles.
+
+---
+
 ## Liens
 
 - API : https://appli-v2.onrender.com

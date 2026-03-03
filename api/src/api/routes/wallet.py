@@ -1,13 +1,16 @@
 """Pass Wallet (Apple/Google) — token pour Gorillax Salles."""
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
 from ..db import get_session
 from ..models import User, PassToken
-from ..utils.dependencies import get_current_user
+from ..services.apple_pass import generate_pkpass
+from ..services.google_wallet import get_add_to_wallet_url
+from ..utils.dependencies import get_current_user, get_current_user_header_or_query
 
 router = APIRouter(prefix="/wallet", tags=["wallet"])
 
@@ -77,3 +80,43 @@ def renew_pass_token(
     """Révoque l'ancien token et en crée un nouveau (pour mettre à jour le pass)."""
     pt = _renew_pass_token(current_user.id, session)
     return PassTokenResponse(token=pt.token, expires_at=pt.expires_at)
+
+
+@router.get("/apple/pass")
+def get_apple_pass(
+    current_user: User = Depends(get_current_user_header_or_query),
+    session: Session = Depends(get_session),
+) -> Response:
+    """Retourne le fichier .pkpass pour Apple Wallet. 503 si certificats non configurés."""
+    pt = _get_or_create_pass_token(current_user.id, session)
+    pkpass_bytes = generate_pkpass(pt.token, organization_name="Gorillax")
+    if pkpass_bytes is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Apple Wallet pass non configuré (certificats manquants). Voir APPLE_PASS_* dans .env.",
+        )
+    return Response(
+        content=pkpass_bytes,
+        media_type="application/vnd.apple.pkpass",
+        headers={"Content-Disposition": "attachment; filename=gorillax.pkpass"},
+    )
+
+
+class GooglePassResponse(BaseModel):
+    addToWalletUrl: str
+
+
+@router.get("/google/pass", response_model=GooglePassResponse)
+def get_google_pass(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> GooglePassResponse:
+    """Retourne l'URL « Add to Google Wallet ». 503 si compte de service non configuré."""
+    pt = _get_or_create_pass_token(current_user.id, session)
+    url = get_add_to_wallet_url(pt.token)
+    if url is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Google Wallet non configuré (GOOGLE_WALLET_ISSUER_ID / service account).",
+        )
+    return GooglePassResponse(addToWalletUrl=url)
