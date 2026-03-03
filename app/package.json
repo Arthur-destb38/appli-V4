@@ -13,7 +13,8 @@
     "build:android": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform android --profile preview",
     "build:android:prod": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform android --profile production",
     "build:ios": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform ios --profile production",
-    "build:all": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform all --profile production"
+    "build:all": "EAS_BUILD_NO_EXPO_GO_WARNING=true eas build --platform all --profile production",
+    "update:ota": "eas update --branch production --message"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

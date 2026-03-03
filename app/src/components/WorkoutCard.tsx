@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
 
@@ -13,6 +14,23 @@ interface WorkoutCardProps {
   onDelete?: () => void;
 }
 
+// Couleurs alignées sur les empty states (Dernière séance créée / terminée)
+const DRAFT_COLORS = {
+  gradient: ['#F9731612', '#EA580C08', 'transparent'] as const,
+  border: 'rgba(249, 115, 22, 0.25)',
+  iconBg: 'rgba(249, 115, 22, 0.15)',
+  iconColor: '#F97316',
+  deco: 'rgba(249, 115, 22, 0.08)',
+  buttonGradient: ['#F97316', '#EA580C'] as const,
+};
+const COMPLETED_COLORS = {
+  gradient: ['#22C55E12', '#16A34A08', 'transparent'] as const,
+  border: 'rgba(34, 197, 94, 0.25)',
+  iconBg: 'rgba(34, 197, 94, 0.15)',
+  iconColor: '#22C55E',
+  deco: 'rgba(34, 197, 94, 0.08)',
+};
+
 export const WorkoutCard: React.FC<WorkoutCardProps> = ({
   title,
   date,
@@ -22,221 +40,179 @@ export const WorkoutCard: React.FC<WorkoutCardProps> = ({
   onDelete,
 }) => {
   const { theme } = useAppTheme();
-  const isDark = theme.mode === 'dark';
+  const isCompleted = status === 'completed';
+  const colors = isCompleted ? COMPLETED_COLORS : DRAFT_COLORS;
 
-  // Configuration selon le statut
-  const statusConfig = {
-    completed: {
-      icon: 'checkmark-circle' as const,
-      label: 'Terminé',
-      color: theme.colors.success,
-      bgColor: theme.colors.success + '15',
-      buttonText: 'Consulter',
-    },
-    in_progress: {
-      icon: 'play-circle' as const,
-      label: 'En cours',
-      color: theme.colors.warning,
-      bgColor: theme.colors.warning + '15',
-      buttonText: 'Continuer',
-    },
-    draft: {
-      icon: 'document-text' as const,
-      label: 'Brouillon',
-      color: theme.colors.textSecondary,
-      bgColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
-      buttonText: 'Démarrer',
-    },
-  };
-
-  const config = statusConfig[status];
+  const iconName = isCompleted ? 'trophy-outline' : status === 'in_progress' ? 'play-circle' : 'barbell-outline';
+  const buttonText = isCompleted ? 'Consulter' : status === 'in_progress' ? 'Continuer' : 'Démarrer';
 
   return (
     <Pressable
       style={({ pressed }) => [
-        styles.container,
+        styles.card,
         {
-          backgroundColor: theme.colors.surfaceMuted,
-          borderColor: theme.colors.border,
-          opacity: pressed ? 0.9 : 1,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
+          borderColor: colors.border,
+          backgroundColor: theme.colors.surface,
+          opacity: pressed ? 0.96 : 1,
         },
       ]}
       onPress={onPress}
     >
-      {/* Indicateur de statut (barre latérale) */}
-      <View style={[styles.statusIndicator, { backgroundColor: config.color }]} />
+      <LinearGradient
+        colors={colors.gradient}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
 
-      {/* Contenu principal */}
+      {onDelete && (
+        <TouchableOpacity
+          style={styles.deleteWrap}
+          onPress={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="trash-outline" size={20} color={theme.colors.error} />
+        </TouchableOpacity>
+      )}
+
       <View style={styles.content}>
-        {/* Header avec titre et badge */}
-        <View style={styles.header}>
-          <View style={styles.titleContainer}>
-            <Text 
-              style={[styles.title, { color: theme.colors.textPrimary }]} 
-              numberOfLines={1}
-            >
-              {title || 'Séance sans nom'}
-            </Text>
-            
-            {/* Badge de statut */}
-            <View style={[styles.statusBadge, { backgroundColor: config.bgColor }]}>
-              <Ionicons name={config.icon} size={12} color={config.color} />
-              <Text style={[styles.statusText, { color: config.color }]}>
-                {config.label}
-              </Text>
-            </View>
+        <View style={styles.iconWrap}>
+          <View style={[styles.iconCircle, { backgroundColor: colors.iconBg }]}>
+            <Ionicons name={iconName} size={36} color={colors.iconColor} />
           </View>
+          <View style={[styles.deco, styles.deco1, { backgroundColor: colors.deco }]} />
+          <View style={[styles.deco, styles.deco2, { backgroundColor: colors.deco }]} />
         </View>
 
-        {/* Métadonnées */}
-        <View style={styles.metadata}>
-          <View style={styles.metaItem}>
-            <Ionicons name="calendar-outline" size={14} color={theme.colors.textSecondary} />
-            <Text style={[styles.metaText, { color: theme.colors.textSecondary }]}>
-              {date}
-            </Text>
-          </View>
-          
-          {exerciseCount !== undefined && exerciseCount > 0 && (
-            <View style={styles.metaItem}>
-              <Ionicons name="barbell-outline" size={14} color={theme.colors.textSecondary} />
-              <Text style={[styles.metaText, { color: theme.colors.textSecondary }]}>
-                {exerciseCount} exercice{exerciseCount > 1 ? 's' : ''}
-              </Text>
-            </View>
-          )}
-        </View>
+        <Text style={[styles.title, { color: theme.colors.textPrimary }]} numberOfLines={2}>
+          {title || 'Séance sans nom'}
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
+          {date}
+          {exerciseCount !== undefined && exerciseCount > 0
+            ? ` · ${exerciseCount} exercice${exerciseCount > 1 ? 's' : ''}`
+            : ''}
+        </Text>
 
-        {/* Actions */}
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={[
-              styles.primaryButton,
-              { 
-                backgroundColor: status === 'completed' 
-                  ? theme.colors.surfaceMuted 
-                  : theme.colors.accent,
-                borderColor: status === 'completed' ? theme.colors.border : 'transparent',
-                borderWidth: status === 'completed' ? 1 : 0,
-              },
-            ]}
+        {isCompleted ? (
+          <Pressable
             onPress={onPress}
-            activeOpacity={0.8}
+            style={({ pressed }) => [
+              styles.ctaSecondary,
+              { borderColor: 'rgba(34, 197, 94, 0.4)', opacity: pressed ? 0.9 : 1 },
+            ]}
           >
-            <Ionicons 
-              name={status === 'completed' ? 'eye-outline' : 'play'} 
-              size={16} 
-              color={status === 'completed' ? theme.colors.textPrimary : '#FFFFFF'} 
-            />
-            <Text
-              style={[
-                styles.primaryButtonText,
-                { color: status === 'completed' ? theme.colors.textPrimary : '#FFFFFF' },
-              ]}
+            <Ionicons name="eye-outline" size={18} color="#22C55E" />
+            <Text style={[styles.ctaSecondaryText, { color: '#22C55E' }]}>{buttonText}</Text>
+          </Pressable>
+        ) : (
+          <Pressable onPress={onPress} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
+            <LinearGradient
+              colors={DRAFT_COLORS.buttonGradient}
+              style={styles.ctaGradient}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
             >
-              {config.buttonText}
-            </Text>
-          </TouchableOpacity>
-
-          {onDelete && (
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={onDelete}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="trash-outline" size={18} color={theme.colors.error} />
-            </TouchableOpacity>
-          )}
-        </View>
+              <Ionicons name="play" size={20} color="#fff" />
+              <Text style={styles.ctaText}>{buttonText}</Text>
+            </LinearGradient>
+          </Pressable>
+        )}
       </View>
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 12,
+  card: {
+    borderRadius: 20,
+    borderWidth: 1,
     overflow: 'hidden',
+    marginBottom: 12,
+    position: 'relative',
   },
-  statusIndicator: {
-    width: 4,
+  deleteWrap: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    zIndex: 1,
+    padding: 8,
   },
   content: {
-    flex: 1,
-    padding: 14,
-    gap: 10,
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+    alignItems: 'center',
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+  iconWrap: {
+    position: 'relative',
+    marginBottom: 20,
   },
-  titleContainer: {
-    flex: 1,
-    gap: 8,
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deco: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
+  deco1: {
+    width: 48,
+    height: 48,
+    top: -8,
+    right: -12,
+  },
+  deco2: {
+    width: 32,
+    height: 32,
+    bottom: -4,
+    left: -16,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: -0.2,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 6,
+    textAlign: 'center',
   },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: 'center',
+    marginBottom: 20,
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    gap: 4,
   },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-  },
-  metadata: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  metaText: {
-    fontSize: 13,
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginTop: 4,
-  },
-  primaryButton: {
-    flex: 1,
+  ctaGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    gap: 6,
+    gap: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+    overflow: 'hidden',
   },
-  primaryButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+  ctaText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
-  deleteButton: {
-    padding: 10,
-    borderRadius: 10,
+  ctaSecondary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    borderWidth: 1.5,
+  },
+  ctaSecondaryText: {
+    fontSize: 15,
+    fontWeight: '700',
   },
 });
-
-
-
-
