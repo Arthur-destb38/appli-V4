@@ -28,6 +28,7 @@ from .routes import users
 from .routes import seed
 from .routes import messaging
 from .routes import admin
+from .routes import wallet
 
 _IS_PRODUCTION = os.getenv("ENVIRONMENT", "").lower() == "production"
 from .seeds import seed_exercises
@@ -144,6 +145,7 @@ app.include_router(explore.router)
 app.include_router(notifications.router)
 app.include_router(leaderboard.router)
 app.include_router(messaging.router)
+app.include_router(wallet.router)
 
 if not _IS_PRODUCTION:
     app.include_router(seed.router)

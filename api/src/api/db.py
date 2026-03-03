@@ -57,7 +57,7 @@ def init_db() -> None:
     from .models import (
         User, Workout, Exercise, WorkoutExercise, Set, Program, ProgramSession,
         ProgramSet, Share, Follower, Like, Comment, Notification, Story,
-        RefreshToken, LoginAttempt, SyncEvent
+        RefreshToken, LoginAttempt, SyncEvent, PassToken,
     )
     
     url = _database_url()

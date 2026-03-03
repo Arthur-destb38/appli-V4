@@ -1,6 +1,6 @@
 """Database models for the Fitness App."""
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from sqlmodel import Field, SQLModel
@@ -245,6 +245,19 @@ class SyncEvent(SQLModel, table=True):
     entity_id: Optional[str] = Field(default=None)
     payload: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=utcnow)
+
+
+def _pass_token_expires_at() -> datetime:
+    return datetime.now(timezone.utc) + timedelta(days=365)
+
+
+class PassToken(SQLModel, table=True):
+    """Token pass Wallet (Apple/Google) — Gorillax Salles. Un token actif par user."""
+    token: str = Field(default_factory=generate_uuid, primary_key=True)
+    user_id: str = Field(index=True)
+    created_at: datetime = Field(default_factory=utcnow)
+    revoked_at: Optional[datetime] = Field(default=None)
+    expires_at: datetime = Field(default_factory=_pass_token_expires_at)
 
 
 class Conversation(SQLModel, table=True):
