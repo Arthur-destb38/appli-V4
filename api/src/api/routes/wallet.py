@@ -89,7 +89,12 @@ def get_apple_pass(
 ) -> Response:
     """Retourne le fichier .pkpass pour Apple Wallet. 503 si certificats non configurés."""
     pt = _get_or_create_pass_token(current_user.id, session)
-    pkpass_bytes = generate_pkpass(pt.token, organization_name="Gorillax")
+    pkpass_bytes = generate_pkpass(
+        pt.token,
+        organization_name="Gorillax",
+        member_name=current_user.username or "Membre",
+        member_id=current_user.id,
+    )
     if pkpass_bytes is None:
         raise HTTPException(
             status_code=503,

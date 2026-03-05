@@ -49,7 +49,12 @@ def _get_config(tmpdir: Path | None = None) -> dict | None:
     }
 
 
-def generate_pkpass(token: str, organization_name: str = "Gorillax") -> bytes | None:
+def generate_pkpass(
+    token: str,
+    organization_name: str = "Gorillax",
+    member_name: str = "Membre",
+    member_id: str | None = None,
+) -> bytes | None:
     """
     Génère un fichier .pkpass (ZIP) contenant pass.json, manifest.json, signature.
     Retourne les octets du ZIP ou None si la config Apple est absente / erreur.
@@ -61,6 +66,8 @@ def generate_pkpass(token: str, organization_name: str = "Gorillax") -> bytes | 
         if not config:
             return None
 
+        display_id = (member_id or token)[:12].upper()
+
         pass_json = {
             "formatVersion": 1,
             "passTypeIdentifier": config["pass_type_id"],
@@ -68,6 +75,25 @@ def generate_pkpass(token: str, organization_name: str = "Gorillax") -> bytes | 
             "teamIdentifier": config["team_id"],
             "organizationName": organization_name,
             "description": "Carte membre Gorillax",
+            "foregroundColor": "rgb(255, 255, 255)",
+            "backgroundColor": "rgb(20, 20, 20)",
+            "labelColor": "rgb(200, 200, 200)",
+            "logoText": organization_name,
+            "generic": {
+                "primaryFields": [
+                    {"key": "member", "label": "MEMBRE", "value": member_name}
+                ],
+                "secondaryFields": [
+                    {"key": "memberId", "label": "ID", "value": f"GX-{display_id}"}
+                ],
+            },
+            "barcodes": [
+                {
+                    "format": "PKBarcodeFormatQR",
+                    "message": token,
+                    "messageEncoding": "iso-8859-1",
+                }
+            ],
             "barcode": {
                 "format": "PKBarcodeFormatQR",
                 "message": token,
