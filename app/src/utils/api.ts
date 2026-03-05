@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// URL de l'API cloud (Render)
+// Téléphone = Render (recommandé). Ne pas mettre EXPO_PUBLIC_API_URL en prod.
 const CLOUD_API_URL = 'https://appli-v2.onrender.com';
 
 // Pour le dev local (téléphone sur le même Wi‑Fi que la machine)
@@ -12,9 +12,8 @@ const LOCAL_API_IP = 'http://192.168.1.45:8000';
 const LOCAL_API_WEB = 'http://localhost:8000';
 
 // Toggle pour basculer entre local et cloud
-// ⚠️ Pour APK/Production: mettre à false
-// ⚠️ Pour Expo Go local: mettre à true
-const USE_LOCAL_API = false; // ⚠️ false = Render (prod)
+// ⚠️ false = le téléphone utilise Render (prod). true = utilise LOCAL_API_IP (même Wi‑Fi que le Mac).
+const USE_LOCAL_API = false;
 
 export const getApiBaseUrl = () => {
   // Mode dev local activé (seulement en développement)

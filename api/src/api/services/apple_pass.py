@@ -8,16 +8,37 @@ import uuid
 from pathlib import Path
 
 
-def _get_config() -> dict | None:
-    """Retourne la config Apple pass ou None si non configurée."""
+def _pem_to_path(value: str | None, prefix: str, tmpdir: Path) -> str | None:
+    """Si value est du contenu PEM (-----BEGIN), l'écrit dans un fichier tmp et retourne le chemin. Sinon traite value comme chemin fichier."""
+    if not value or not value.strip():
+        return None
+    if "-----BEGIN" in value:
+        path = tmpdir / f"{prefix}.pem"
+        path.write_text(value.strip(), encoding="utf-8")
+        return str(path)
+    if os.path.isfile(value):
+        return value
+    return None
+
+
+def _get_config(tmpdir: Path | None = None) -> dict | None:
+    """Retourne la config Apple pass ou None si non configurée. Si tmpdir fourni, accepte contenu PEM inline (pour Render)."""
     team_id = os.getenv("APPLE_PASS_TEAM_ID")
     pass_type_id = os.getenv("APPLE_PASS_TYPE_ID")
-    cert_path = os.getenv("APPLE_PASS_CERT_PEM")
-    key_path = os.getenv("APPLE_PASS_KEY_PEM")
-    wwdr_path = os.getenv("APPLE_PASS_WWDR_PEM")
-    if not all((team_id, pass_type_id, cert_path, key_path, wwdr_path)):
+    cert_val = os.getenv("APPLE_PASS_CERT_PEM")
+    key_val = os.getenv("APPLE_PASS_KEY_PEM")
+    wwdr_val = os.getenv("APPLE_PASS_WWDR_PEM")
+    if not all((team_id, pass_type_id, cert_val, key_val, wwdr_val)):
         return None
-    if not os.path.isfile(cert_path) or not os.path.isfile(key_path) or not os.path.isfile(wwdr_path):
+    if tmpdir is not None:
+        cert_path = _pem_to_path(cert_val, "cert", tmpdir)
+        key_path = _pem_to_path(key_val, "key", tmpdir)
+        wwdr_path = _pem_to_path(wwdr_val, "wwdr", tmpdir)
+    else:
+        cert_path = cert_val if os.path.isfile(cert_val) else None
+        key_path = key_val if os.path.isfile(key_val) else None
+        wwdr_path = wwdr_val if os.path.isfile(wwdr_val) else None
+    if not all((cert_path, key_path, wwdr_path)):
         return None
     return {
         "team_id": team_id,
@@ -32,37 +53,34 @@ def generate_pkpass(token: str, organization_name: str = "Gorillax") -> bytes | 
     """
     Génère un fichier .pkpass (ZIP) contenant pass.json, manifest.json, signature.
     Retourne les octets du ZIP ou None si la config Apple est absente / erreur.
+    Supporte APPLE_PASS_* en chemins fichiers ou contenu PEM inline (pour Render).
     """
-    config = _get_config()
-    if not config:
-        return None
-
-    pass_json = {
-        "formatVersion": 1,
-        "passTypeIdentifier": config["pass_type_id"],
-        "serialNumber": str(uuid.uuid4()),
-        "teamIdentifier": config["team_id"],
-        "organizationName": organization_name,
-        "description": "Carte membre Gorillax",
-        "barcode": {
-            "format": "PKBarcodeFormatQR",
-            "message": token,
-            "messageEncoding": "iso-8859-1",
-        },
-    }
-    pass_bytes = json.dumps(pass_json, separators=(",", ":")).encode("utf-8")
-
-    manifest = {
-        "pass.json": hashlib.sha1(pass_bytes).hexdigest(),
-    }
-
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
+        config = _get_config(tmp)
+        if not config:
+            return None
+
+        pass_json = {
+            "formatVersion": 1,
+            "passTypeIdentifier": config["pass_type_id"],
+            "serialNumber": str(uuid.uuid4()),
+            "teamIdentifier": config["team_id"],
+            "organizationName": organization_name,
+            "description": "Carte membre Gorillax",
+            "barcode": {
+                "format": "PKBarcodeFormatQR",
+                "message": token,
+                "messageEncoding": "iso-8859-1",
+            },
+        }
+        pass_bytes = json.dumps(pass_json, separators=(",", ":")).encode("utf-8")
+        manifest = {"pass.json": hashlib.sha1(pass_bytes).hexdigest()}
+
         (tmp / "pass.json").write_bytes(pass_bytes)
         manifest_path = tmp / "manifest.json"
         manifest_path.write_text(json.dumps(manifest, separators=(",", ":")))
 
-        # Signer manifest.json avec OpenSSL (PKCS7)
         signature_path = tmp / "signature"
         try:
             subprocess.run(
@@ -86,7 +104,6 @@ def generate_pkpass(token: str, organization_name: str = "Gorillax") -> bytes | 
         if not signature_path.is_file():
             return None
 
-        # Créer le ZIP (.pkpass)
         import zipfile
         from io import BytesIO
         buf = BytesIO()

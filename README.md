@@ -56,6 +56,13 @@ Ou clique sur le bouton "🧪 Connexion Demo" sur la page de login.
 ./deploy.sh --tunnel     # Si le QR code marche pas, ça passe par internet
 ```
 
+### Téléphone : passer par Render
+
+Sur ton **téléphone** (Expo Go ou build), l'app utilise **Render** par défaut (`appli-v2.onrender.com`). Comme ça, « Ajouter à Apple Wallet » et le reste marchent sans être sur le même Wi‑Fi que ton Mac.
+
+- Ne pas créer `app/.env` avec `EXPO_PUBLIC_API_URL` en prod (sinon l'app peut pointer vers une autre URL).
+- Pour forcer l'API locale sur le téléphone (dev), mets dans `app/.env` : `EXPO_PUBLIC_API_URL=http://TON_IP:8000`.
+
 ---
 
 ## Comment c'est construit
