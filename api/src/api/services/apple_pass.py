@@ -2,10 +2,27 @@
 import hashlib
 import json
 import os
+import struct
 import subprocess
 import tempfile
 import uuid
+import zlib
 from pathlib import Path
+
+
+def _make_solid_png(width: int, height: int, r: int, g: int, b: int) -> bytes:
+    """Generate a minimal solid-color PNG (no external deps)."""
+    def _chunk(tag: bytes, data: bytes) -> bytes:
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    raw_rows = b""
+    for _ in range(height):
+        raw_rows += b"\x00" + bytes([r, g, b]) * width
+    compressed = zlib.compress(raw_rows)
+
+    sig = b"\x89PNG\r\n\x1a\n"
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    return sig + _chunk(b"IHDR", ihdr) + _chunk(b"IDAT", compressed) + _chunk(b"IEND", b"")
 
 
 def _pem_to_path(value: str | None, prefix: str, tmpdir: Path) -> str | None:
@@ -101,9 +118,24 @@ def generate_pkpass(
             },
         }
         pass_bytes = json.dumps(pass_json, separators=(",", ":")).encode("utf-8")
-        manifest = {"pass.json": hashlib.sha1(pass_bytes).hexdigest()}
 
-        (tmp / "pass.json").write_bytes(pass_bytes)
+        icon_png = _make_solid_png(29, 29, 20, 20, 20)
+        icon_2x_png = _make_solid_png(58, 58, 20, 20, 20)
+        logo_png = _make_solid_png(50, 50, 20, 20, 20)
+        logo_2x_png = _make_solid_png(100, 100, 20, 20, 20)
+
+        files = {
+            "pass.json": pass_bytes,
+            "icon.png": icon_png,
+            "icon@2x.png": icon_2x_png,
+            "logo.png": logo_png,
+            "logo@2x.png": logo_2x_png,
+        }
+
+        manifest = {name: hashlib.sha1(data).hexdigest() for name, data in files.items()}
+
+        for name, data in files.items():
+            (tmp / name).write_bytes(data if isinstance(data, bytes) else data.encode())
         manifest_path = tmp / "manifest.json"
         manifest_path.write_text(json.dumps(manifest, separators=(",", ":")))
 
@@ -134,7 +166,8 @@ def generate_pkpass(
         from io import BytesIO
         buf = BytesIO()
         with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr("pass.json", pass_bytes)
+            for name, data in files.items():
+                zf.writestr(name, data)
             zf.writestr("manifest.json", manifest_path.read_text())
             zf.writestr("signature", signature_path.read_bytes())
         return buf.getvalue()
