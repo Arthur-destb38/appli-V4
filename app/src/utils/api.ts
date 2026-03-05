@@ -85,7 +85,6 @@ export const apiCall = async (
     let response = await fetch(url, config);
     clearTimeout(timeoutId);
 
-    // Si le token est expiré (401), essayer de le rafraîchir
     if (response.status === 401 && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
       try {
         const refreshToken = await AsyncStorage.getItem('@gorillax_refresh_token');
@@ -119,10 +118,20 @@ export const apiCall = async (
               },
             });
             clearTimeout(retryTimeoutId);
+          } else {
+            await AsyncStorage.multiRemove([
+              '@gorillax_access_token',
+              '@gorillax_refresh_token',
+              '@gorillax_user',
+            ]);
           }
         }
       } catch (_) {
-        // Refresh failed silently
+        await AsyncStorage.multiRemove([
+          '@gorillax_access_token',
+          '@gorillax_refresh_token',
+          '@gorillax_user',
+        ]).catch(() => {});
       }
     }
 

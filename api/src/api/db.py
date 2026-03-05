@@ -38,12 +38,18 @@ def get_engine() -> Engine:
     if _ENGINE is None:
         url = _database_url()
         parsed_url = make_url(url)
-        connect_args = (
-            {"check_same_thread": False}
-            if parsed_url.get_backend_name() == "sqlite"
-            else {}
-        )
-        _ENGINE = create_engine(url, echo=False, connect_args=connect_args)
+        is_sqlite = parsed_url.get_backend_name() == "sqlite"
+        connect_args = {"check_same_thread": False} if is_sqlite else {}
+        pool_kwargs = {}
+        if not is_sqlite:
+            pool_kwargs = {
+                "pool_size": 3,
+                "max_overflow": 5,
+                "pool_timeout": 30,
+                "pool_recycle": 600,
+                "pool_pre_ping": True,
+            }
+        _ENGINE = create_engine(url, echo=False, connect_args=connect_args, **pool_kwargs)
     return _ENGINE
 
 
