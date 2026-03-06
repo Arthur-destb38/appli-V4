@@ -59,8 +59,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Run tests
-        working-directory: api/src
-        run: uv run --directory .. pytest api/tests/ -v --tb=short
+        run: uv run pytest src/api/tests/ -v --tb=short
         env:
           DATABASE_URL: "sqlite:///test.db"
 
