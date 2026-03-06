@@ -8,3 +8,11 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Secrets (ne jamais commiter)
+.env
+.env.*
+*.pem
+*.p12
+*service*account*.json
+*service-account*.json

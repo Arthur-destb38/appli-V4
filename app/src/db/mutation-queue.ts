@@ -68,19 +68,21 @@ export const countPendingMutations = async (): Promise<number> => {
   return rows[0]?.count ?? 0;
 };
 
+const MAX_MUTATION_RETRIES = 5;
+
 export const getPendingMutations = async (limit = 20): Promise<QueuedMutation[]> => {
   if (isUsingFallbackDatabase()) {
     const store = getFallbackStore();
     return store.mutationQueue
-      .filter((item) => item.status !== 'completed')
+      .filter((item) => item.status !== 'completed' && item.attempts < MAX_MUTATION_RETRIES)
       .sort((a, b) => a.id - b.id)
       .slice(0, limit)
       .map(parseRow);
   }
 
   const result = await runSql(
-    `SELECT * FROM mutation_queue WHERE status != 'completed' ORDER BY id ASC LIMIT ?`,
-    [limit]
+    `SELECT * FROM mutation_queue WHERE status != 'completed' AND attempts < ? ORDER BY id ASC LIMIT ?`,
+    [MAX_MUTATION_RETRIES, limit]
   );
 
   return result.rows._array.map(parseRow);

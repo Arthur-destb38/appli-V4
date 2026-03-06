@@ -81,6 +81,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
         setUser(JSON.parse(storedUser));
       }
     } catch (error) {
+      console.warn('[useAuth] Failed to load stored auth:', error);
     } finally {
       setIsLoading(false);
     }
@@ -96,6 +97,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       setTokens(authTokens);
       setUser(userData);
     } catch (error) {
+      console.warn('[useAuth] Failed to save auth:', error);
     }
   };
 
@@ -109,6 +111,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       setTokens(null);
       setUser(null);
     } catch (error) {
+      console.warn('[useAuth] Failed to clear auth:', error);
     }
   };
 
@@ -244,6 +247,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       await clearAllUserDataForLogout();
       await clearAuth();
     } catch (error) {
+      console.warn('[useAuth] Failed to logout:', error);
     } finally {
       setIsLoading(false);
     }

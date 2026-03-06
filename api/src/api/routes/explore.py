@@ -6,6 +6,7 @@ from typing import Optional
 
 from ..db import get_session
 from ..models import User, Share, Like, Follower
+from ..utils.dependencies import get_current_user_optional
 
 router = APIRouter(prefix="/explore", tags=["explore"])
 
@@ -96,12 +97,13 @@ def get_trending_posts(
 
 @router.get("/suggested-users", response_model=list[SuggestedUser])
 def get_suggested_users(
-    current_user_id: Optional[str] = None,
     limit: int = Query(10, ge=1, le=30),
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ) -> list[SuggestedUser]:
     """Récupérer des suggestions d'utilisateurs à suivre."""
-    
+    current_user_id = current_user.id if current_user else None
+
     # Récupérer les IDs des utilisateurs déjà suivis
     following_ids = set()
     if current_user_id:
@@ -173,11 +175,11 @@ def search(
     
     # Optimisation: Rechercher des utilisateurs directement en SQL avec filtres
     from sqlalchemy import or_
-    
+
     users_query = select(User).where(
         or_(
             User.username.ilike(search_pattern),
-            User.bio.ilike(search_pattern) if User.bio else False
+            User.bio.ilike(search_pattern),
         )
     ).limit(limit)
     
@@ -256,13 +258,13 @@ def search(
 
 @router.get("", response_model=ExploreResponse)
 def get_explore(
-    current_user_id: Optional[str] = None,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ) -> ExploreResponse:
     """Page Explore complète avec trending et suggestions."""
-    
+
     trending = get_trending_posts(limit=12, session=session)
-    suggested = get_suggested_users(current_user_id=current_user_id, limit=5, session=session)
+    suggested = get_suggested_users(limit=5, session=session, current_user=current_user)
     
     return ExploreResponse(
         trending_posts=trending,

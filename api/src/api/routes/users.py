@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, List, Union
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from sqlmodel import Session, select
 
 from ..db import get_session
@@ -18,6 +18,45 @@ class UpdateProfileRequest(BaseModel):
     bio: Optional[str] = None
     avatar_url: Optional[str] = None
     objective: Optional[str] = None
+
+
+class SetupStep1Request(BaseModel):
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = Field(None, max_length=500)
+    location: Optional[str] = Field(None, max_length=100)
+    height: Optional[int] = Field(None, ge=50, le=300)
+    weight: Optional[float] = Field(None, ge=20, le=500)
+    birth_date: Optional[str] = None
+    gender: Optional[str] = None
+
+    @field_validator("gender")
+    @classmethod
+    def validate_gender(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in ("male", "female", "other", "prefer_not_to_say"):
+            raise ValueError("Invalid gender value")
+        return v
+
+
+class SetupStep2Request(BaseModel):
+    objective: Optional[str] = Field(None, max_length=200)
+    experience_level: Optional[str] = None
+    training_frequency: Optional[int] = Field(None, ge=1, le=14)
+
+    @field_validator("experience_level")
+    @classmethod
+    def validate_experience(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and v not in ("beginner", "intermediate", "advanced", "expert"):
+            raise ValueError("Invalid experience level")
+        return v
+
+
+class SetupStep3Request(BaseModel):
+    equipment_available: Optional[Union[str, List[str]]] = None
+    consent_to_public_share: Optional[bool] = None
+
+
+class SetupCompleteRequest(SetupStep1Request, SetupStep2Request, SetupStep3Request):
+    pass
 
 
 def _ensure_unique_username(session, username: str, exclude_id: Optional[str] = None) -> None:
@@ -152,27 +191,26 @@ def update_profile(
 
 @router.post("/profile/setup/step1")
 def setup_profile_step1(
-    payload: dict,
+    payload: SetupStep1Request,
     current_user: User = Depends(_get_current_user),
     session: Session = Depends(get_session)
 ) -> dict:
     """Étape 1: Informations de base"""
-    
-    # Mise à jour des champs de l'étape 1
-    if 'avatar_url' in payload and payload['avatar_url']:
-        current_user.avatar_url = payload['avatar_url']
-    if 'bio' in payload and payload['bio']:
-        current_user.bio = payload['bio']
-    if 'location' in payload and payload['location']:
-        setattr(current_user, 'location', payload['location'])
-    if 'height' in payload and payload['height']:
-        setattr(current_user, 'height', int(payload['height']))
-    if 'weight' in payload and payload['weight']:
-        setattr(current_user, 'weight', float(payload['weight']))
-    if 'birth_date' in payload and payload['birth_date']:
-        setattr(current_user, 'birth_date', datetime.fromisoformat(payload['birth_date'].replace('Z', '+00:00')))
-    if 'gender' in payload and payload['gender']:
-        setattr(current_user, 'gender', payload['gender'])
+
+    if payload.avatar_url:
+        current_user.avatar_url = payload.avatar_url
+    if payload.bio:
+        current_user.bio = payload.bio
+    if payload.location:
+        current_user.location = payload.location
+    if payload.height is not None:
+        current_user.height = payload.height
+    if payload.weight is not None:
+        current_user.weight = payload.weight
+    if payload.birth_date:
+        current_user.birth_date = datetime.fromisoformat(payload.birth_date.replace('Z', '+00:00'))
+    if payload.gender:
+        current_user.gender = payload.gender
     
     session.commit()
     session.refresh(current_user)
@@ -186,19 +224,18 @@ def setup_profile_step1(
 
 @router.post("/profile/setup/step2")
 def setup_profile_step2(
-    payload: dict,
+    payload: SetupStep2Request,
     current_user: User = Depends(_get_current_user),
     session: Session = Depends(get_session)
 ) -> dict:
     """Étape 2: Objectifs fitness"""
-    
-    # Mise à jour des champs de l'étape 2
-    if 'objective' in payload and payload['objective']:
-        current_user.objective = payload['objective']
-    if 'experience_level' in payload and payload['experience_level']:
-        setattr(current_user, 'experience_level', payload['experience_level'])
-    if 'training_frequency' in payload and payload['training_frequency']:
-        setattr(current_user, 'training_frequency', int(payload['training_frequency']))
+
+    if payload.objective:
+        current_user.objective = payload.objective
+    if payload.experience_level:
+        current_user.experience_level = payload.experience_level
+    if payload.training_frequency is not None:
+        current_user.training_frequency = payload.training_frequency
     
     session.commit()
     session.refresh(current_user)
@@ -212,19 +249,21 @@ def setup_profile_step2(
 
 @router.post("/profile/setup/step3")
 def setup_profile_step3(
-    payload: dict,
+    payload: SetupStep3Request,
     current_user: User = Depends(_get_current_user),
     session: Session = Depends(get_session)
 ) -> dict:
     """Étape 3: Préférences"""
-    
-    # Mise à jour des champs de l'étape 3
-    if 'equipment_available' in payload and payload['equipment_available']:
+
+    if payload.equipment_available is not None:
         import json
-        setattr(current_user, 'equipment_available', json.dumps(payload['equipment_available']))
-    
-    if 'consent_to_public_share' in payload:
-        current_user.consent_to_public_share = payload['consent_to_public_share']
+        if isinstance(payload.equipment_available, list):
+            current_user.equipment_available = json.dumps(payload.equipment_available)
+        else:
+            current_user.equipment_available = payload.equipment_available
+
+    if payload.consent_to_public_share is not None:
+        current_user.consent_to_public_share = payload.consent_to_public_share
     
     # Marquer le profil comme complet
     setattr(current_user, 'profile_completed', True)
@@ -241,48 +280,46 @@ def setup_profile_step3(
 
 @router.post("/profile/complete")
 def complete_profile_all_steps(
-    payload: dict,
+    payload: SetupCompleteRequest,
     current_user: User = Depends(_get_current_user),
     session: Session = Depends(get_session)
 ) -> dict:
     """Compléter le profil en une seule fois"""
-    
+
     # Étape 1: Informations de base
-    if 'avatar_url' in payload and payload['avatar_url']:
-        current_user.avatar_url = payload['avatar_url']
-    if 'bio' in payload and payload['bio']:
-        current_user.bio = payload['bio']
-    if 'location' in payload and payload['location']:
-        current_user.location = payload['location']
-    if 'height' in payload and payload['height']:
-        current_user.height = int(payload['height'])
-    if 'weight' in payload and payload['weight']:
-        current_user.weight = float(payload['weight'])
-    if 'birth_date' in payload and payload['birth_date']:
-        current_user.birth_date = datetime.fromisoformat(payload['birth_date'].replace('Z', '+00:00'))
-    if 'gender' in payload and payload['gender']:
-        current_user.gender = payload['gender']
-    
+    if payload.avatar_url:
+        current_user.avatar_url = payload.avatar_url
+    if payload.bio:
+        current_user.bio = payload.bio
+    if payload.location:
+        current_user.location = payload.location
+    if payload.height is not None:
+        current_user.height = payload.height
+    if payload.weight is not None:
+        current_user.weight = payload.weight
+    if payload.birth_date:
+        current_user.birth_date = datetime.fromisoformat(payload.birth_date.replace('Z', '+00:00'))
+    if payload.gender:
+        current_user.gender = payload.gender
+
     # Étape 2: Objectifs fitness
-    if 'objective' in payload and payload['objective']:
-        current_user.objective = payload['objective']
-    if 'experience_level' in payload and payload['experience_level']:
-        current_user.experience_level = payload['experience_level']
-    if 'training_frequency' in payload and payload['training_frequency']:
-        current_user.training_frequency = int(payload['training_frequency'])
-    
+    if payload.objective:
+        current_user.objective = payload.objective
+    if payload.experience_level:
+        current_user.experience_level = payload.experience_level
+    if payload.training_frequency is not None:
+        current_user.training_frequency = payload.training_frequency
+
     # Étape 3: Préférences
-    if 'equipment_available' in payload and payload['equipment_available']:
-        # Si c'est déjà une string JSON, l'utiliser directement
-        if isinstance(payload['equipment_available'], str):
-            current_user.equipment_available = payload['equipment_available']
+    if payload.equipment_available is not None:
+        import json
+        if isinstance(payload.equipment_available, list):
+            current_user.equipment_available = json.dumps(payload.equipment_available)
         else:
-            # Sinon, convertir en JSON
-            import json
-            current_user.equipment_available = json.dumps(payload['equipment_available'])
-    
-    if 'consent_to_public_share' in payload:
-        current_user.consent_to_public_share = payload['consent_to_public_share']
+            current_user.equipment_available = payload.equipment_available
+
+    if payload.consent_to_public_share is not None:
+        current_user.consent_to_public_share = payload.consent_to_public_share
     
     current_user.profile_completed = True
     

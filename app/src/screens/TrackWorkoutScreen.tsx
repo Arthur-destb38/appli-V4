@@ -61,7 +61,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
     }).start();
 
     // Pulse animation pour le bouton terminer
-    Animated.loop(
+    const pulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.02,
@@ -76,7 +76,12 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+    pulseLoop.start();
+
+    return () => {
+      pulseLoop.stop();
+    };
   }, []);
 
   if (!workout) {

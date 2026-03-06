@@ -34,6 +34,7 @@ api/#/
 .env.*
 api/.env
 .cursor/mcp.json
+.mcp.json
 
 # OS/Editor
 .DS_Store

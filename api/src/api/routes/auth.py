@@ -15,7 +15,7 @@ from ..utils.auth import (
     hash_password,
     verify_password,
 )
-from ..utils.rate_limit import record_login_attempt, cleanup_old_attempts
+from ..utils.rate_limit import record_login_attempt, cleanup_old_attempts, is_rate_limited
 from ..utils.dependencies import get_current_user as _get_current_user
 from ..services.email import send_verification_email, send_password_reset_email, generate_verification_token
 
@@ -242,13 +242,16 @@ def login(payload: LoginRequest, request: Request, session: Session = Depends(ge
     client_ip = _get_client_ip(request)
     username = payload.username.strip()
 
+    # Vérifier le rate limiting AVANT de tenter le login
+    if is_rate_limited(session, username, client_ip):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="too_many_attempts")
+
     if username == "demo":
         from ..main import ensure_demo_user
         ensure_demo_user()
 
     user = session.exec(select(User).where(User.username == username)).first()
     if not user or not verify_password(payload.password, user.password_hash):
-        # Enregistrer la tentative échouée
         record_login_attempt(session, username, client_ip, success=False)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_credentials")
     
@@ -325,12 +328,16 @@ def refresh_token(
         session.commit()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="token_expired")
     
-    # Supprimer l'ancien token et créer un nouveau
-    session.delete(db_token)
+    # Créer le nouveau token AVANT de supprimer l'ancien (transactionnalité)
     new_refresh, exp = create_refresh_token(user_id)
     session.add(RefreshToken(token=new_refresh, user_id=user_id, expires_at=exp))
     access = create_access_token(user_id)
-    session.commit()
+    session.delete(db_token)
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="refresh_failed")
     return TokenPair(access_token=access, refresh_token=new_refresh)
 
 

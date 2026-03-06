@@ -29,6 +29,7 @@ from .routes import seed
 from .routes import messaging
 from .routes import admin
 from .routes import wallet
+from .routes import salle
 
 _IS_PRODUCTION = os.getenv("ENVIRONMENT", "").lower() == "production"
 from .seeds import seed_exercises
@@ -125,7 +126,7 @@ app.add_middleware(
     allow_origins=cors_origins,  # Configurable via CORS_ORIGINS env var
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Explicit methods
-    allow_headers=["Authorization", "Content-Type", "Accept"],  # Explicit headers
+    allow_headers=["Authorization", "Content-Type", "Accept", "X-API-Key"],  # Explicit headers
 )
 
 app.include_router(health.router)
@@ -146,6 +147,7 @@ app.include_router(notifications.router)
 app.include_router(leaderboard.router)
 app.include_router(messaging.router)
 app.include_router(wallet.router)
+app.include_router(salle.router)
 
 if not _IS_PRODUCTION:
     app.include_router(seed.router)

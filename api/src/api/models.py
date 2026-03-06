@@ -260,6 +260,15 @@ class PassToken(SQLModel, table=True):
     expires_at: datetime = Field(default_factory=_pass_token_expires_at)
 
 
+class SalleAuditLog(SQLModel, table=True):
+    """Audit des appels API salle (resolve-token, profile, current-session)."""
+    id: str = Field(default_factory=generate_uuid, primary_key=True)
+    gym_id: Optional[str] = Field(default=None, index=True)
+    endpoint: str = Field(index=True)
+    user_id: Optional[str] = Field(default=None, index=True)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
 class Conversation(SQLModel, table=True):
     """Conversation privée entre deux utilisateurs."""
     id: str = Field(default_factory=generate_uuid, primary_key=True)

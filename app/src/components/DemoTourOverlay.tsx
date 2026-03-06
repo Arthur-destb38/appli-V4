@@ -69,6 +69,8 @@ export function DemoTourOverlay() {
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+      progressAnim.stopAnimation();
     };
   }, [isDemoActive, demoStep]);
 
