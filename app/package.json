@@ -75,5 +75,6 @@
       "node_modules/(?!(expo|@expo|expo-font|expo-router|expo-modules-core|expo-constants|expo-status-bar|expo-sqlite|@react-native|react-native)/)"
     ]
   },
-  "private": true
+  "private": true,
+  "packageManager": "pnpm@10.24.0"
 }
