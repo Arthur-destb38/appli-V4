@@ -9,3 +9,4 @@ httpx>=0.28.0
 slowapi>=0.1.9
 psycopg2-binary>=2.9.9
 PyJWT>=2.8.0
+Pillow>=11.0.0

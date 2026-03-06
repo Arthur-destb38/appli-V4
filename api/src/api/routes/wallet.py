@@ -94,6 +94,7 @@ def get_apple_pass(
         organization_name="Gorillax",
         member_name=current_user.username or "Membre",
         member_id=current_user.id,
+        expires_at=pt.expires_at,
     )
     if pkpass_bytes is None:
         raise HTTPException(
