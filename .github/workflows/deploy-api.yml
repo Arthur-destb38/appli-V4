@@ -1,0 +1,55 @@
+name: Deploy API to Render
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - ".github/workflows/deploy-api.yml"
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: "Deploy API"
+    runs-on: ubuntu-latest
+    # Only deploy after CI passes
+    needs: []
+    steps:
+      - name: Trigger Render deploy
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "::warning::RENDER_DEPLOY_HOOK_URL secret not set. Skipping deploy."
+            echo "To enable auto-deploy, add your Render Deploy Hook URL as a GitHub secret."
+            echo "Go to Render Dashboard > Your Service > Settings > Deploy Hook"
+            exit 0
+          fi
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}")
+          if [ "$response" -ge 200 ] && [ "$response" -lt 300 ]; then
+            echo "Deploy triggered successfully (HTTP $response)"
+          else
+            echo "::error::Deploy hook returned HTTP $response"
+            exit 1
+          fi
+
+      - name: Wait and verify health
+        run: |
+          API_URL="${{ secrets.RENDER_API_URL }}"
+          if [ -z "$API_URL" ]; then
+            API_URL="https://appli-v2.onrender.com"
+          fi
+          echo "Waiting 60s for deployment to start..."
+          sleep 60
+          echo "Checking health at $API_URL/health ..."
+          for i in $(seq 1 10); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "$API_URL/health" || true)
+            if [ "$status" = "200" ]; then
+              echo "Health check passed (attempt $i)"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $status - retrying in 30s..."
+            sleep 30
+          done
+          echo "::warning::Health check did not pass after 10 attempts. The deploy may still be in progress."

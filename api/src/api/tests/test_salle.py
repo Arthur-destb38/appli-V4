@@ -1,6 +1,7 @@
 """Tests API salle (resolve-token, profile, current-session)."""
 import os
 import uuid
+from datetime import datetime, timezone, timedelta
 
 import pytest
 from sqlmodel import Session, select
@@ -9,12 +10,15 @@ from api.db import get_engine
 from api.models import User, PassToken, Workout, WorkoutExercise, Set, Exercise
 
 
-def _create_user_with_pass_token(session: Session) -> tuple[str, str]:
+_SALLE_HEADERS = {"X-API-Key": "test-salle-key"}
+
+
+def _create_user_with_pass_token(session: Session, username: str = "salle-test-user") -> tuple[str, str]:
     """Crée un user et un PassToken actif. Retourne (user_id, token)."""
     user = User(
         id=str(uuid.uuid4()),
-        username="salle-test-user",
-        email="salle-test@test.local",
+        username=username,
+        email=f"{username}@test.local",
         password_hash="hash",
         objective="Objectif test",
         bio="Bio test",
@@ -32,6 +36,10 @@ def _create_user_with_pass_token(session: Session) -> tuple[str, str]:
 @pytest.fixture(autouse=True)
 def _salle_api_key():
     os.environ["SALLE_API_KEY"] = "test-salle-key"
+    # Clear rate-limit deque and TTL cache between tests to avoid cross-test pollution
+    from api.routes.salle import _salle_rate_limit, _salle_cache
+    _salle_rate_limit.clear()
+    _salle_cache.clear()
     yield
     if "SALLE_API_KEY" in os.environ:
         del os.environ["SALLE_API_KEY"]
@@ -160,3 +168,103 @@ def test_current_session_returns_draft_workout(client):
     assert len(data["exercises"][0]["sets"]) == 1
     assert data["exercises"][0]["sets"][0]["reps"] == 10
     assert data["exercises"][0]["sets"][0]["weight"] == 80.0
+
+
+# ---------------------------------------------------------------------------
+# Additional edge cases
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_token_revoked(client):
+    """A revoked token should return 404."""
+    with Session(get_engine()) as session:
+        user_id, token = _create_user_with_pass_token(session, username="revoked-user")
+        pt = session.exec(select(PassToken).where(PassToken.token == token)).first()
+        pt.revoked_at = datetime.now(timezone.utc)
+        session.add(pt)
+        session.commit()
+
+    response = client.post(
+        "/salle/resolve-token",
+        json={"token": token},
+        headers=_SALLE_HEADERS,
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "token_revoked"
+
+
+def test_resolve_token_expired(client):
+    """An expired token should return 410."""
+    with Session(get_engine()) as session:
+        user_id, token = _create_user_with_pass_token(session, username="expired-user")
+        pt = session.exec(select(PassToken).where(PassToken.token == token)).first()
+        pt.expires_at = datetime.now(timezone.utc) - timedelta(days=1)
+        session.add(pt)
+        session.commit()
+
+    response = client.post(
+        "/salle/resolve-token",
+        json={"token": token},
+        headers=_SALLE_HEADERS,
+    )
+    assert response.status_code == 410
+    assert response.json()["detail"] == "token_expired"
+
+
+def test_bearer_auth_also_works(client):
+    """The salle API should also accept Authorization: Bearer <key>."""
+    with Session(get_engine()) as session:
+        user_id, token = _create_user_with_pass_token(session, username="bearer-user")
+
+    response = client.post(
+        "/salle/resolve-token",
+        json={"token": token},
+        headers={"Authorization": "Bearer test-salle-key"},
+    )
+    assert response.status_code == 200
+    assert response.json()["user_id"] == user_id
+
+
+def test_no_api_key_configured_returns_503(client):
+    """If SALLE_API_KEY is not set, the endpoint returns 503."""
+    del os.environ["SALLE_API_KEY"]
+
+    response = client.post(
+        "/salle/resolve-token",
+        json={"token": "any"},
+        headers=_SALLE_HEADERS,
+    )
+    assert response.status_code == 503
+    assert response.json()["detail"] == "salle_api_not_configured"
+
+
+def test_current_session_user_not_found(client):
+    response = client.get(
+        "/salle/users/nonexistent-user/current-session",
+        headers=_SALLE_HEADERS,
+    )
+    assert response.status_code == 404
+
+
+def test_current_session_ignores_completed_workouts(client):
+    """Completed workouts should not appear in current-session."""
+    with Session(get_engine()) as session:
+        user_id, _ = _create_user_with_pass_token(session, username="completed-user")
+        workout = Workout(
+            user_id=user_id,
+            title="Done workout",
+            status="completed",
+        )
+        session.add(workout)
+        session.commit()
+
+    # Clear cache to ensure fresh fetch
+    from api.routes.salle import _salle_cache
+    _salle_cache.clear()
+
+    response = client.get(
+        f"/salle/users/{user_id}/current-session",
+        headers=_SALLE_HEADERS,
+    )
+    assert response.status_code == 200
+    assert response.json() is None

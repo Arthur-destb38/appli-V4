@@ -1,260 +1,305 @@
-# Gorillax 🦍
+# Gorillax
 
-Application mobile de fitness avec fonctionnalités sociales. L'idée : combiner le suivi d'entraînement avec un réseau social pour garder la motivation.
+Application mobile de fitness avec fonctionnalites sociales. L'idee : combiner le suivi d'entrainement avec un reseau social pour garder la motivation.
 
-**Projet M2 MoSEF** — Arthur Destribats & Niama El Kamal — Paris 1, Février 2026
+**Projet M2 MoSEF** -- Arthur Destribats & Niama El Kamal -- Paris 1, Fevrier 2026
 
 ---
 
 ## Le projet en bref
 
-80% des gens abandonnent la salle après 3 mois. Pourquoi ? Pas de suivi, pas de motivation, personne pour te pousser. 
+80% des gens abandonnent la salle apres 3 mois. Pourquoi ? Pas de suivi, pas de motivation, personne pour te pousser.
 
-Gorillax essaie de résoudre ça en mélangeant deux trucs :
-- Une app de tracking classique (séances, exercices, progression)
-- Un feed social à la Instagram où tu partages tes séances
+Gorillax essaie de resoudre ca en melangeant deux trucs :
+- Une app de tracking classique (seances, exercices, progression)
+- Un feed social a la Instagram ou tu partages tes seances
 
 En gros, c'est un peu le Strava de la muscu.
 
 ---
 
+## Stack technique
+
+| Couche | Technologie |
+|--------|-------------|
+| Frontend | React Native 0.81 + Expo 54 + TypeScript |
+| Navigation | Expo Router (file-based routing) |
+| BDD locale | expo-sqlite (offline-first) |
+| Backend | FastAPI (Python 3.10+) |
+| ORM | SQLModel (SQLAlchemy) |
+| BDD serveur | SQLite (dev) / PostgreSQL (prod) |
+| Auth | JWT (access + refresh tokens) |
+| Deploiement API | Render |
+| Build mobile | EAS Build (Expo) |
+
+---
+
 ## Lancer le projet
 
-### Ce qu'il te faut
+### Prerequis
 
-- Python 3.10+ (avec `uv` pour la gestion des dépendances)
+- Python 3.10+ (avec `uv` pour la gestion des dependances)
 - Node.js 20+
-- pnpm (`npm install -g pnpm` si t'as pas)
-- L'app Expo Go sur ton tel (ou un navigateur web)
+- pnpm (`npm install -g pnpm` si besoin)
+- L'app Expo Go sur ton telephone (ou un navigateur web)
 
 ### Installation rapide
 
 ```bash
 git clone https://github.com/Arthur-destb38/appli-V4.git
 cd appli_V3
-chmod +x deploy.sh   # Si nécessaire
+chmod +x deploy.sh
 ./deploy.sh
 ```
 
-Le script fait tout : il installe les dépendances, lance l'API, charge les données de démo, et démarre l'app. À la fin tu scannes le QR code avec Expo Go ou tu ouvres http://localhost:8081 dans ton navigateur.
+Le script fait tout : il installe les dependances, lance l'API, charge les donnees de demo, et demarre l'app. A la fin tu scannes le QR code avec Expo Go ou tu ouvres http://localhost:8081 dans ton navigateur.
 
-> Le tel et l'ordi doivent être sur le même WiFi si tu utilises Expo Go.
+> Le telephone et l'ordinateur doivent etre sur le meme WiFi si tu utilises Expo Go.
 
-### Compte de démonstration
+### Compte de demonstration
 
-Pour tester rapidement sans créer de compte :
+Pour tester rapidement sans creer de compte :
 - **Username** : `demo`
 - **Password** : `DemoPassword123`
 
-Ou clique sur le bouton "🧪 Connexion Demo" sur la page de login.
+Ou clique sur le bouton "Connexion Demo" sur la page de login.
 
-### Options utiles
+### Options du script
 
 ```bash
 ./deploy.sh --api-only   # Juste l'API
 ./deploy.sh --app-only   # Juste l'app (utilise l'API cloud)
-./deploy.sh --tunnel     # Si le QR code marche pas, ça passe par internet
+./deploy.sh --tunnel     # Si le QR code ne marche pas, passe par internet
 ```
 
-### Téléphone : passer par Render
+### Telephone : passer par Render
 
-Sur ton **téléphone** (Expo Go ou build), l'app utilise **Render** par défaut (`appli-v2.onrender.com`). Comme ça, « Ajouter à Apple Wallet » et le reste marchent sans être sur le même Wi‑Fi que ton Mac.
+Sur ton **telephone** (Expo Go ou build), l'app utilise **Render** par defaut (`appli-v2.onrender.com`). Comme ca, "Ajouter a Apple Wallet" et le reste marchent sans etre sur le meme Wi-Fi que ton Mac.
 
-- Ne pas créer `app/.env` avec `EXPO_PUBLIC_API_URL` en prod (sinon l'app peut pointer vers une autre URL).
-- Pour forcer l'API locale sur le téléphone (dev), mets dans `app/.env` : `EXPO_PUBLIC_API_URL=http://TON_IP:8000`.
+- Ne pas creer `app/.env` avec `EXPO_PUBLIC_API_URL` en prod.
+- Pour forcer l'API locale sur le telephone (dev), mets dans `app/.env` : `EXPO_PUBLIC_API_URL=http://TON_IP:8000`.
 
 ---
 
-## Comment c'est construit
-
-**Frontend** : React Native avec Expo. On utilise TypeScript pour éviter les bugs débiles. La navigation c'est Expo Router (file-based). Pour le offline, y'a une base SQLite locale qui sync avec le serveur.
-
-**Backend** : FastAPI en Python. C'est rapide, ça génère la doc Swagger automatiquement. La BDD c'est SQLite avec SQLModel comme ORM.
-
-**Déploiement** : L'API tourne sur Render (gratuit). Le code est sur GitHub. Les exercices sont chargés depuis un JSON sur Google Drive.
+## Architecture
 
 ```
-Frontend (React Native)
-        ↓
-    REST API
-        ↓
-Backend (FastAPI)
-        ↓
-    SQLite
+Frontend (React Native + Expo)
+        |
+    REST API (HTTPS)
+        |
+Backend (FastAPI + SQLModel)
+        |
+  SQLite / PostgreSQL
 ```
 
----
+Pour le detail complet de l'architecture, voir [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
-## Ce que ça fait
-
-### Côté fitness
-
-- **Programmes personnalisés** : PPL, Full Body, Upper/Lower, etc.
-- **Base de 130+ exercices** : Avec groupes musculaires, équipement, difficulté
-- **Suivi en temps réel** : Poids, reps, RPE, temps de repos
-- **Historique et progression** : Graphiques par exercice, volume total, PR
-- **Mode offline** : Tout marche sans connexion, sync automatique
-
-### Côté social
-
-- **Feed** : Vois les séances de tes amis en temps réel
-- **Interactions** : Likes, commentaires, partages
-- **Profils** : Stats, bio, avatar, objectifs
-- **Followers** : Suis tes potes ou des athlètes inspirants
-- **Classements** : Volume, fréquence, séries, records
-- **Notifications** : Likes, commentaires, nouveaux followers
-
-### Authentification
-
-- **Inscription sécurisée** : Validation email, mot de passe fort
-- **Connexion** : JWT tokens avec refresh
-- **Configuration du profil** : 4 étapes (bio, niveau, objectif, fréquence)
-- **Mode démo** : Compte de test pré-configuré
-
----
-
-## L'API
-
-En prod : https://appli-v2.onrender.com
-
-La doc Swagger est là : https://appli-v2.onrender.com/docs
-
-Quelques endpoints :
-
-```
-POST /auth/register-v2  - Créer un compte (avec validation)
-POST /auth/login        - Se connecter
-POST /auth/logout       - Se déconnecter
-GET  /auth/me           - Profil utilisateur
-POST /auth/refresh      - Rafraîchir le token
-
-GET  /exercises         - Liste des exercices
-GET  /feed              - Le feed social
-POST /likes/{id}        - Liker un post
-GET  /profile/{id}      - Voir un profil
-GET  /leaderboard/volume - Classement par volume
-```
-
-Pour tester :
-```bash
-curl https://appli-v2.onrender.com/health
-curl "https://appli-v2.onrender.com/feed?user_id=guest-user&limit=5"
-```
-
-> L'API sur Render se met en veille après 15 min d'inactivité. Le premier appel peut prendre 30 secondes.
-
----
-
-## Structure des dossiers
+### Structure des dossiers
 
 ```
 appli_V3/
-├── deploy.sh           # Le script qui fait tout
-├── api/                # Le backend Python
-│   ├── src/api/        # Code source
-│   │   ├── routes/     # Endpoints (auth, feed, users, etc.)
-│   │   ├── models.py   # Modèles SQLModel
-│   │   ├── services/   # Logique métier
-│   │   └── utils/      # Auth, validation, rate limiting
-│   ├── scripts/        # Scripts utilitaires (seed, reset, etc.)
-│   └── migrations/     # Migrations Alembic
-└── app/                # L'app React Native
-    ├── app/            # Les écrans (Expo Router)
-    │   ├── (tabs)/     # Navigation principale
-    │   ├── login.tsx   # Connexion
-    │   ├── register.tsx # Inscription
-    │   └── profile-setup-simple.tsx # Config profil
-    └── src/            
-        ├── components/ # Composants réutilisables
-        ├── hooks/      # useAuth, useWorkouts, etc.
-        ├── services/   # API calls
-        └── db/         # SQLite local + sync
+|-- deploy.sh              # Le script qui fait tout
+|-- api/                   # Le backend Python
+|   |-- src/api/           # Code source
+|   |   |-- main.py        # Point d'entree FastAPI
+|   |   |-- models.py      # 20 modeles SQLModel
+|   |   |-- schemas.py     # Schemas Pydantic (validation)
+|   |   |-- routes/        # 22 fichiers de routes
+|   |   |-- services/      # Logique metier (programmes, email, wallet)
+|   |   `-- utils/         # Auth, validation, rate limiting
+|   |-- scripts/           # Scripts utilitaires (seed, reset)
+|   `-- migrations/        # Migrations Alembic
+`-- app/                   # L'app React Native
+    |-- app/               # Les ecrans (Expo Router)
+    |   |-- (tabs)/        # Navigation principale (5 tabs)
+    |   |-- login.tsx      # Connexion
+    |   |-- register.tsx   # Inscription
+    |   |-- track/[id].tsx # Suivi seance en temps reel
+    |   |-- messages/      # Messagerie privee
+    |   `-- ...            # 35+ ecrans
+    `-- src/
+        |-- components/    # Composants reutilisables
+        |-- hooks/         # useAuth, useWorkouts, etc.
+        |-- services/      # Appels API
+        `-- db/            # SQLite local + sync
 ```
 
 ---
 
-## Réponse aux consignes
+## Fonctionnalites
 
-On devait faire une app mobile avec API. Voilà ce qu'on a fait :
+### Fitness
 
-- **App fonctionnelle** : 30+ écrans, fonctionne sur iOS/Android/Web
-- **API REST** : FastAPI avec tous les endpoints documentés (Swagger)
-- **Base de données** : SQLite côté serveur et côté client
-- **Auth sécurisée** : JWT tokens, validation email, rate limiting
-- **Mode offline** : SQLite local + sync automatique
-- **Déploiement** : Script bash automatisé + API sur Render
-- **Données de démo** : 10 utilisateurs fictifs avec séances, likes, commentaires
-- **UI/UX moderne** : Thème dark/light, animations, gradients
-- **Internationalisation** : FR/EN avec système de traductions
+- **Programmes personnalises** : PPL, Full Body, Upper/Lower, generation intelligente basee sur le profil
+- **Base de 130+ exercices** : avec groupes musculaires, equipement, difficulte
+- **Suivi en temps reel** : poids, reps, RPE, temps de repos
+- **Historique et progression** : graphiques par exercice, volume total, PR
+- **Mode offline** : tout marche sans connexion, sync automatique via `/sync/push` et `/sync/pull`
 
----
+### Social
 
-## Fonctionnalités avancées
+- **Feed** : vois les seances de tes amis en temps reel, avec likes et commentaires
+- **Profils** : stats, bio, avatar, objectifs, followers/following
+- **Classements** : volume, frequence, likes, followers (par semaine/mois/all-time)
+- **Notifications** : likes, commentaires, nouveaux followers
+- **Messagerie privee** : conversations 1:1, messages non lus
+- **Explore** : trending posts, suggestions d'utilisateurs, recherche
 
-### Sécurité
-- Mots de passe hashés avec salt
-- Rate limiting sur les endpoints sensibles
-- Validation stricte des inputs
-- Protection CSRF
-- Tokens JWT avec expiration
+### Authentification et securite
 
-### Performance
-- Lazy loading des images
-- Pagination du feed
-- Cache des exercices
-- Sync incrémentale
-- Optimistic updates
+- **Inscription securisee** : validation email, mot de passe fort, usernames reserves bloques
+- **Connexion** : JWT tokens avec refresh, rate limiting sur les tentatives
+- **Configuration du profil** : onboarding en 3 etapes (infos, objectifs, preferences)
+- **Mode demo** : compte de test pre-configure
+- **Reset password** : par email avec token temporaire
 
-### Expérience utilisateur
-- Onboarding en 4 étapes
-- Feedback haptique
-- Animations fluides
-- Mode offline transparent
-- Messages d'erreur clairs
+### Gorillax Salles (integration salles de sport)
+
+- **Pass Wallet** : carte membre Apple Wallet (.pkpass) et Google Wallet
+- **API Salle** : resolution de token QR, profil public, seance en cours pour affichage machine
+- **Audit** : log de chaque appel API salle
+- Voir [gorillax-salles/](./gorillax-salles/) pour la documentation complete
 
 ---
 
-## Si ça marche pas
+## API
 
-**Port occupé** : `lsof -ti:8000 | xargs kill -9`
+**Production** : https://appli-v2.onrender.com
+**Documentation Swagger** : https://appli-v2.onrender.com/docs
+**Documentation detaillee** : [docs/API.md](./docs/API.md)
 
-**L'app se connecte pas** : Vérifie que t'es sur le même WiFi, ou utilise `--tunnel`
+### Endpoints principaux (70+ au total)
 
-**QR code marche pas** : Essaie `./deploy.sh --tunnel` ou ouvre http://localhost:8081 dans ton navigateur
+| Categorie | Prefix | Endpoints |
+|-----------|--------|-----------|
+| Auth | `/auth` | register, login, refresh, me, logout, verify-email, reset-password |
+| Exercises | `/exercises` | list, get, create, bulk, import |
+| Feed | `/feed` | get feed, follow, unfollow |
+| Likes | `/likes` | toggle like, comments, comment likes |
+| Share | `/share` | share workout |
+| Profile | `/profile` | get, update, follow, followers, avatar |
+| Users | `/users` | profile setup (3 steps), profile status |
+| Programs | `/programs` | list, create, generate, save |
+| Explore | `/explore` | trending, suggested users, search |
+| Notifications | `/notifications` | list, read, delete |
+| Leaderboard | `/leaderboard` | volume, sessions, likes, followers |
+| Messages | `/messaging` | conversations, messages, send, unread count |
+| Sync | `/sync` | push mutations, pull changes |
+| Wallet | `/wallet` | pass token, Apple pass, Google pass |
+| Salle | `/salle` | resolve token, current session, profile |
+| Stories | `/stories` | list |
 
-**Erreur pnpm** : `npm install -g pnpm`
+### Exemples rapides
 
-**Erreur uv** : Installe uv avec `curl -LsSf https://astral.sh/uv/install.sh | sh`
+```bash
+# Health check
+curl https://appli-v2.onrender.com/health
 
-Pour relancer juste l'API :
+# Login
+curl -X POST https://appli-v2.onrender.com/auth/demo-login
+
+# Feed (avec auth)
+TOKEN=$(curl -s -X POST https://appli-v2.onrender.com/auth/demo-login | python3 -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
+curl "https://appli-v2.onrender.com/feed?limit=5" -H "Authorization: Bearer $TOKEN"
+
+# Exercises
+curl https://appli-v2.onrender.com/exercises
+
+# Search
+curl "https://appli-v2.onrender.com/explore/search?q=push"
+```
+
+> L'API sur Render se met en veille apres 15 min d'inactivite. Le premier appel peut prendre 30 secondes.
+
+---
+
+## Deploiement
+
+### Backend (Render)
+
+L'API tourne sur Render (gratuit). Variables d'environnement requises :
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | URL PostgreSQL |
+| `ENVIRONMENT` | `production` |
+| `JWT_SECRET_KEY` | Cle secrete JWT |
+| `EXERCISES_URL` | URL JSON exercices (optionnel) |
+| `APPLE_PASS_*` | Certificats Apple Wallet (optionnel) |
+| `SALLE_API_KEY` | Cle API salle (optionnel) |
+
+### Frontend (EAS Build)
+
+```bash
+cd app
+pnpm build:android         # Build Android (preview)
+pnpm build:android:prod    # Build Android (production)
+pnpm build:ios             # Build iOS (production)
+pnpm build:all             # Build toutes plateformes
+pnpm update:ota            # OTA update (sans rebuild)
+```
+
+---
+
+## Developpement
+
+### Lancer l'API seule
+
 ```bash
 cd api
 uv run uvicorn src.api.main:app --reload --port 8000
 ```
 
-Pour relancer juste l'app :
+### Lancer l'app seule
+
 ```bash
 cd app
 pnpm start
 ```
 
-Pour réinitialiser la base de données :
+### Reinitialiser la base de donnees
+
 ```bash
 cd api
 uv run python scripts/reset_db.py
 uv run python scripts/seed_demo.py
 ```
 
+### Seeder les donnees de demo (via API)
+
+```bash
+curl -X POST http://localhost:8000/seed/demo
+curl -X POST http://localhost:8000/seed/messages
+```
+
+### Tests
+
+```bash
+cd app
+pnpm test
+```
+
 ---
 
-## Gorillax Salles (intégration salles de sport)
+## Troubleshooting
 
-Le projet **Gorillax Salles** (pass Wallet en salle, lecteur, affichage sur les machines) est documenté et développé à part :
+| Probleme | Solution |
+|----------|----------|
+| Port 8000 occupe | `lsof -ti:8000 \| xargs kill -9` |
+| App ne se connecte pas | Verifier meme WiFi, ou utiliser `--tunnel` |
+| QR code ne marche pas | `./deploy.sh --tunnel` ou http://localhost:8081 |
+| Erreur pnpm | `npm install -g pnpm` |
+| Erreur uv | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 
-- **Dans ce repo** : dossier [`gorillax-salles/`](./gorillax-salles/) (vision, roadmap, contrat API, contexte).
-- **En dépôt séparé** : si tu clones uniquement le projet « salles », ce dépôt contient toute la doc nécessaire pour être autonome (voir `gorillax-salles/README.md` et `gorillax-salles/CONTEXTE.md`).
+---
 
-L’app et l’API Gorillax (pass, endpoint resolve-token, etc.) restent dans appli_V3 ; le **système déployé en salle** (backend salle, lecteur, écran machine) vit dans le projet gorillax-salles.
+## Documentation
+
+- [docs/API.md](./docs/API.md) -- Documentation complete de l'API REST (tous les endpoints, params, exemples curl)
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) -- Architecture du projet (stack, modeles, flux de donnees, securite)
+- [docs/Roadmap.md](./docs/Roadmap.md) -- Roadmap fonctionnelle
+- [Swagger](https://appli-v2.onrender.com/docs) -- Documentation interactive de l'API
 
 ---
 
@@ -266,5 +311,4 @@ L’app et l’API Gorillax (pass, endpoint resolve-token, etc.) restent dans ap
 
 ---
 
-Projet M2 MoSEF — Paris 1 — Février 2026
-
+Projet M2 MoSEF -- Paris 1 -- Fevrier 2026

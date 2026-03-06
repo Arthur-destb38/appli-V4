@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: gorillax
+      POSTGRES_PASSWORD: gorillax
+      POSTGRES_DB: gorillax
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gorillax"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://gorillax:gorillax@db:5432/gorillax
+      ENVIRONMENT: development
+      CORS_ORIGINS: "*"
+      JWT_SECRET: dev-secret-change-me
+    volumes:
+      - ./api/src:/app/src
+
+volumes:
+  pgdata:
