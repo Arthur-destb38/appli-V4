@@ -6,8 +6,8 @@ from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter
 from sqlmodel import Session, select
 
-from src.api.db import get_engine
-from src.api.models import (
+from api.db import get_engine
+from api.models import (
     User, Share, Follower, Workout, WorkoutExercise, 
     Set, Exercise, Like, Notification, Comment, Conversation, Message
 )
