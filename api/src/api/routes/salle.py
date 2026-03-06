@@ -216,15 +216,27 @@ def _fetch_current_session_uncached(session: Session, user_id: str) -> Optional[
         .order_by(WorkoutExercise.order_index.asc())
     ).all()
 
+    # Batch-load exercises and sets to avoid N+1
+    exercise_ids = list({we.exercise_id for we in exercises})
+    we_ids = [we.id for we in exercises]
+
+    exercises_map: dict[str, Exercise] = {}
+    if exercise_ids:
+        ex_list = session.exec(select(Exercise).where(Exercise.id.in_(exercise_ids))).all()
+        exercises_map = {ex.id: ex for ex in ex_list}
+
+    sets_by_we: dict[str, list[Set]] = {wid: [] for wid in we_ids}
+    if we_ids:
+        all_sets = session.exec(
+            select(Set).where(Set.workout_exercise_id.in_(we_ids)).order_by(Set.order.asc())
+        ).all()
+        for s in all_sets:
+            sets_by_we[s.workout_exercise_id].append(s)
+
     exercise_summaries = []
     for we in exercises:
-        ex_catalog = session.get(Exercise, we.exercise_id)
+        ex_catalog = exercises_map.get(we.exercise_id)
         name = ex_catalog.name if ex_catalog else we.exercise_id
-        sets_list = session.exec(
-            select(Set)
-            .where(Set.workout_exercise_id == we.id)
-            .order_by(Set.order.asc())
-        ).all()
         exercise_summaries.append(
             ExerciseSummary(
                 name=name,
@@ -236,7 +248,7 @@ def _fetch_current_session_uncached(session: Session, user_id: str) -> Optional[
                         rpe=s.rpe,
                         done_at=s.done_at.isoformat() if s.done_at else None,
                     )
-                    for s in sets_list
+                    for s in sets_by_we.get(we.id, [])
                 ],
             )
         )

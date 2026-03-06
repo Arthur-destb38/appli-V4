@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
+from sqlalchemy import Index
 from sqlmodel import Field, SQLModel
 
 
@@ -188,6 +189,9 @@ class CommentLike(SQLModel, table=True):
 
 class Follower(SQLModel, table=True):
     """Relation de suivi entre utilisateurs."""
+    __table_args__ = (
+        Index("ix_follower_pair", "follower_id", "followed_id", unique=True),
+    )
     id: str = Field(default_factory=generate_uuid, primary_key=True)
     follower_id: str = Field(index=True)
     followed_id: str = Field(index=True)
@@ -271,6 +275,9 @@ class SalleAuditLog(SQLModel, table=True):
 
 class Conversation(SQLModel, table=True):
     """Conversation privée entre deux utilisateurs."""
+    __table_args__ = (
+        Index("ix_conversation_participants", "participant1_id", "participant2_id"),
+    )
     id: str = Field(default_factory=generate_uuid, primary_key=True)
     participant1_id: str = Field(index=True)
     participant2_id: str = Field(index=True)
@@ -280,6 +287,10 @@ class Conversation(SQLModel, table=True):
 
 class Message(SQLModel, table=True):
     """Message dans une conversation."""
+    __table_args__ = (
+        Index("ix_message_conv_created", "conversation_id", "created_at"),
+        Index("ix_message_conv_unread", "conversation_id", "sender_id", "read_at"),
+    )
     id: str = Field(default_factory=generate_uuid, primary_key=True)
     conversation_id: str = Field(index=True)
     sender_id: str = Field(index=True)

@@ -45,14 +45,35 @@ def get_shared_workout(share_id: str, session: Session = Depends(get_session)) -
             .order_by(WorkoutExercise.order_index)
         ).all()
 
-        for we in workout_exercises:
-            ex_info = _resolve_exercise(session, we.exercise_id)
+        # Batch-load exercises and sets to avoid N+1
+        exercise_ids = list({we.exercise_id for we in workout_exercises})
+        we_ids = [we.id for we in workout_exercises]
 
-            sets = session.exec(
-                select(Set)
-                .where(Set.workout_exercise_id == we.id)
-                .order_by(Set.order)
+        exercises_by_id: dict[str, Exercise] = {}
+        exercises_by_slug: dict[str, Exercise] = {}
+        if exercise_ids:
+            all_exercises = session.exec(select(Exercise).where(Exercise.id.in_(exercise_ids))).all()
+            exercises_by_id = {ex.id: ex for ex in all_exercises}
+            # Also try slug lookup for IDs not found by primary key
+            missing_ids = [eid for eid in exercise_ids if eid not in exercises_by_id]
+            if missing_ids:
+                slug_exercises = session.exec(select(Exercise).where(Exercise.slug.in_(missing_ids))).all()
+                exercises_by_slug = {ex.slug: ex for ex in slug_exercises if ex.slug}
+
+        sets_by_we: dict[str, list[Set]] = {wid: [] for wid in we_ids}
+        if we_ids:
+            all_sets = session.exec(
+                select(Set).where(Set.workout_exercise_id.in_(we_ids)).order_by(Set.order)
             ).all()
+            for s in all_sets:
+                sets_by_we[s.workout_exercise_id].append(s)
+
+        for we in workout_exercises:
+            ex = exercises_by_id.get(we.exercise_id) or exercises_by_slug.get(we.exercise_id)
+            if ex:
+                ex_info = {"name": ex.name, "slug": ex.slug or we.exercise_id, "muscle_group": ex.muscle_group}
+            else:
+                ex_info = {"name": _slug_to_name(we.exercise_id), "slug": we.exercise_id, "muscle_group": ""}
 
             snapshot["exercises"].append({
                 "name": ex_info["name"],
@@ -60,7 +81,7 @@ def get_shared_workout(share_id: str, session: Session = Depends(get_session)) -
                 "muscle_group": ex_info["muscle_group"],
                 "sets": [
                     {"reps": s.reps, "weight": s.weight}
-                    for s in sets
+                    for s in sets_by_we.get(we.id, [])
                 ],
             })
     else:

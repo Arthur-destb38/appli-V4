@@ -89,28 +89,54 @@ def list_conversations(
             next_cursor = last_conv.last_message_at.isoformat()
         conversations = conversations[:limit]
 
+    # Batch-load to avoid N+1: users, last messages, unread counts
+    conv_ids = [conv.id for conv in conversations]
+    other_user_ids = list({get_other_participant(conv, user_id) for conv in conversations})
+
+    # 1) Batch-load all other participants
+    users_map: dict[str, User] = {}
+    if other_user_ids:
+        users_list = session.exec(select(User).where(User.id.in_(other_user_ids))).all()
+        users_map = {u.id: u for u in users_list}
+
+    # 2) Batch-load last message per conversation (using a lateral-style subquery)
+    last_messages_map: dict[str, Message] = {}
+    if conv_ids:
+        # Get newest message per conversation via a window function approach
+        from sqlalchemy import desc
+        all_msgs = session.exec(
+            select(Message)
+            .where(Message.conversation_id.in_(conv_ids))
+            .order_by(Message.conversation_id, desc(Message.created_at))
+        ).all()
+        for msg in all_msgs:
+            if msg.conversation_id not in last_messages_map:
+                last_messages_map[msg.conversation_id] = msg
+
+    # 3) Batch-load unread counts per conversation
+    unread_map: dict[str, int] = {cid: 0 for cid in conv_ids}
+    if conv_ids:
+        unread_rows = session.exec(
+            select(Message.conversation_id, func.count(Message.id))
+            .where(
+                Message.conversation_id.in_(conv_ids),
+                Message.sender_id != user_id,
+                Message.read_at.is_(None),
+            )
+            .group_by(Message.conversation_id)
+        ).all()
+        for cid, cnt in unread_rows:
+            unread_map[cid] = cnt
+
     result_conversations = []
     for conv in conversations:
         other_user_id = get_other_participant(conv, user_id)
-        other_user = session.get(User, other_user_id)
-
+        other_user = users_map.get(other_user_id)
         if other_user is None:
             continue
 
-        last_message_stmt = (
-            select(Message)
-            .where(Message.conversation_id == conv.id)
-            .order_by(Message.created_at.desc())
-            .limit(1)
-        )
-        last_message = session.exec(last_message_stmt).first()
-
-        unread_stmt = select(func.count(Message.id)).where(
-            Message.conversation_id == conv.id,
-            Message.sender_id != user_id,
-            Message.read_at.is_(None),
-        )
-        unread_count = session.exec(unread_stmt).one()
+        last_message = last_messages_map.get(conv.id)
+        unread_count = unread_map.get(conv.id, 0)
 
         result_conversations.append(
             ConversationRead(
