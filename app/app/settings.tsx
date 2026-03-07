@@ -115,7 +115,7 @@ export default function SettingsScreen() {
     try {
       // Charger les données de base depuis le profil
       if (profile) {
-        setUsername(profile.username || '');
+        setUsername(user?.username || profile.username || '');
         setBio(profile.bio || '');
         setObjective(profile.objective || '');
         setProfileData(prev => ({

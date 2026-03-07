@@ -384,7 +384,7 @@ export default function HomeScreen() {
     router.push(route as never);
   };
 
-  const username = displayProfile?.username || 'Champion';
+  const username = user?.username || displayProfile?.username || 'Champion';
   const volumeTrend = stats.prevVolume7d > 0
     ? {
         direction: (stats.volume7d > stats.prevVolume7d ? 'up' : stats.volume7d < stats.prevVolume7d ? 'down' : 'neutral') as 'up' | 'down' | 'neutral',

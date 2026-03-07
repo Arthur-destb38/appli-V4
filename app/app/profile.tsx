@@ -26,7 +26,7 @@ const ProfileScreen: React.FC = () => {
 
   useEffect(() => {
     if (profile) {
-      setUsername(profile.username);
+      setUsername(user?.username || profile.username);
       setConsent(profile.consent_to_public_share);
     }
   }, [profile]);
