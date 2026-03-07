@@ -29,118 +29,34 @@ export default function RootLayout() {
                   <View style={styles.root}>
                     <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="create"
-                  options={{ title: 'Nouvelle séance', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="track/[id]"
-                  options={{ title: 'Suivi séance', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="history/index"
-                  options={{ title: 'Historique', headerShown: false }}
-                />
-                <Stack.Screen
-                  name="history/[id]"
-                  options={{ title: 'Détail séance', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="history/progression"
-                  options={{ title: 'Progression', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="programme/create"
-                  options={{ title: 'Nouveau programme', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="programme/index"
-                  options={{ title: 'Mon Programme', headerShown: false }}
-                />
-                <Stack.Screen
-                  name="settings"
-                  options={{ title: 'Paramètres', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="legal/terms"
-                  options={{ title: 'Conditions d\'utilisation', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="legal/privacy"
-                  options={{ title: 'Politique de confidentialité', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="guide-utilisation"
-                  options={{ title: 'Guide d\'utilisation', headerShown: false }}
-                />
-                <Stack.Screen
-                  name="profile/[id]"
-                  options={{ title: 'Profil', headerShown: false }}
-                />
-                <Stack.Screen
-                  name="objectives"
-                  options={{ title: 'Mes Objectifs', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="pass-salle"
-                  options={{ title: 'Carte membre', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="notifications"
-                  options={{ title: 'Notifications', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="library"
-                  options={{ title: 'Bibliothèque', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="leaderboard"
-                  options={{ title: 'Classement', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="challenge/[id]"
-                  options={{ title: 'Défi', headerShown: false }}
-                />
-                <Stack.Screen
-                  name="messages/index"
-                  options={{ title: 'Messages', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="messages/[id]"
-                  options={{ title: 'Conversation', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="messages/new"
-                  options={{ title: 'Nouveau message', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="shared-workout/[id]"
-                  options={{ title: 'Séance partagée', headerShown: true, headerBackTitle: 'Retour' }}
-                />
-                <Stack.Screen
-                  name="share-post"
-                  options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                  name="modal"
-                  options={{ presentation: 'modal', title: 'Modal' }}
-                />
-                <Stack.Screen
-                  name="login"
-                  options={{ title: 'Connexion', headerShown: false }}
-                />
-                <Stack.Screen
-                  name="register"
-                  options={{ title: 'Inscription', headerShown: false }}
-                />
-                <Stack.Screen
-                  name="profile-setup"
-                  options={{ title: 'Configuration du profil', headerShown: false }}
-                />
-                <Stack.Screen
-                  name="profile-setup-simple"
-                  options={{ title: 'Configuration du profil', headerShown: false }}
-                />
+                <Stack.Screen name="create" />
+                <Stack.Screen name="track/[id]" />
+                <Stack.Screen name="history/index" />
+                <Stack.Screen name="history/[id]" />
+                <Stack.Screen name="history/progression" />
+                <Stack.Screen name="programme/create" />
+                <Stack.Screen name="programme/index" />
+                <Stack.Screen name="settings" />
+                <Stack.Screen name="legal/terms" />
+                <Stack.Screen name="legal/privacy" />
+                <Stack.Screen name="guide-utilisation" />
+                <Stack.Screen name="profile/[id]" />
+                <Stack.Screen name="objectives" />
+                <Stack.Screen name="pass-salle" />
+                <Stack.Screen name="notifications" />
+                <Stack.Screen name="library" />
+                <Stack.Screen name="leaderboard" />
+                <Stack.Screen name="challenge/[id]" />
+                <Stack.Screen name="messages/index" />
+                <Stack.Screen name="messages/[id]" />
+                <Stack.Screen name="messages/new" />
+                <Stack.Screen name="shared-workout/[id]" />
+                <Stack.Screen name="share-post" />
+                <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="login" />
+                <Stack.Screen name="register" />
+                <Stack.Screen name="profile-setup" />
+                <Stack.Screen name="profile-setup-simple" />
                   </Stack>
                   <DemoTourOverlay />
                 </View>

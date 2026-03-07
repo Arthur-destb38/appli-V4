@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Pressable,
   Alert,
   ActivityIndicator,
   Platform,
@@ -11,6 +12,8 @@ import {
   Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
 
@@ -21,6 +24,8 @@ const COPY_PASS = "Présentez ce pass à l'entrée ou sur la machine en salle pa
 
 export default function PassSalleScreen() {
   const { theme } = useAppTheme();
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [loadingApple, setLoadingApple] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
 
@@ -85,9 +90,17 @@ export default function PassSalleScreen() {
   };
 
   return (
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={[styles.header, { paddingTop: insets.top + 8, backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
+        </Pressable>
+        <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>Carte membre</Text>
+        <View style={{ width: 32 }} />
+      </View>
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
       <View style={[styles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-        <Text style={[styles.title, { color: theme.colors.text }]}>Carte membre Gorillax</Text>
+        <Text style={[styles.title, { color: theme.colors.textPrimary }]}>Carte membre Gorillax</Text>
         <Text style={[styles.copy, { color: theme.colors.textSecondary }]}>{COPY_PASS}</Text>
       </View>
 
@@ -144,10 +157,14 @@ export default function PassSalleScreen() {
         </TouchableOpacity>
       )}
     </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  headerTitle: { fontSize: 17, fontWeight: '600' },
   container: { flex: 1 },
   content: { padding: 20, paddingTop: 24 },
   card: {

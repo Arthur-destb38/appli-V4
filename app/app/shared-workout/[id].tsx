@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -98,16 +99,15 @@ export default function SharedWorkoutDetailScreen() {
   }
 
   return (
-    <>
-      <Stack.Screen 
-        options={{ 
-          headerShown: true,
-          headerTitle: 'Détail séance',
-          headerStyle: { backgroundColor: theme.colors.background },
-          headerTintColor: theme.colors.textPrimary,
-        }} 
-      />
-      <ScrollView 
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={[styles.navHeader, { paddingTop: insets.top + 8, backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
+        </Pressable>
+        <Text style={[styles.navTitle, { color: theme.colors.textPrimary }]}>Séance partagée</Text>
+        <View style={{ width: 32 }} />
+      </View>
+      <ScrollView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
       >
@@ -202,11 +202,14 @@ export default function SharedWorkoutDetailScreen() {
           ))}
         </View>
       </ScrollView>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  navHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  navTitle: { fontSize: 17, fontWeight: '600' },
   container: {
     flex: 1,
   },
