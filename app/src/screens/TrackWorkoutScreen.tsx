@@ -1,15 +1,19 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import {
   FlatList,
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   Linking,
   Alert,
   Animated,
   Easing,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -133,9 +137,12 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
       next = Math.max(0, Math.round(current + delta));
     }
 
-    updateSet(set.id, {
-      [field]: next,
-    });
+    updateSet(set.id, { [field]: next });
+  };
+
+  const handleSetValue = (set: WorkoutSet, field: 'reps' | 'weight' | 'rpe', value: number) => {
+    Haptics.selectionAsync().catch(() => {});
+    updateSet(set.id, { [field]: value });
   };
 
   const handleToggleCompletion = async (set: WorkoutSet) => {
@@ -455,6 +462,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
                     set={set}
                     index={setIndex}
                     onAdjust={handleAdjustSet}
+                    onSetValue={handleSetValue}
                     onToggle={handleToggleCompletion}
                     onRemove={handleRemoveSet}
                   />
@@ -472,11 +480,12 @@ interface SetRowProps {
   set: WorkoutSet;
   index: number;
   onAdjust: (set: WorkoutSet, field: 'reps' | 'weight' | 'rpe', delta: number) => void;
+  onSetValue: (set: WorkoutSet, field: 'reps' | 'weight' | 'rpe', value: number) => void;
   onToggle: (set: WorkoutSet) => void;
   onRemove: (setId: number) => void;
 }
 
-const SetRow: React.FC<SetRowProps> = ({ set, index, onAdjust, onToggle, onRemove }) => {
+const SetRow: React.FC<SetRowProps> = ({ set, index, onAdjust, onSetValue, onToggle, onRemove }) => {
   const { theme } = useAppTheme();
   const isDone = Boolean(set.done_at);
 
@@ -513,8 +522,13 @@ const SetRow: React.FC<SetRowProps> = ({ set, index, onAdjust, onToggle, onRemov
           suffix=""
           icon="repeat"
           color="#6366f1"
+          step={1}
+          min={0}
+          max={100}
+          presets={[6, 8, 10, 12, 15, 20]}
           onIncrement={() => onAdjust(set, 'reps', 1)}
           onDecrement={() => onAdjust(set, 'reps', -1)}
+          onSetValue={(v) => onSetValue(set, 'reps', v)}
         />
         <StepperModern
           label="Poids"
@@ -522,8 +536,13 @@ const SetRow: React.FC<SetRowProps> = ({ set, index, onAdjust, onToggle, onRemov
           suffix="kg"
           icon="barbell"
           color="#f59e0b"
+          step={2.5}
+          min={0}
+          max={500}
+          presets={[10, 20, 30, 40, 60, 80]}
           onIncrement={() => onAdjust(set, 'weight', 2.5)}
           onDecrement={() => onAdjust(set, 'weight', -2.5)}
+          onSetValue={(v) => onSetValue(set, 'weight', v)}
         />
         <StepperModern
           label="RPE"
@@ -531,8 +550,13 @@ const SetRow: React.FC<SetRowProps> = ({ set, index, onAdjust, onToggle, onRemov
           suffix=""
           icon="speedometer"
           color="#ef4444"
+          step={0.5}
+          min={0}
+          max={10}
+          presets={[5, 6, 7, 8, 9, 10]}
           onIncrement={() => onAdjust(set, 'rpe', 0.5)}
           onDecrement={() => onAdjust(set, 'rpe', -0.5)}
+          onSetValue={(v) => onSetValue(set, 'rpe', v)}
         />
       </View>
 
@@ -567,43 +591,134 @@ interface StepperModernProps {
   suffix?: string;
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
+  step: number;
+  min?: number;
+  max?: number;
+  presets?: number[];
   onIncrement: () => void;
   onDecrement: () => void;
+  onSetValue: (v: number) => void;
 }
 
-const StepperModern: React.FC<StepperModernProps> = ({ 
-  label, 
-  value, 
-  suffix = '', 
+const StepperModern: React.FC<StepperModernProps> = ({
+  label,
+  value,
+  suffix = '',
   icon,
   color,
-  onIncrement, 
-  onDecrement 
+  step,
+  min = 0,
+  max,
+  presets,
+  onIncrement,
+  onDecrement,
+  onSetValue,
 }) => {
   const { theme } = useAppTheme();
-  
+  const [modalVisible, setModalVisible] = useState(false);
+  const [inputText, setInputText] = useState('');
+  const displayValue = Number.isFinite(value) ? value : 0;
+
+  const openModal = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    setInputText(String(displayValue));
+    setModalVisible(true);
+  }, [displayValue]);
+
+  const confirmValue = useCallback(() => {
+    const parsed = parseFloat(inputText.replace(',', '.'));
+    if (Number.isFinite(parsed)) {
+      let clamped = Math.max(min, parsed);
+      if (max !== undefined) clamped = Math.min(max, clamped);
+      // Snap to step
+      clamped = Math.round(clamped / step) * step;
+      clamped = Math.round(clamped * 100) / 100;
+      onSetValue(clamped);
+    }
+    setModalVisible(false);
+  }, [inputText, min, max, step, onSetValue]);
+
   return (
-    <View style={styles.stepperModern}>
-      <View style={styles.stepperModernHeader}>
-        <View style={[styles.stepperIcon, { backgroundColor: color + '20' }]}>
-          <Ionicons name={icon} size={12} color={color} />
+    <>
+      <View style={styles.stepperModern}>
+        <View style={styles.stepperModernHeader}>
+          <View style={[styles.stepperIcon, { backgroundColor: color + '20' }]}>
+            <Ionicons name={icon} size={14} color={color} />
+          </View>
+          <Text style={[styles.stepperModernLabel, { color: theme.colors.textSecondary }]}>{label}</Text>
         </View>
-        <Text style={[styles.stepperModernLabel, { color: theme.colors.textSecondary }]}>{label}</Text>
-      </View>
-      <View style={[styles.stepperModernControls, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-        <TouchableOpacity onPress={onDecrement} style={styles.stepperModernBtn}>
-          <Ionicons name="remove" size={16} color={theme.colors.textSecondary} />
-        </TouchableOpacity>
-        <View style={styles.stepperModernValueWrap}>
-          <Text style={[styles.stepperModernValue, { color: theme.colors.textPrimary }]} numberOfLines={1} adjustsFontSizeToFit>
-            {Number.isFinite(value) ? value : 0}{suffix ? ` ${suffix}` : ''}
-          </Text>
+        <View style={[styles.stepperModernControls, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+          <TouchableOpacity onPress={onDecrement} style={[styles.stepperModernBtn, { backgroundColor: color + '15' }]} activeOpacity={0.6}>
+            <Ionicons name="remove" size={20} color={color} />
+          </TouchableOpacity>
+          <Pressable onPress={openModal} style={styles.stepperModernValueWrap}>
+            <Text style={[styles.stepperModernValue, { color: theme.colors.textPrimary }]} numberOfLines={1}>
+              {displayValue}{suffix ? ` ${suffix}` : ''}
+            </Text>
+          </Pressable>
+          <TouchableOpacity onPress={onIncrement} style={[styles.stepperModernBtn, { backgroundColor: color + '15' }]} activeOpacity={0.6}>
+            <Ionicons name="add" size={20} color={color} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={onIncrement} style={styles.stepperModernBtn}>
-          <Ionicons name="add" size={16} color={theme.colors.textSecondary} />
-        </TouchableOpacity>
       </View>
-    </View>
+
+      <Modal visible={modalVisible} transparent animationType="fade" onRequestClose={() => setModalVisible(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <Pressable style={[styles.modalContent, { backgroundColor: theme.colors.surface }]} onPress={(e) => e.stopPropagation()}>
+              <View style={styles.modalHeader}>
+                <View style={[styles.modalIconBadge, { backgroundColor: color + '20' }]}>
+                  <Ionicons name={icon} size={20} color={color} />
+                </View>
+                <Text style={[styles.modalTitle, { color: theme.colors.textPrimary }]}>{label}</Text>
+              </View>
+
+              <TextInput
+                style={[styles.modalInput, { color: theme.colors.textPrimary, borderColor: color, backgroundColor: theme.colors.surfaceMuted }]}
+                value={inputText}
+                onChangeText={setInputText}
+                keyboardType="decimal-pad"
+                autoFocus
+                selectTextOnFocus
+                onSubmitEditing={confirmValue}
+                placeholderTextColor={theme.colors.textSecondary}
+              />
+
+              {presets && (
+                <View style={styles.presetsRow}>
+                  {presets.map((p) => (
+                    <TouchableOpacity
+                      key={p}
+                      style={[
+                        styles.presetBtn,
+                        { backgroundColor: p === displayValue ? color : theme.colors.surfaceMuted },
+                      ]}
+                      onPress={() => {
+                        Haptics.selectionAsync().catch(() => {});
+                        setInputText(String(p));
+                      }}
+                    >
+                      <Text style={[styles.presetBtnText, { color: p === displayValue ? '#fff' : theme.colors.textPrimary }]}>
+                        {p}{suffix ? ` ${suffix}` : ''}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              <View style={styles.modalActions}>
+                <TouchableOpacity style={[styles.modalCancelBtn, { backgroundColor: theme.colors.surfaceMuted }]} onPress={() => setModalVisible(false)}>
+                  <Text style={[styles.modalCancelText, { color: theme.colors.textSecondary }]}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.modalConfirmBtn, { backgroundColor: color }]} onPress={confirmValue}>
+                  <Text style={styles.modalConfirmText}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </KeyboardAvoidingView>
+        </Pressable>
+      </Modal>
+    </>
   );
 };
 
@@ -911,14 +1026,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   stepperIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
   },
   stepperModernLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
   },
   stepperModernControls: {
@@ -926,14 +1041,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    borderRadius: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
   },
   stepperModernBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -942,12 +1057,99 @@ const styles = StyleSheet.create({
     minWidth: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 6,
+    paddingHorizontal: 2,
+    paddingVertical: 4,
   },
   stepperModernValue: {
+    fontSize: 18,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  modalContent: {
+    width: '100%',
+    minWidth: 300,
+    borderRadius: 24,
+    padding: 24,
+    gap: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  modalInput: {
+    fontSize: 32,
+    fontWeight: '800',
+    textAlign: 'center',
+    borderWidth: 2,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+  presetsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'center',
+  },
+  presetBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    minWidth: 52,
+    alignItems: 'center',
+  },
+  presetBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    textAlign: 'center',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalConfirmBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  modalConfirmText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
   setFooter: {
     flexDirection: 'row',

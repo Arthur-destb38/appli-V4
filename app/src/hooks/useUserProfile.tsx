@@ -10,6 +10,7 @@ import React, {
 
 import { fetchRemoteProfile, upsertRemoteProfile } from '@/services/userProfileApi';
 import { fetchUserProfile, upsertUserProfile, UserProfile } from '@/db/user-profile';
+import { useAuth } from '@/hooks/useAuth';
 
 const generateUserId = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -42,21 +43,28 @@ const normalizeUsername = (value: string | undefined, fallback: string): string 
 };
 
 export const UserProfileProvider: React.FC<PropsWithChildren> = ({ children }) => {
+  const { user: authUser, isAuthenticated } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const pushLocal = useCallback(async (): Promise<UserProfile> => {
+    // Use auth user's data when authenticated, otherwise generate random
+    const id = authUser?.id ?? generateUserId();
+    const username = authUser?.username ?? generateUsername();
     const newProfile = await upsertUserProfile({
-      id: generateUserId(),
-      username: generateUsername(),
+      id,
+      username,
       consent_to_public_share: false,
     });
     setProfile(newProfile);
     return newProfile;
-  }, []);
+  }, [authUser]);
 
   const syncRemote = useCallback(async (localProfile: UserProfile) => {
+    // Don't overwrite server username with local profile data
+    // The server already has the correct username from auth registration
+    if (!isAuthenticated) return;
     try {
       await upsertRemoteProfile({
         id: localProfile.id,
@@ -67,16 +75,32 @@ export const UserProfileProvider: React.FC<PropsWithChildren> = ({ children }) =
       // Silent failure: stay functional offline.
       console.warn('Failed to sync user profile with server', err);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   const loadProfile = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const local = await fetchUserProfile();
+
+      // If authenticated, ensure local profile matches auth user
+      if (authUser) {
+        const needsUpdate = !local || local.id !== authUser.id || local.username !== authUser.username;
+        if (needsUpdate) {
+          const corrected = await upsertUserProfile({
+            id: authUser.id,
+            username: authUser.username,
+            consent_to_public_share: local?.consent_to_public_share ?? false,
+          });
+          setProfile(corrected);
+          return corrected;
+        }
+        setProfile(local);
+        return local;
+      }
+
       if (local) {
         setProfile(local);
-        await syncRemote(local);
         try {
           const remote = await fetchRemoteProfile(local.id);
           if (remote && remote.username !== local.username) {
@@ -94,7 +118,6 @@ export const UserProfileProvider: React.FC<PropsWithChildren> = ({ children }) =
         return local;
       }
       const created = await pushLocal();
-      await syncRemote(created);
       return created;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Profil indisponible');
@@ -108,25 +131,25 @@ export const UserProfileProvider: React.FC<PropsWithChildren> = ({ children }) =
     } finally {
       setIsLoading(false);
     }
-  }, [pushLocal, syncRemote]);
+  }, [pushLocal, authUser]);
 
   useEffect(() => {
     loadProfile().catch((err) => console.warn('Failed to bootstrap user profile', err));
   }, [loadProfile]);
 
   const refresh = useCallback(async () => {
-    // D'abord récupérer le profil local pour avoir l'ID
     const local = await fetchUserProfile();
-    const userId = local?.id ?? profile?.id;
-    
+    const userId = authUser?.id ?? local?.id ?? profile?.id;
+
     if (userId) {
       try {
-        // Récupérer les données fraîches depuis l'API (avec bio, objective, avatar_url)
         const remote = await fetchRemoteProfile(userId);
         if (remote) {
+          // Always prefer auth username over remote/local
+          const username = authUser?.username ?? remote.username;
           const merged = {
             id: remote.id,
-            username: remote.username,
+            username,
             consent_to_public_share: (remote as any).consent_to_public_share ?? local?.consent_to_public_share ?? false,
             created_at: local?.created_at ?? Date.now(),
             bio: (remote as any).bio,
@@ -140,14 +163,14 @@ export const UserProfileProvider: React.FC<PropsWithChildren> = ({ children }) =
         console.warn('Failed to fetch remote profile during refresh', err);
       }
     }
-    
+
     if (local) {
       setProfile(local);
       return local;
     }
     const created = await pushLocal();
     return created;
-  }, [pushLocal, profile?.id]);
+  }, [pushLocal, authUser, profile?.id]);
 
   const updateProfile = useCallback(
     async (updates: { username?: string; consent_to_public_share?: boolean }) => {

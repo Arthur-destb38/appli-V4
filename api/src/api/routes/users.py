@@ -70,15 +70,18 @@ def _ensure_unique_username(session, username: str, exclude_id: Optional[str] = 
 
 @router.post("/profile", response_model=UserProfileRead)
 def upsert_profile(
-    payload: UserProfileCreate, 
+    payload: UserProfileCreate,
     session=Depends(get_session),
     current_user: User = Depends(_get_current_user)
 ) -> UserProfileRead:
     # Use authenticated user instead of payload.id
     user = current_user
-    if user.username != payload.username:
+    # Only update username if it's a real change (not an auto-generated athlete-XXXX)
+    import re
+    is_auto_generated = bool(re.match(r'^athlete-[0-9A-Fa-f]{4}$', payload.username))
+    if not is_auto_generated and payload.username and user.username != payload.username:
         _ensure_unique_username(session, payload.username, exclude_id=user.id)
-    user.username = payload.username
+        user.username = payload.username
     user.consent_to_public_share = payload.consent_to_public_share
     session.commit()
     session.refresh(user)

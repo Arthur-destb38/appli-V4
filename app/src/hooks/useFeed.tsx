@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { fetchFeed, followUser, unfollowUser, fetchSharedWorkout } from '@/services/feedApi';
 import { useWorkouts } from '@/hooks/useWorkouts';
@@ -12,10 +13,8 @@ const slugify = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)+/g, '') || 'exercise';
 
-// Utilisateur de démo pour le feed
-const DEMO_USER_ID = 'guest-user';
-
 export const useFeed = () => {
+  const { user, isAuthenticated } = useAuth();
   const { profile } = useUserProfile();
   const { createDraft, addExercise, addSet } = useWorkouts();
   const [items, setItems] = useState([]);
@@ -23,11 +22,12 @@ export const useFeed = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Utilise guest-user pour le mode démo
-  const userId = profile?.id || DEMO_USER_ID;
+  // Use auth user ID first, then profile ID
+  const userId = user?.id ?? profile?.id ?? '';
 
   const load = useCallback(
     async (reset = false) => {
+      if (!userId) return; // Don't load until we have a user ID
       setIsLoading(true);
       setError(null);
       try {
