@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { getApiBaseUrl } from '@/utils/api';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface SetData {
   reps: number;
@@ -37,6 +38,7 @@ export default function SharedWorkoutDetailScreen() {
   const { theme } = useAppTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslations();
   
   const [workout, setWorkout] = useState<WorkoutSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,12 +50,12 @@ export default function SharedWorkoutDetailScreen() {
         const baseUrl = getApiBaseUrl();
         const response = await fetch(`${baseUrl}/workouts/shared/${id}`);
         if (!response.ok) {
-          throw new Error('Séance non trouvée');
+          throw new Error(t('workoutNotFound'));
         }
         const data = await response.json();
         setWorkout(data);
       } catch (err: any) {
-        setError(err.message || 'Erreur de chargement');
+        setError(err.message || t('loadingError'));
       } finally {
         setLoading(false);
       }
@@ -75,7 +77,7 @@ export default function SharedWorkoutDetailScreen() {
       <View style={[styles.container, styles.centered, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.accent} />
         <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-          Chargement de la séance...
+          {t('loading')}
         </Text>
       </View>
     );
@@ -86,13 +88,13 @@ export default function SharedWorkoutDetailScreen() {
       <View style={[styles.container, styles.centered, { backgroundColor: theme.colors.background }]}>
         <Ionicons name="alert-circle-outline" size={64} color={theme.colors.textSecondary} />
         <Text style={[styles.errorText, { color: theme.colors.textSecondary }]}>
-          {error || 'Séance non trouvée'}
+          {error || t('workoutNotFound')}
         </Text>
         <TouchableOpacity 
           style={[styles.backButton, { backgroundColor: theme.colors.accent }]}
           onPress={() => router.back()}
         >
-          <Text style={styles.backButtonText}>Retour</Text>
+          <Text style={styles.backButtonText}>{t('back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -104,7 +106,7 @@ export default function SharedWorkoutDetailScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
         </Pressable>
-        <Text style={[styles.navTitle, { color: theme.colors.textPrimary }]}>Séance partagée</Text>
+        <Text style={[styles.navTitle, { color: theme.colors.textPrimary }]}>{t('sharedWorkout')}</Text>
         <View style={{ width: 32 }} />
       </View>
       <ScrollView
@@ -122,13 +124,13 @@ export default function SharedWorkoutDetailScreen() {
             <View style={[styles.statChip, { backgroundColor: theme.colors.accent + '20' }]}>
               <Ionicons name="fitness" size={16} color={theme.colors.accent} />
               <Text style={[styles.statText, { color: theme.colors.accent }]}>
-                {workout.exercises.length} exercices
+                {t('exercisesCount', { count: workout.exercises.length })}
               </Text>
             </View>
             <View style={[styles.statChip, { backgroundColor: theme.colors.accent + '20' }]}>
               <Ionicons name="layers" size={16} color={theme.colors.accent} />
               <Text style={[styles.statText, { color: theme.colors.accent }]}>
-                {totalSets} séries
+                {t('setsCount', { count: totalSets })}
               </Text>
             </View>
             <View style={[styles.statChip, { backgroundColor: theme.colors.accent + '20' }]}>
@@ -164,9 +166,9 @@ export default function SharedWorkoutDetailScreen() {
               {/* Sets table */}
               <View style={styles.setsContainer}>
                 <View style={[styles.setsHeader, { borderBottomColor: theme.colors.border }]}>
-                  <Text style={[styles.setHeaderText, { color: theme.colors.textSecondary }]}>Série</Text>
-                  <Text style={[styles.setHeaderText, { color: theme.colors.textSecondary }]}>Poids</Text>
-                  <Text style={[styles.setHeaderText, { color: theme.colors.textSecondary }]}>Reps</Text>
+                  <Text style={[styles.setHeaderText, { color: theme.colors.textSecondary }]}>{t('setLabel')}</Text>
+                  <Text style={[styles.setHeaderText, { color: theme.colors.textSecondary }]}>{t('weightHeader')}</Text>
+                  <Text style={[styles.setHeaderText, { color: theme.colors.textSecondary }]}>{t('repsHeader')}</Text>
                 </View>
                 {exercise.sets.map((set, setIndex) => (
                   <View 
@@ -192,7 +194,7 @@ export default function SharedWorkoutDetailScreen() {
               {/* Exercise volume */}
               <View style={[styles.exerciseVolume, { backgroundColor: theme.colors.surfaceMuted }]}>
                 <Text style={[styles.volumeLabel, { color: theme.colors.textSecondary }]}>
-                  Volume total
+                  {t('totalVolume')}
                 </Text>
                 <Text style={[styles.volumeValue, { color: theme.colors.textPrimary }]}>
                   {exercise.sets.reduce((acc, s) => acc + s.weight * s.reps, 0).toLocaleString()} kg

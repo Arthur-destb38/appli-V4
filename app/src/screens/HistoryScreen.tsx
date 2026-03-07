@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 
 import { fetchWorkouts, WorkoutWithRelations } from '@/db/workouts-repository';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { LoadingState, ErrorState, EmptyState } from '@/components/StateView';
 import { HistoryProgressChart } from '@/components/HistoryProgressChart';
 import { ExerciseChargesChart } from '@/components/ExerciseChargesChart';
@@ -74,7 +75,7 @@ const mapToHistoryItem = (workout: WorkoutWithRelations): HistoryItem => {
 };
 
 // Grouper par période
-const getTimePeriod = (timestamp: number): string => {
+const getTimePeriod = (timestamp: number, t: (key: any) => string, language: string): string => {
   const today = new Date();
   const date = new Date(timestamp);
   const yesterday = new Date(today);
@@ -83,17 +84,18 @@ const getTimePeriod = (timestamp: number): string => {
   thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
   const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  if (date.toDateString() === today.toDateString()) return 'Aujourd\'hui';
-  if (date.toDateString() === yesterday.toDateString()) return 'Hier';
-  if (date >= thisWeekStart) return 'Cette semaine';
-  if (date >= thisMonthStart) return 'Ce mois-ci';
-  return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  if (date.toDateString() === today.toDateString()) return t('todayLabel');
+  if (date.toDateString() === yesterday.toDateString()) return t('yesterdayLabel');
+  if (date >= thisWeekStart) return t('thisWeekLabel');
+  if (date >= thisMonthStart) return t('thisMonthLabel');
+  return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
 };
 
 export const HistoryScreen: React.FC = () => {
   const navigation = useNavigation();
   const router = useRouter();
   const { theme, mode } = useAppTheme();
+  const { t, language } = useTranslations();
   const insets = useSafeAreaInsets();
   const [data, setData] = useState<HistoryItem[]>([]);
   const [filtered, setFiltered] = useState<HistoryItem[]>([]);
@@ -138,7 +140,7 @@ export const HistoryScreen: React.FC = () => {
       setData(items);
       setFiltered(items);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      setError(err instanceof Error ? err.message : t('errorOccurred'));
     } finally {
       setIsLoading(false);
     }
@@ -176,7 +178,7 @@ export const HistoryScreen: React.FC = () => {
   const groupedData = useMemo(() => {
     const groups: { [key: string]: HistoryItem[] } = {};
     filtered.forEach((item) => {
-      const period = getTimePeriod(item.date);
+      const period = getTimePeriod(item.date, t, language);
       if (!groups[period]) groups[period] = [];
       groups[period].push(item);
     });
@@ -227,9 +229,9 @@ export const HistoryScreen: React.FC = () => {
       const minutes = Math.floor(diff / 60000);
       const hours = Math.floor(diff / 3600000);
       const days = Math.floor(diff / 86400000);
-      if (minutes < 60) return `il y a ${minutes}min`;
-      if (hours < 24) return `il y a ${hours}h`;
-      if (days < 7) return `il y a ${days}j`;
+      if (minutes < 60) return t('minutesAgo', { n: minutes });
+      if (hours < 24) return t('hoursAgo', { n: hours });
+      if (days < 7) return t('daysAgoShort', { n: days });
       return item.dateLabel;
     };
     
@@ -286,7 +288,7 @@ export const HistoryScreen: React.FC = () => {
               <View style={[styles.statusBadge, { backgroundColor: statusColor + '20' }]}>
                 <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
                 <Text style={[styles.statusText, { color: statusColor }]}>
-                  {isCompleted ? 'Terminée' : 'Brouillon'}
+                  {isCompleted ? t('statusCompleted') : t('statusDraft')}
                 </Text>
               </View>
             </View>
@@ -305,7 +307,7 @@ export const HistoryScreen: React.FC = () => {
                     {item.exerciseCount}
                   </Text>
                   <Text style={[styles.cardStatLabel, { color: theme.colors.textSecondary }]}>
-                    Exercices
+                    {t('exercisesLabel')}
                   </Text>
                 </View>
               </View>
@@ -322,7 +324,7 @@ export const HistoryScreen: React.FC = () => {
                     {item.setCount}
                   </Text>
                   <Text style={[styles.cardStatLabel, { color: theme.colors.textSecondary }]}>
-                    Séries
+                    {t('seriesLabel')}
                   </Text>
                 </View>
               </View>
@@ -350,7 +352,7 @@ export const HistoryScreen: React.FC = () => {
               {item.synced && (
                 <View style={styles.syncBadge}>
                   <Ionicons name="cloud-done" size={12} color="#10b981" />
-                  <Text style={[styles.syncText, { color: '#10b981' }]}>Sync</Text>
+                  <Text style={[styles.syncText, { color: '#10b981' }]}>{t('syncLabel')}</Text>
                 </View>
               )}
               <View style={{ flex: 1 }} />
@@ -366,7 +368,7 @@ export const HistoryScreen: React.FC = () => {
                   end={{ x: 1, y: 0 }}
                   style={styles.viewBtnGradient}
                 >
-                  <Text style={styles.viewBtnText}>Voir détails</Text>
+                  <Text style={styles.viewBtnText}>{t('viewDetails')}</Text>
                   <Ionicons name="chevron-forward" size={14} color="#FFFFFF" />
                 </LinearGradient>
               </Pressable>
@@ -473,7 +475,7 @@ export const HistoryScreen: React.FC = () => {
 
   const content = useMemo(() => {
     if (isLoading) {
-      return <LoadingState message="Chargement de l'historique..." />;
+      return <LoadingState message={t('loadingHistory')} />;
     }
 
     if (error) {
@@ -490,10 +492,10 @@ export const HistoryScreen: React.FC = () => {
             <Ionicons name="calendar-outline" size={48} color="#FFFFFF" />
           </LinearGradient>
           <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-            Aucune séance trouvée
+            {t('noWorkoutFound')}
           </Text>
           <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-            {searchQuery ? 'Essaie une autre recherche' : 'Crée ta première séance pour commencer'}
+            {searchQuery ? t('tryOtherSearch') : t('createFirstWorkout')}
           </Text>
           {!searchQuery && (
             <Pressable
@@ -507,7 +509,7 @@ export const HistoryScreen: React.FC = () => {
                 style={styles.emptyBtn}
               >
                 <Ionicons name="add" size={20} color="#FFFFFF" />
-                <Text style={styles.emptyBtnText}>Nouvelle séance</Text>
+                <Text style={styles.emptyBtnText}>{t('newWorkoutBtn')}</Text>
               </LinearGradient>
             </Pressable>
           )}
@@ -546,12 +548,12 @@ export const HistoryScreen: React.FC = () => {
                       <Ionicons name="trending-up" size={16} color="#FFFFFF" />
                     </LinearGradient>
                     <Text style={[styles.chartTitle, { color: theme.colors.textPrimary }]}>
-                      Progression hebdomadaire
+                      {t('weeklyProgress')}
                     </Text>
                   </View>
                   <View style={[styles.chartBadge, { backgroundColor: '#10b98120' }]}>
                     <Ionicons name="stats-chart" size={12} color="#10b981" />
-                    <Text style={[styles.chartBadgeText, { color: '#10b981' }]}>Stable</Text>
+                    <Text style={[styles.chartBadgeText, { color: '#10b981' }]}>{t('stableLabel')}</Text>
                   </View>
                 </View>
                 <HistoryProgressChart
@@ -573,7 +575,7 @@ export const HistoryScreen: React.FC = () => {
                       <Ionicons name="barbell" size={16} color="#FFFFFF" />
                     </LinearGradient>
                     <Text style={[styles.chartTitle, { color: theme.colors.textPrimary }]}>
-                      Charges par exercice
+                      {t('chargesByExercise')}
                     </Text>
                   </View>
                 </View>
@@ -587,7 +589,7 @@ export const HistoryScreen: React.FC = () => {
             {/* Section headers with grouped data */}
             {Object.entries(groupedData).length > 0 && (
               <Text style={[styles.resultsCount, { color: theme.colors.textSecondary }]}>
-                {filtered.length} séance{filtered.length > 1 ? 's' : ''} trouvée{filtered.length > 1 ? 's' : ''}
+                {t('workoutsFoundCount', { count: filtered.length, plural: filtered.length > 1 ? 's' : '' })}
               </Text>
             )}
           </>
@@ -636,10 +638,10 @@ export const HistoryScreen: React.FC = () => {
 
             <View style={styles.titleBlock}>
               <Text style={[styles.screenTitle, { color: theme.colors.textPrimary }]}>
-                Historique
+                {t('history')}
               </Text>
               <Text style={[styles.screenSubtitle, { color: theme.colors.textSecondary }]}>
-                {stats.completed} séances terminées
+                {t('completedWorkoutsCount', { count: stats.completed })}
               </Text>
             </View>
 
@@ -680,7 +682,7 @@ export const HistoryScreen: React.FC = () => {
             <Ionicons name="search-outline" size={18} color={theme.colors.textSecondary} />
             <TextInput
               style={[styles.searchInput, { color: theme.colors.textPrimary }]}
-              placeholder="Rechercher une séance..."
+              placeholder={t('searchWorkout')}
               placeholderTextColor={theme.colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -709,7 +711,7 @@ export const HistoryScreen: React.FC = () => {
                   {stats.completed}
                 </Text>
                 <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-                  Terminées
+                  {t('completedLabel')}
                 </Text>
               </View>
             </View>
@@ -737,7 +739,7 @@ export const HistoryScreen: React.FC = () => {
                   {stats.totalExercises}
                 </Text>
                 <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-                  Exercices
+                  {t('exercisesLabel')}
                 </Text>
               </View>
             </View>
@@ -751,7 +753,7 @@ export const HistoryScreen: React.FC = () => {
                   {stats.totalSets}
                 </Text>
                 <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-                  Séries
+                  {t('seriesLabel')}
                 </Text>
               </View>
             </View>
@@ -761,7 +763,7 @@ export const HistoryScreen: React.FC = () => {
           <View style={[styles.periodFilters, { backgroundColor: theme.colors.surface }]}>
             {(['all', 'month', 'week'] as const).map((p) => {
               const isActive = period === p;
-              const label = p === 'all' ? 'Tout' : p === 'month' ? '30 jours' : '7 jours';
+              const label = p === 'all' ? t('allPeriod') : p === 'month' ? t('thirtyDaysLabel') : t('sevenDaysLabel');
               
               return (
                 <Pressable

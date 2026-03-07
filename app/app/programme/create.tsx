@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppButton } from '@/components/AppButton';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { generateProgram, saveProgram } from '@/services/programsApi';
 import { Program } from '@/types/program';
 import { useWorkouts } from '@/hooks/useWorkouts';
@@ -31,7 +32,8 @@ const CreateProgramScreen: React.FC = () => {
   const router = useRouter();
   const { createDraft, addExercise, addSet, refresh, pullFromServer } = useWorkouts();
   const { isAuthenticated } = useAuth();
-  const { profile } = useUserProfile(); // 🎯 NOUVEAU: Récupérer le profil utilisateur
+  const { profile } = useUserProfile();
+  const { t } = useTranslations();
 
   // États principaux
   const [objective, setObjective] = useState('Hypertrophie');
@@ -44,7 +46,7 @@ const CreateProgramScreen: React.FC = () => {
   const [launchingSession, setLaunchingSession] = useState<number | null>(null);
   const [savingSessions, setSavingSessions] = useState(false);
   const [programSaved, setProgramSaved] = useState(false);
-  const [showProfileSuggestions, setShowProfileSuggestions] = useState(true); // 🎯 NOUVEAU
+  const [showProfileSuggestions, setShowProfileSuggestions] = useState(true);
 
   // États avancés
   const [niveau, setNiveau] = useState('Intermédiaire');
@@ -53,58 +55,58 @@ const CreateProgramScreen: React.FC = () => {
   const [equipmentAvailable, setEquipmentAvailable] = useState<string[]>(['barbell', 'dumbbell']);
   const [methodePreferee, setMethodePreferee] = useState<string>('');
 
-  // 🎯 NOUVEAU: Suggestions intelligentes basées sur le profil
+  // Suggestions intelligentes basées sur le profil
   const profileSuggestions = useMemo(() => {
     if (!profile) return null;
-    
+
     const suggestions = [];
-    
+
     // Suggestion d'objectif
     if (profile.objective && profile.objective !== objective) {
       const objectiveMap: Record<string, string> = {
-        'muscle_gain': 'Hypertrophie',
-        'weight_loss': 'Perte de poids',
-        'strength': 'Force', 
-        'endurance': 'Endurance',
-        'general_fitness': 'Remise en forme'
+        'muscle_gain': t('hypertrophyLabel'),
+        'weight_loss': t('fitnessLabel'),
+        'strength': t('forceOptionLabel'),
+        'endurance': t('enduranceLabel'),
+        'general_fitness': t('fitnessLabel')
       };
       const suggestedObjective = objectiveMap[profile.objective] || profile.objective;
       suggestions.push({
         type: 'objective',
-        message: `Objectif suggéré: ${suggestedObjective}`,
+        message: `${t('suggestedObjective')}: ${suggestedObjective}`,
         action: () => setObjective(suggestedObjective),
         icon: 'flag-outline'
       });
     }
-    
+
     // Suggestion de niveau
     if (profile.experience_level && profile.experience_level !== niveau.toLowerCase()) {
       const levelMap: Record<string, string> = {
-        'beginner': 'Débutant',
-        'intermediate': 'Intermédiaire',
-        'advanced': 'Avancé'
+        'beginner': t('beginnerLevel'),
+        'intermediate': t('intermediateLevel'),
+        'advanced': t('advancedLevel')
       };
       const suggestedLevel = levelMap[profile.experience_level] || profile.experience_level;
       suggestions.push({
         type: 'level',
-        message: `Niveau suggéré: ${suggestedLevel}`,
+        message: `${t('suggestedLevel')}: ${suggestedLevel}`,
         action: () => setNiveau(suggestedLevel),
         icon: 'trophy-outline'
       });
     }
-    
+
     // Suggestion de fréquence
     if (profile.training_frequency && profile.training_frequency !== frequency) {
       suggestions.push({
         type: 'frequency',
-        message: `Fréquence suggérée: ${profile.training_frequency}x/semaine`,
+        message: `${t('suggestedFrequency')}: ${profile.training_frequency}x/${t('weeks')}`,
         action: () => setFrequency(profile.training_frequency),
         icon: 'calendar-outline'
       });
     }
-    
+
     return suggestions.length > 0 ? suggestions : null;
-  }, [profile, objective, niveau, frequency]);
+  }, [profile, objective, niveau, frequency, t]);
 
   // Animation du header
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -120,43 +122,43 @@ const CreateProgramScreen: React.FC = () => {
 
   const equipmentOptions = useMemo(
     () => [
-      { id: 'barbell', label: 'Barre', icon: 'barbell-outline' as const },
-      { id: 'dumbbell', label: 'Haltères', icon: 'fitness-outline' as const },
-      { id: 'bodyweight', label: 'Poids du corps', icon: 'body-outline' as const },
-      { id: 'machine', label: 'Machines', icon: 'cog-outline' as const },
-      { id: 'cable', label: 'Câbles', icon: 'git-branch-outline' as const },
-      { id: 'kettlebell', label: 'Kettlebell', icon: 'disc-outline' as const },
+      { id: 'barbell', label: t('barreLabel'), icon: 'barbell-outline' as const },
+      { id: 'dumbbell', label: t('dumbbellsLabel'), icon: 'fitness-outline' as const },
+      { id: 'bodyweight', label: t('bodyweightLabel'), icon: 'body-outline' as const },
+      { id: 'machine', label: t('machinesLabel'), icon: 'cog-outline' as const },
+      { id: 'cable', label: t('cablesLabel'), icon: 'git-branch-outline' as const },
+      { id: 'kettlebell', label: t('kettlebellLabel'), icon: 'disc-outline' as const },
     ],
-    []
+    [t]
   );
 
   const objectiveOptions = useMemo(
     () => [
-      { id: 'Hypertrophie', label: 'Hypertrophie', icon: 'trending-up-outline' as const, desc: 'Prise de masse' },
-      { id: 'Force', label: 'Force', icon: 'flash-outline' as const, desc: 'Puissance max' },
-      { id: 'Endurance', label: 'Endurance', icon: 'pulse-outline' as const, desc: 'Cardio musculaire' },
-      { id: 'Remise en forme', label: 'Fitness', icon: 'heart-outline' as const, desc: 'Remise en forme' },
+      { id: 'Hypertrophie', label: t('hypertrophyLabel'), icon: 'trending-up-outline' as const, desc: t('massGainDesc') },
+      { id: 'Force', label: t('forceOptionLabel'), icon: 'flash-outline' as const, desc: t('maxPowerDesc') },
+      { id: 'Endurance', label: t('enduranceLabel'), icon: 'pulse-outline' as const, desc: t('muscularCardioDesc') },
+      { id: 'Remise en forme', label: t('fitnessLabel'), icon: 'heart-outline' as const, desc: t('fitnessDesc') },
     ],
-    []
+    [t]
   );
 
   const niveauOptions = useMemo(
     () => [
-      { id: 'Débutant', icon: 'leaf-outline' as const },
-      { id: 'Intermédiaire', icon: 'flame-outline' as const },
-      { id: 'Avancé', icon: 'rocket-outline' as const },
+      { id: 'Débutant', label: t('beginnerLevel'), icon: 'leaf-outline' as const },
+      { id: 'Intermédiaire', label: t('intermediateLevel'), icon: 'flame-outline' as const },
+      { id: 'Avancé', label: t('advancedLevel'), icon: 'rocket-outline' as const },
     ],
-    []
+    [t]
   );
 
   const methodeOptions = useMemo(
     () => [
-      { id: '', label: 'Auto', desc: 'Choix optimal' },
-      { id: 'fullbody', label: 'Full Body', desc: 'Corps entier' },
-      { id: 'upperlower', label: 'Upper/Lower', desc: 'Haut/Bas' },
-      { id: 'ppl', label: 'PPL', desc: 'Push/Pull/Legs' },
+      { id: '', label: t('autoMethod'), desc: t('optimalChoice') },
+      { id: 'fullbody', label: t('fullBody'), desc: t('wholeBody') },
+      { id: 'upperlower', label: t('upperLower'), desc: t('upperLowerDesc') },
+      { id: 'ppl', label: t('pplMethod'), desc: t('pplDesc') },
     ],
-    []
+    [t]
   );
 
   const toggleEquipment = (equipmentId: string) => {
@@ -201,7 +203,7 @@ const CreateProgramScreen: React.FC = () => {
       setProgram(result);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'Génération impossible';
+      const errorMessage = e instanceof Error ? e.message : t('generationImpossible');
       setError(errorMessage);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
     } finally {
@@ -220,11 +222,11 @@ const CreateProgramScreen: React.FC = () => {
 
   const handleSaveAllSessions = async () => {
     if (!program?.id) {
-      Alert.alert('Erreur', 'Programme introuvable');
+      Alert.alert(t('error'), t('programNotFound'));
       return;
     }
     if (!isAuthenticated) {
-      Alert.alert('Connexion requise', 'Tu dois être connecté pour enregistrer les séances.');
+      Alert.alert(t('connectionRequired'), t('loginRequiredToSave'));
       return;
     }
 
@@ -266,12 +268,12 @@ const CreateProgramScreen: React.FC = () => {
       await refresh();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       Alert.alert(
-        'Séances enregistrées !',
-        `${result.workouts_created} séance${result.workouts_created > 1 ? 's' : ''} enregistrée${result.workouts_created > 1 ? 's' : ''}.`
+        t('sessionsRegistered'),
+        result.workouts_created > 1 ? t('sessionsRegisteredCount', { count: result.workouts_created }) : t('sessionRegisteredCount', { count: result.workouts_created })
       );
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Impossible d'enregistrer";
-      Alert.alert('Erreur', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : t('cannotSave');
+      Alert.alert(t('error'), errorMessage);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
     } finally {
       setSavingSessions(false);
@@ -280,14 +282,14 @@ const CreateProgramScreen: React.FC = () => {
 
   const handleStartSession = async (sess: Program['sessions'][number], modeSport = false) => {
     if (!sess.sets?.length) {
-      Alert.alert('Séance vide', 'Cette séance ne contient pas de séries.');
+      Alert.alert(t('emptySession'), t('sessionHasNoSets'));
       return;
     }
     Haptics.selectionAsync().catch(() => {});
     try {
       setLaunchingSession(sess.day_index);
-      const draft = await createDraft(sess.title || `Séance ${sess.day_index + 1}`);
-      if (!draft) throw new Error('Impossible de créer la séance');
+      const draft = await createDraft(sess.title || `${t('sessionLabel')} ${sess.day_index + 1}`);
+      if (!draft) throw new Error(t('cannotCreateSession'));
 
       const grouped = sess.sets.reduce<Record<string, typeof sess.sets>>((acc, set) => {
         const key = set.exercise_slug || 'exercice';
@@ -310,8 +312,8 @@ const CreateProgramScreen: React.FC = () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       router.push(`/track/${draft.workout.id}${modeSport ? '?mode=1' : ''}`);
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Impossible de démarrer';
-      Alert.alert('Erreur', errorMessage);
+      const errorMessage = err instanceof Error ? err.message : t('cannotStart');
+      Alert.alert(t('error'), errorMessage);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
     } finally {
       setLaunchingSession(null);
@@ -424,7 +426,7 @@ const CreateProgramScreen: React.FC = () => {
             ))}
             {session.sets.length > 4 && (
               <Text style={[styles.moreText, { color: theme.colors.textSecondary }]}>
-                +{session.sets.length - 4} exercice{session.sets.length - 4 > 1 ? 's' : ''}
+                +{session.sets.length - 4} {session.sets.length - 4 > 1 ? t('exercisesMore') : t('exerciseMore')}
               </Text>
             )}
           </View>
@@ -440,7 +442,7 @@ const CreateProgramScreen: React.FC = () => {
               disabled={launchingSession !== null}
             >
               <Ionicons name="play-circle-outline" size={18} color={theme.colors.textPrimary} />
-              <Text style={[styles.actionBtnText, { color: theme.colors.textPrimary }]}>Sport</Text>
+              <Text style={[styles.actionBtnText, { color: theme.colors.textPrimary }]}>{t('sportMode')}</Text>
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -451,7 +453,7 @@ const CreateProgramScreen: React.FC = () => {
               disabled={launchingSession !== null}
             >
               <Ionicons name="play" size={18} color="#FFFFFF" />
-              <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]}>Démarrer</Text>
+              <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]}>{t('startSession')}</Text>
             </Pressable>
           </View>
         </View>
@@ -488,10 +490,10 @@ const CreateProgramScreen: React.FC = () => {
               <Ionicons name="create-outline" size={32} color={theme.colors.accent} />
             </View>
             <Text style={[styles.heroTitle, { color: theme.colors.textPrimary }]}>
-              Créer un programme
+              {t('createProgramTitle')}
             </Text>
             <Text style={[styles.heroSubtitle, { color: theme.colors.textSecondary }]}>
-              Personnalise ton entraînement selon tes objectifs
+              {t('customizeTraining')}
             </Text>
           </Animated.View>
         </LinearGradient>
@@ -501,7 +503,7 @@ const CreateProgramScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="flag" size={20} color={theme.colors.accent} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Objectif</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>{t('objectiveSection')}</Text>
             </View>
             <View style={styles.objectiveGrid}>
               {objectiveOptions.map((opt) => {
@@ -549,13 +551,13 @@ const CreateProgramScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* 🎯 NOUVEAU: Section Suggestions Intelligentes */}
+          {/* Section Suggestions Intelligentes */}
           {profileSuggestions && showProfileSuggestions && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Ionicons name="bulb" size={20} color="#f59e0b" />
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Suggestions basées sur ton profil
+                  {t('suggestionsBasedOnProfile')}
                 </Text>
                 <Pressable
                   onPress={() => setShowProfileSuggestions(false)}
@@ -568,7 +570,7 @@ const CreateProgramScreen: React.FC = () => {
                 <View style={styles.suggestionHeader}>
                   <Ionicons name="sparkles" size={16} color="#f59e0b" />
                   <Text style={[styles.suggestionHeaderText, { color: '#f59e0b' }]}>
-                    Personnalisation intelligente
+                    {t('smartPersonalization')}
                   </Text>
                 </View>
                 {profileSuggestions.map((suggestion, index) => (
@@ -590,12 +592,12 @@ const CreateProgramScreen: React.FC = () => {
                       </Text>
                     </View>
                     <View style={[styles.suggestionButton, { backgroundColor: theme.colors.accent }]}>
-                      <Text style={styles.suggestionButtonText}>Appliquer</Text>
+                      <Text style={styles.suggestionButtonText}>{t('applyLabel')}</Text>
                     </View>
                   </Pressable>
                 ))}
                 <Text style={[styles.suggestionNote, { color: theme.colors.textSecondary }]}>
-                  💡 Ces suggestions sont basées sur les informations de ton profil
+                  {t('suggestionsNote')}
                 </Text>
               </View>
             </View>
@@ -605,29 +607,29 @@ const CreateProgramScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="settings" size={20} color={theme.colors.accent} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Paramètres</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>{t('parametersSection')}</Text>
             </View>
             <View style={styles.countersGrid}>
               <Counter
                 value={frequency}
-                unit="/ sem"
-                label="Fréquence"
+                unit={t('timesPerWeek')}
+                label={t('frequencyLabel')}
                 icon="calendar-outline"
                 onDecrement={() => updateValue(setFrequency, -1, 2, 6)}
                 onIncrement={() => updateValue(setFrequency, 1, 2, 6)}
               />
               <Counter
                 value={exercisesPerSession}
-                unit="exos"
-                label="Par séance"
+                unit={t('exercisesPerSession')}
+                label={t('perSessionLabel')}
                 icon="barbell-outline"
                 onDecrement={() => updateValue(setExercisesPerSession, -1, 3, 8)}
                 onIncrement={() => updateValue(setExercisesPerSession, 1, 3, 8)}
               />
               <Counter
                 value={durationWeeks}
-                unit="sem"
-                label="Durée"
+                unit={t('weeks')}
+                label={t('durationLabel')}
                 icon="time-outline"
                 onDecrement={() => updateValue(setDurationWeeks, -1, 2, 16)}
                 onIncrement={() => updateValue(setDurationWeeks, 1, 2, 16)}
@@ -635,7 +637,7 @@ const CreateProgramScreen: React.FC = () => {
               <Counter
                 value={parseInt(dureeSeance)}
                 unit="min"
-                label="Séance"
+                label={t('sessionLabel')}
                 icon="hourglass-outline"
                 onDecrement={() => {
                   Haptics.selectionAsync().catch(() => {});
@@ -653,7 +655,7 @@ const CreateProgramScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="trophy" size={20} color={theme.colors.accent} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Niveau</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>{t('levelSection')}</Text>
             </View>
             <View style={styles.pillsRow}>
               {niveauOptions.map((opt) => {
@@ -682,7 +684,7 @@ const CreateProgramScreen: React.FC = () => {
                     <Text
                       style={[styles.pillText, { color: isActive ? '#FFFFFF' : theme.colors.textPrimary }]}
                     >
-                      {opt.id}
+                      {opt.label}
                     </Text>
                   </Pressable>
                 );
@@ -694,7 +696,7 @@ const CreateProgramScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="git-network" size={20} color={theme.colors.accent} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Méthode</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>{t('methodSection')}</Text>
             </View>
             <View style={styles.methodeGrid}>
               {methodeOptions.map((opt) => {
@@ -741,10 +743,10 @@ const CreateProgramScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="construct" size={20} color={theme.colors.accent} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Équipement</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>{t('equipmentSection')}</Text>
               <View style={[styles.badge, { backgroundColor: theme.colors.surfaceMuted }]}>
                 <Text style={[styles.badgeText, { color: theme.colors.textSecondary }]}>
-                  {equipmentAvailable.length} sélectionné{equipmentAvailable.length > 1 ? 's' : ''}
+                  {equipmentAvailable.length} {equipmentAvailable.length > 1 ? t('selectedPluralCount') : t('selectedCount')}
                 </Text>
               </View>
             </View>
@@ -787,12 +789,12 @@ const CreateProgramScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Ionicons name="medical" size={20} color={theme.colors.accent} />
-              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Contraintes</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>{t('constraintsSection')}</Text>
             </View>
             <TextInput
               value={blessures}
               onChangeText={setBlessures}
-              placeholder="Ex: Genou fragile, dos sensible..."
+              placeholder={t('constraintsPlaceholder')}
               placeholderTextColor={theme.colors.textSecondary}
               style={[
                 styles.textInput,
@@ -809,7 +811,7 @@ const CreateProgramScreen: React.FC = () => {
 
           {/* Bouton Générer */}
           <AppButton
-            title={loading ? 'Génération en cours...' : '✨ Générer mon programme'}
+            title={loading ? t('generationInProgress') : t('generateMyProgram')}
             onPress={handleGenerate}
             loading={loading}
             disabled={loading}
@@ -850,13 +852,13 @@ const CreateProgramScreen: React.FC = () => {
                       <View style={[styles.programTag, { backgroundColor: theme.colors.surfaceMuted }]}>
                         <Ionicons name="calendar-outline" size={12} color={theme.colors.accent} />
                         <Text style={[styles.programTagText, { color: theme.colors.textPrimary }]}>
-                          {program.duration_weeks} sem
+                          {program.duration_weeks} {t('weeks')}
                         </Text>
                       </View>
                       <View style={[styles.programTag, { backgroundColor: theme.colors.surfaceMuted }]}>
                         <Ionicons name="layers-outline" size={12} color={theme.colors.accent} />
                         <Text style={[styles.programTagText, { color: theme.colors.textPrimary }]}>
-                          {program.sessions.length} séances
+                          {program.sessions.length} {t('sessionsCountLabel')}
                         </Text>
                       </View>
                     </View>
@@ -865,14 +867,14 @@ const CreateProgramScreen: React.FC = () => {
                 {programSaved && (
                   <View style={[styles.savedBadge, { backgroundColor: theme.colors.primaryMuted + '20' }]}>
                     <Ionicons name="checkmark-circle" size={16} color={theme.colors.primaryMuted} />
-                    <Text style={[styles.savedBadgeText, { color: theme.colors.primaryMuted }]}>Sauvé</Text>
+                    <Text style={[styles.savedBadgeText, { color: theme.colors.primaryMuted }]}>{t('savedBadge')}</Text>
                   </View>
                 )}
               </View>
 
               {isAuthenticated && !programSaved && (
                 <AppButton
-                  title={savingSessions ? 'Enregistrement...' : '💾 Enregistrer toutes les séances'}
+                  title={savingSessions ? t('savingInProgress') : t('saveAllSessions')}
                   onPress={handleSaveAllSessions}
                   loading={savingSessions}
                   disabled={savingSessions}
@@ -1164,7 +1166,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  // 🎯 NOUVEAU: Styles pour les suggestions intelligentes
   suggestionsContainer: {
     borderRadius: 12,
     borderWidth: 1,

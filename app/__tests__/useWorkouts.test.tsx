@@ -86,6 +86,29 @@ jest.mock('@/services/syncClient', () => ({
   pullChanges: jest.fn(),
 }));
 
+jest.mock('@/hooks/usePreferences', () => ({
+  useTranslations: () => ({
+    t: (key: string, params?: Record<string, string | number>) => {
+      const fr: Record<string, string> = {
+        newWorkout: 'Nouvelle séance',
+        defaultWorkoutTitle: 'Séance',
+        workoutCopy: '{title} (copie)',
+        workoutCopyN: '{title} (copie {n})',
+        errorWorkoutNotFound: 'Séance introuvable',
+        errorProfileUnavailable: 'Profil utilisateur indisponible',
+        errorWorkoutNotSynced: 'Séance pas encore synchronisée.',
+      };
+      let text = fr[key] ?? key;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          text = text.replace(`{${k}}`, String(v));
+        });
+      }
+      return text;
+    },
+  }),
+}));
+
 const wrapper: React.FC<React.PropsWithChildren> = ({ children }) => (
   <WorkoutsProvider>{children}</WorkoutsProvider>
 );

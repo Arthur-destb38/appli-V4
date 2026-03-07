@@ -13,11 +13,13 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { register, isLoading } = useAuth();
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,28 +28,28 @@ export default function RegisterScreen() {
 
   const validateForm = () => {
     if (!username.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      setError('Veuillez remplir tous les champs');
+      setError(t('fillAllFields'));
       return false;
     }
 
     if (username.trim().length < 3) {
-      setError('Le nom d\'utilisateur doit contenir au moins 3 caractères');
+      setError(t('usernameMinLength'));
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      setError('Veuillez entrer une adresse email valide');
+      setError(t('invalidEmail'));
       return false;
     }
 
     if (password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères');
+      setError(t('passwordMinLength'));
       return false;
     }
 
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      setError(t('passwordsDoNotMatch'));
       return false;
     }
 
@@ -68,7 +70,7 @@ export default function RegisterScreen() {
       });
       router.replace('/profile-setup-simple');
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Erreur lors de l\'inscription');
+      setError(error instanceof Error ? error.message : t('registrationError'));
     }
   };
 
@@ -81,7 +83,7 @@ export default function RegisterScreen() {
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.colors.textPrimary }]}>🦍 Gorillax</Text>
           <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            Crée ton compte
+            {t('createYourAccount')}
           </Text>
         </View>
 
@@ -94,7 +96,7 @@ export default function RegisterScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: theme.colors.textPrimary }]}>
-              Nom d'utilisateur
+              {t('usernameLabel')}
             </Text>
             <TextInput
               style={[
@@ -107,7 +109,7 @@ export default function RegisterScreen() {
               ]}
               value={username}
               onChangeText={setUsername}
-              placeholder="Choisis un nom d'utilisateur"
+              placeholder={t('chooseUsername')}
               placeholderTextColor={theme.colors.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
@@ -117,7 +119,7 @@ export default function RegisterScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: theme.colors.textPrimary }]}>
-              Email
+              {t('emailLabel')}
             </Text>
             <TextInput
               style={[
@@ -130,7 +132,7 @@ export default function RegisterScreen() {
               ]}
               value={email}
               onChangeText={setEmail}
-              placeholder="ton@email.com"
+              placeholder={t('emailExample')}
               placeholderTextColor={theme.colors.textSecondary}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -141,7 +143,7 @@ export default function RegisterScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: theme.colors.textPrimary }]}>
-              Mot de passe
+              {t('passwordLabel')}
             </Text>
             <TextInput
               style={[
@@ -154,7 +156,7 @@ export default function RegisterScreen() {
               ]}
               value={password}
               onChangeText={setPassword}
-              placeholder="Au moins 8 caractères"
+              placeholder={t('passwordMinChars')}
               placeholderTextColor={theme.colors.textSecondary}
               secureTextEntry
               autoCapitalize="none"
@@ -164,7 +166,7 @@ export default function RegisterScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: theme.colors.textPrimary }]}>
-              Confirmer le mot de passe
+              {t('confirmPasswordLabel')}
             </Text>
             <TextInput
               style={[
@@ -177,7 +179,7 @@ export default function RegisterScreen() {
               ]}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              placeholder="Répète ton mot de passe"
+              placeholder={t('repeatPassword')}
               placeholderTextColor={theme.colors.textSecondary}
               secureTextEntry
               autoCapitalize="none"
@@ -193,7 +195,7 @@ export default function RegisterScreen() {
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text style={styles.buttonText}>S'inscrire</Text>
+              <Text style={styles.buttonText}>{t('registerButton')}</Text>
             )}
           </TouchableOpacity>
 
@@ -203,7 +205,7 @@ export default function RegisterScreen() {
             disabled={isLoading}
           >
             <Text style={[styles.linkText, { color: theme.colors.accent }]}>
-              Déjà un compte ? Se connecter
+              {t('alreadyHaveAccount')} {t('loginLink')}
             </Text>
           </TouchableOpacity>
         </View>

@@ -5,14 +5,15 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Circle, Polyline, Svg } from 'react-native-svg';
 
 import { useWorkouts } from '@/hooks/useWorkouts';
+import { useTranslations } from '@/hooks/usePreferences';
 import { buildExerciseProgression } from '@/utils/workoutSummary';
 
 type RangeFilter = '7' | '30' | 'all';
 
-const RANGE_LABELS: Record<RangeFilter, string> = {
-  '7': '7 jours',
-  '30': '30 jours',
-  all: 'Tout',
+const RANGE_KEYS: Record<RangeFilter, string> = {
+  '7': 'rangeLabelWeek',
+  '30': 'rangeLabelMonth',
+  all: 'rangeLabelAll',
 };
 
 const formatDate = (timestamp: number) =>
@@ -32,6 +33,7 @@ const formatKg = (value: number) => `${Math.round(value)} kg`;
 
 export const ExerciseProgressScreen: React.FC = () => {
   const router = useRouter();
+  const { t } = useTranslations();
   const params = useLocalSearchParams<{ exerciseId?: string; exerciseName?: string }>();
   const exerciseId = params.exerciseId ?? '';
   const exerciseName = params.exerciseName ?? exerciseId;
@@ -94,16 +96,16 @@ export const ExerciseProgressScreen: React.FC = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Retour</Text>
+          <Text style={styles.backButtonText}>{t('backLabel')}</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Progression — {exerciseName}</Text>
+        <Text style={styles.title}>{t('progressionDash')} — {exerciseName}</Text>
         <Text style={styles.subtitle}>
-          Charge totale (poids × reps) sur les séances contenant cet exercice.
+          {t('progressChartDesc')}
         </Text>
       </View>
 
       <View style={styles.rangeRow}>
-        {(Object.keys(RANGE_LABELS) as RangeFilter[]).map((option) => (
+        {(Object.keys(RANGE_KEYS) as RangeFilter[]).map((option) => (
           <TouchableOpacity
             key={option}
             style={[styles.rangeButton, range === option ? styles.rangeButtonActive : null]}
@@ -113,7 +115,7 @@ export const ExerciseProgressScreen: React.FC = () => {
                 styles.rangeButtonText,
                 range === option ? styles.rangeButtonTextActive : null,
               ]}>
-              {RANGE_LABELS[option]}
+              {t(RANGE_KEYS[option])}
             </Text>
           </TouchableOpacity>
         ))}
@@ -137,18 +139,17 @@ export const ExerciseProgressScreen: React.FC = () => {
         </View>
       ) : (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>Pas assez de données</Text>
+          <Text style={styles.emptyTitle}>{t('notEnoughData')}</Text>
           <Text style={styles.emptySubtitle}>
-            Ajoute au moins trois séances avec cet exercice et des charges renseignées pour
-            afficher la courbe de progression.
+            {t('progressMinSessions')}
           </Text>
         </View>
       )}
 
       <View style={styles.listCard}>
-        <Text style={styles.listTitle}>Historique des séances</Text>
+        <Text style={styles.listTitle}>{t('sessionHistory')}</Text>
         {points.length === 0 ? (
-          <Text style={styles.emptyList}>Aucune séance enregistrée pour cet exercice.</Text>
+          <Text style={styles.emptyList}>{t('noSessionForExercise')}</Text>
         ) : (
           points
             .slice()

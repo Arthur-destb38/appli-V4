@@ -20,6 +20,7 @@ import { useAppTheme } from '@/theme/ThemeProvider';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { createOrGetConversation } from '@/services/messagingApi';
 import { searchUsers } from '@/services/exploreApi';
+import { useTranslations } from '@/hooks/usePreferences';
 
 type UserResult = {
   id: string;
@@ -33,6 +34,7 @@ export default function NewConversationScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { profile } = useUserProfile();
+  const { t } = useTranslations();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<UserResult[]>([]);
@@ -126,7 +128,7 @@ export default function NewConversationScreen() {
             </Pressable>
             <View style={styles.topBarTitle}>
               <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
-                Nouvelle conversation
+                {t('newConversationTitle')}
               </Text>
             </View>
             <View style={{ width: 44 }} />
@@ -137,7 +139,7 @@ export default function NewConversationScreen() {
             <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
             <TextInput
               style={[styles.searchInput, { color: theme.colors.textPrimary }]}
-              placeholder="Rechercher un utilisateur..."
+              placeholder={t('searchUserPlaceholder')}
               placeholderTextColor={theme.colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -163,7 +165,7 @@ export default function NewConversationScreen() {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-              Recherche...
+              {t('searching')}
             </Text>
           </View>
         ) : searchQuery.trim() === '' ? (
@@ -172,10 +174,10 @@ export default function NewConversationScreen() {
               <Ionicons name="people" size={32} color={theme.colors.primary} />
             </View>
             <Text style={[styles.hintTitle, { color: theme.colors.textPrimary }]}>
-              Trouvez un athlète
+              {t('findAthlete')}
             </Text>
             <Text style={[styles.hintText, { color: theme.colors.textSecondary }]}>
-              Recherchez par nom d&apos;utilisateur pour démarrer une conversation
+              {t('searchByUsername')}
             </Text>
           </View>
         ) : users.length === 0 ? (
@@ -184,16 +186,16 @@ export default function NewConversationScreen() {
               <Ionicons name="search-outline" size={32} color={theme.colors.textSecondary} />
             </View>
             <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-              Aucun résultat
+              {t('noResults')}
             </Text>
             <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-              Aucun utilisateur trouvé pour &quot;{searchQuery}&quot;
+              {t('noUserFoundFor', { query: searchQuery })}
             </Text>
           </View>
         ) : (
           <>
             <Text style={[styles.resultsHeader, { color: theme.colors.textSecondary }]}>
-              {users.length} RÉSULTAT{users.length > 1 ? 'S' : ''}
+              {t('resultCountLabel', { count: users.length })}
             </Text>
             {users.map((user, index) => {
               const avatarLetter = user.username.charAt(0).toUpperCase();
@@ -252,7 +254,7 @@ export default function NewConversationScreen() {
           <View style={[styles.creatingBox, { backgroundColor: theme.colors.surface }]}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={[styles.creatingText, { color: theme.colors.textPrimary }]}>
-              Création...
+              {t('creatingConversation')}
             </Text>
           </View>
         </View>

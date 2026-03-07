@@ -9,9 +9,11 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 export default function ProfileSetupSimple() {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const insets = useSafeAreaInsets();
 
   const goToApp = () => {
@@ -22,11 +24,11 @@ export default function ProfileSetupSimple() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[styles.content, { paddingTop: insets.top + 40 }]}>
         <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
-          🦍 Bienvenue sur Gorillax !
+          {t('welcomeGorillax')}
         </Text>
         
         <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-          Tu peux configurer ton profil plus tard dans les paramètres
+          {t('configLater')}
         </Text>
 
         <TouchableOpacity
@@ -34,7 +36,7 @@ export default function ProfileSetupSimple() {
           onPress={goToApp}
         >
           <Text style={styles.buttonText}>
-            Accéder à l'app
+            {t('accessApp')}
           </Text>
         </TouchableOpacity>
 
@@ -43,7 +45,7 @@ export default function ProfileSetupSimple() {
           onPress={goToApp}
         >
           <Text style={[styles.skipText, { color: theme.colors.textSecondary }]}>
-            Passer pour l'instant
+            {t('skipForNow')}
           </Text>
         </TouchableOpacity>
       </View>

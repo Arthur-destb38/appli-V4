@@ -19,11 +19,11 @@ import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { buildApiUrl, apiCall } from '@/utils/api';
-
-const COPY_PASS = "Présentez ce pass à l'entrée ou sur la machine en salle partenaire Gorillax.";
+import { useTranslations } from '@/hooks/usePreferences';
 
 export default function PassSalleScreen() {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [loadingApple, setLoadingApple] = useState(false);
@@ -34,7 +34,7 @@ export default function PassSalleScreen() {
     try {
       const accessToken = await AsyncStorage.getItem('@gorillax_access_token');
       if (!accessToken) {
-        Alert.alert('Connexion requise', 'Connecte-toi pour ajouter le pass.');
+        Alert.alert(t('loginRequired'), t('loginToAddPass'));
         return;
       }
       const url = `${buildApiUrl('/wallet/apple/pass')}?access_token=${encodeURIComponent(accessToken)}`;
@@ -43,12 +43,12 @@ export default function PassSalleScreen() {
         await Linking.openURL(url);
       } else {
         Alert.alert(
-          'Ajouter à Apple Wallet',
-          'Ouvre ce lien dans Safari pour ajouter le pass : ' + url.slice(0, 50) + '...'
+          t('addToAppleWallet'),
+          t('openInSafari')
         );
       }
     } catch (e) {
-      Alert.alert('Erreur', 'Impossible d\'ouvrir le pass. Vérifie ta connexion.');
+      Alert.alert(t('error'), t('cannotOpenPass'));
     } finally {
       setLoadingApple(false);
     }
@@ -59,16 +59,16 @@ export default function PassSalleScreen() {
     try {
       const accessToken = await AsyncStorage.getItem('@gorillax_access_token');
       if (!accessToken) {
-        Alert.alert('Connexion requise', 'Connecte-toi pour ajouter le pass.');
+        Alert.alert(t('loginRequired'), t('loginToAddPass'));
         return;
       }
       const res = await apiCall('/wallet/google/pass');
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         if (res.status === 503) {
-          Alert.alert('Non configuré', 'Google Wallet n\'est pas encore configuré sur ce serveur.');
+          Alert.alert(t('notConfigured'), t('googleWalletNotConfigured'));
         } else {
-          Alert.alert('Erreur', err.detail || 'Impossible de récupérer le pass.');
+          Alert.alert(t('error'), err.detail || t('cannotOpenPass'));
         }
         return;
       }
@@ -79,11 +79,11 @@ export default function PassSalleScreen() {
         if (supported) {
           await Linking.openURL(addUrl);
         } else {
-          Alert.alert('Ouvre le lien', addUrl);
+          Alert.alert(t('openLink'), addUrl);
         }
       }
     } catch (e) {
-      Alert.alert('Erreur', 'Impossible d\'ouvrir Google Wallet. Vérifie ta connexion.');
+      Alert.alert(t('error'), t('cannotOpenGoogleWallet'));
     } finally {
       setLoadingGoogle(false);
     }
@@ -95,13 +95,13 @@ export default function PassSalleScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>Carte membre</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>{t('memberCardTitle')}</Text>
         <View style={{ width: 32 }} />
       </View>
     <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
       <View style={[styles.card, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-        <Text style={[styles.title, { color: theme.colors.textPrimary }]}>Carte membre Gorillax</Text>
-        <Text style={[styles.copy, { color: theme.colors.textSecondary }]}>{COPY_PASS}</Text>
+        <Text style={[styles.title, { color: theme.colors.textPrimary }]}>{t('gorillaxMemberCard')}</Text>
+        <Text style={[styles.copy, { color: theme.colors.textSecondary }]}>{t('passDescription')}</Text>
       </View>
 
       {Platform.OS === 'ios' && (
@@ -118,7 +118,7 @@ export default function PassSalleScreen() {
           ) : (
             <>
               <Ionicons name="wallet" size={22} color="#fff" />
-              <Text style={styles.buttonText}>Ajouter à Apple Wallet</Text>
+              <Text style={styles.buttonText}>{t('addToAppleWallet')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -138,7 +138,7 @@ export default function PassSalleScreen() {
           ) : (
             <>
               <Ionicons name="wallet" size={22} color="#fff" />
-              <Text style={styles.buttonText}>Ajouter à Google Wallet</Text>
+              <Text style={styles.buttonText}>{t('addToGoogleWallet')}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -153,7 +153,7 @@ export default function PassSalleScreen() {
           }}
           disabled={loadingGoogle}
         >
-          {loadingGoogle ? <ActivityIndicator color="#333" /> : <Text style={styles.buttonTextSecondary}>Lien Google Wallet</Text>}
+          {loadingGoogle ? <ActivityIndicator color="#333" /> : <Text style={styles.buttonTextSecondary}>{t('googleWalletLink')}</Text>}
         </TouchableOpacity>
       )}
     </ScrollView>

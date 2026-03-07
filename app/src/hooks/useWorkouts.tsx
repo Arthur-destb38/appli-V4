@@ -42,6 +42,7 @@ import { pullChanges, pushMutations, SyncEvent } from '@/services/syncClient';
 import { shareWorkoutRemote } from '@/services/shareWorkoutApi';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface WorkoutsContextValue {
   workouts: WorkoutWithRelations[];
@@ -100,6 +101,7 @@ type RemoteSet = {
 export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
   const { isAuthenticated } = useAuth();
   const { profile } = useUserProfile();
+  const { t } = useTranslations();
   const [workouts, setWorkouts] = useState<WorkoutWithRelations[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pendingCount, setPendingCount] = useState(0);
@@ -447,8 +449,9 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
   );
 
   const createDraft = useCallback(
-    async (title = 'Nouvelle séance') => {
-      const normalizedTitle = title.trim() || 'Nouvelle séance';
+    async (title?: string) => {
+      const defaultTitle = t('newWorkout');
+      const normalizedTitle = (title ?? defaultTitle).trim() || defaultTitle;
       const userId = profile?.id || null;
       const { id, client_id, created_at, updated_at } = await createWorkout(normalizedTitle, userId);
       let refreshedData: WorkoutWithRelations[] | undefined;
@@ -472,7 +475,7 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
       }
       return refreshedData.find((item) => item.workout.id === id);
     },
-    [profile, refresh, runMutation]
+    [profile, refresh, runMutation, t]
   );
 
   const updateTitleAction = useCallback(
@@ -704,11 +707,11 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
       }
 
       const existingTitles = new Set(workouts.map((item) => item.workout.title));
-      const baseTitle = source.workout.title.trim() || 'Séance';
-      let candidate = `${baseTitle} (copie)`;
+      const baseTitle = source.workout.title.trim() || t('defaultWorkoutTitle');
+      let candidate = t('workoutCopy', { title: baseTitle });
       let suffix = 2;
       while (existingTitles.has(candidate)) {
-        candidate = `${baseTitle} (copie ${suffix})`;
+        candidate = t('workoutCopyN', { title: baseTitle, n: suffix });
         suffix += 1;
       }
 
@@ -745,26 +748,26 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
       const refreshedData = await refresh();
       return refreshedData.find((item) => item.workout.id === duplicated.workout.id);
     },
-    [addExerciseAction, addSetAction, createDraft, refresh, workouts]
+    [addExerciseAction, addSetAction, createDraft, refresh, workouts, t]
   );
 
   const shareWorkoutAction = useCallback(
     async (id: number, opts?: { caption?: string; color?: string; image_base64?: string }) => {
       const target = workouts.find((item) => item.workout.id === id);
       if (!target) {
-        throw new Error('Séance introuvable');
+        throw new Error(t('errorWorkoutNotFound'));
       }
       if (!profile) {
-        throw new Error('Profil utilisateur indisponible');
+        throw new Error(t('errorProfileUnavailable'));
       }
       if (!target.workout.server_id) {
-        throw new Error('Séance pas encore synchronisée. Attends quelques secondes et réessaie.');
+        throw new Error(t('errorWorkoutNotSynced'));
       }
 
       const workoutIdForApi = target.workout.server_id;
       const userId = profile?.id;
       if (!userId) {
-        throw new Error('Profil utilisateur indisponible');
+        throw new Error(t('errorProfileUnavailable'));
       }
       const mutationPayload = { workoutId: workoutIdForApi, userId };
 
@@ -795,7 +798,7 @@ export const WorkoutsProvider = ({ children }: PropsWithChildren) => {
         return { queued: true } as const;
       }
     },
-    [profile, refreshPendingCount, workouts]
+    [profile, refreshPendingCount, workouts, t]
   );
 
   const value = useMemo<WorkoutsContextValue>(

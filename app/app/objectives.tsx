@@ -19,6 +19,7 @@ import { useAppTheme } from '@/theme/ThemeProvider';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { useAuth } from '@/hooks/useAuth';
 import { AppCard } from '@/components/AppCard';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface Objective {
   id: string;
@@ -36,61 +37,61 @@ interface Objective {
 const OBJECTIVE_TEMPLATES = [
   {
     id: 'weekly_sessions',
-    title: 'Séances par semaine',
-    description: 'Nombre de séances à réaliser chaque semaine',
+    titleKey: 'sessionsPerWeekTitle',
+    descKey: 'sessionsPerWeekDesc',
     type: 'weekly' as const,
     target: 3,
-    unit: 'séances',
+    unitKey: 'sessionsUnit',
     icon: 'calendar',
     color: '#6366f1',
   },
   {
     id: 'weekly_volume',
-    title: 'Volume hebdomadaire',
-    description: 'Poids total soulevé par semaine',
+    titleKey: 'weeklyVolumeTitle',
+    descKey: 'weeklyVolumeDesc',
     type: 'weekly' as const,
     target: 5000,
-    unit: 'kg',
+    unitKey: 'kg',
     icon: 'barbell',
     color: '#8b5cf6',
   },
   {
     id: 'monthly_sessions',
-    title: 'Séances par mois',
-    description: 'Objectif mensuel de séances',
+    titleKey: 'sessionsPerMonthTitle',
+    descKey: 'sessionsPerMonthDesc',
     type: 'monthly' as const,
     target: 12,
-    unit: 'séances',
+    unitKey: 'sessionsUnit',
     icon: 'trophy',
     color: '#10b981',
   },
   {
     id: 'streak_goal',
-    title: 'Série de jours',
-    description: 'Nombre de jours consécutifs avec une séance',
+    titleKey: 'dayStreakTitle',
+    descKey: 'dayStreakDesc',
     type: 'target' as const,
     target: 7,
-    unit: 'jours',
+    unitKey: 'daysUnit',
     icon: 'flame',
     color: '#f59e0b',
   },
   {
     id: 'pr_squat',
-    title: 'Record Squat',
-    description: 'Poids maximum au squat',
+    titleKey: 'squatRecordTitle',
+    descKey: 'squatRecordDesc',
     type: 'target' as const,
     target: 100,
-    unit: 'kg',
+    unitKey: 'kg',
     icon: 'trending-up',
     color: '#ef4444',
   },
   {
     id: 'pr_bench',
-    title: 'Record Développé couché',
-    description: 'Poids maximum au développé couché',
+    titleKey: 'benchRecordTitle',
+    descKey: 'benchRecordDesc',
     type: 'target' as const,
     target: 80,
-    unit: 'kg',
+    unitKey: 'kg',
     icon: 'trending-up',
     color: '#f97316',
   },
@@ -102,7 +103,8 @@ export default function ObjectivesScreen() {
   const insets = useSafeAreaInsets();
   const { workouts } = useWorkouts();
   const { user } = useAuth();
-  
+  const { t } = useTranslations();
+
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [editModal, setEditModal] = useState(false);
   const [addModal, setAddModal] = useState(false);
@@ -142,7 +144,14 @@ export default function ObjectivesScreen() {
       } else {
         // Initialiser avec les templates par défaut pour ce nouvel utilisateur
         const defaultObjectives = OBJECTIVE_TEMPLATES.map(template => ({
-          ...template,
+          id: template.id,
+          title: t(template.titleKey),
+          description: t(template.descKey),
+          type: template.type,
+          target: template.target,
+          unit: t(template.unitKey),
+          icon: template.icon,
+          color: template.color,
           current: 0,
           completed: false,
         }));
@@ -153,7 +162,14 @@ export default function ObjectivesScreen() {
       console.warn('Failed to load objectives', error);
       // Fallback avec les templates par défaut
       const defaultObjectives = OBJECTIVE_TEMPLATES.map(template => ({
-        ...template,
+        id: template.id,
+        title: t(template.titleKey),
+        description: t(template.descKey),
+        type: template.type,
+        target: template.target,
+        unit: t(template.unitKey),
+        icon: template.icon,
+        color: template.color,
         current: 0,
         completed: false,
       }));
@@ -167,7 +183,7 @@ export default function ObjectivesScreen() {
       setObjectives(newObjectives);
     } catch (error) {
       console.error('Failed to save objectives', error);
-      Alert.alert('Erreur', 'Impossible de sauvegarder les objectifs.');
+      Alert.alert(t('error'), t('cannotSaveObjectives'));
     }
   };
 
@@ -184,8 +200,8 @@ export default function ObjectivesScreen() {
       try {
         switch (obj.id) {
           case 'weekly_sessions':
-            current = workouts.filter(w => 
-              w.workout.status === 'completed' && 
+            current = workouts.filter(w =>
+              w.workout.status === 'completed' &&
               w.workout.updated_at >= weekStart
             ).length;
             break;
@@ -208,8 +224,8 @@ export default function ObjectivesScreen() {
             break;
 
           case 'monthly_sessions':
-            current = workouts.filter(w => 
-              w.workout.status === 'completed' && 
+            current = workouts.filter(w =>
+              w.workout.status === 'completed' &&
               w.workout.updated_at >= monthStart
             ).length;
             break;
@@ -219,19 +235,19 @@ export default function ObjectivesScreen() {
             let streak = 0;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
+
             for (let i = 0; i < 365; i++) {
               const checkDate = new Date(today);
               checkDate.setDate(checkDate.getDate() - i);
               const dayStart = checkDate.getTime();
               const dayEnd = dayStart + 24 * 60 * 60 * 1000;
-              
-              const hasWorkout = workouts.some(w => 
+
+              const hasWorkout = workouts.some(w =>
                 w.workout.status === 'completed' &&
-                w.workout.updated_at >= dayStart && 
+                w.workout.updated_at >= dayStart &&
                 w.workout.updated_at < dayEnd
               );
-              
+
               if (hasWorkout) {
                 streak++;
               } else if (i > 0) {
@@ -273,7 +289,7 @@ export default function ObjectivesScreen() {
 
     const newTarget = parseInt(editValue, 10);
     if (isNaN(newTarget) || newTarget <= 0) {
-      Alert.alert('Erreur', 'Veuillez entrer une valeur valide.');
+      Alert.alert(t('error'), t('enterValidValue'));
       return;
     }
 
@@ -290,13 +306,13 @@ export default function ObjectivesScreen() {
 
   const handleAddObjective = async () => {
     if (!newObjective.title.trim() || !newObjective.target.trim()) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires.');
+      Alert.alert(t('error'), t('fillRequiredFields'));
       return;
     }
 
     const target = parseInt(newObjective.target, 10);
     if (isNaN(target) || target <= 0) {
-      Alert.alert('Erreur', 'Veuillez entrer une valeur cible valide.');
+      Alert.alert(t('error'), t('enterValidTarget'));
       return;
     }
 
@@ -316,7 +332,7 @@ export default function ObjectivesScreen() {
     const updatedObjectives = [...objectives, customObjective];
     setObjectives(updatedObjectives);
     await AsyncStorage.setItem(storageKey, JSON.stringify(updatedObjectives));
-    
+
     // Reset form
     setNewObjective({
       title: '',
@@ -327,7 +343,7 @@ export default function ObjectivesScreen() {
       icon: 'star',
       color: '#6366f1',
     });
-    
+
     setAddModal(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   };
@@ -346,7 +362,7 @@ export default function ObjectivesScreen() {
     title: string,
     message: string,
     onConfirm: () => void,
-    confirmLabel: string = 'Supprimer'
+    confirmLabel?: string
   ) => {
     if (typeof window !== 'undefined' && 'confirm' in window) {
       if (window.confirm(`${title}\n\n${message}`)) {
@@ -354,16 +370,55 @@ export default function ObjectivesScreen() {
       }
     } else {
       Alert.alert(title, message, [
-        { text: 'Annuler', style: 'cancel' },
-        { text: confirmLabel, style: 'destructive', onPress: onConfirm },
+        { text: t('cancelLabel'), style: 'cancel' },
+        { text: confirmLabel || t('deleteLabel'), style: 'destructive', onPress: onConfirm },
       ]);
+    }
+  };
+
+  const getTranslatedTitle = (objective: Objective): string => {
+    switch (objective.id) {
+      case 'weekly_sessions': return t('sessionsPerWeekTitle');
+      case 'weekly_volume': return t('weeklyVolumeTitle');
+      case 'monthly_sessions': return t('sessionsPerMonthTitle');
+      case 'streak_goal': return t('dayStreakTitle');
+      case 'pr_squat': return t('squatRecordTitle');
+      case 'pr_bench': return t('benchRecordTitle');
+      default: return objective.title;
+    }
+  };
+
+  const getTranslatedDesc = (objective: Objective): string => {
+    switch (objective.id) {
+      case 'weekly_sessions': return t('sessionsPerWeekDesc');
+      case 'weekly_volume': return t('weeklyVolumeDesc');
+      case 'monthly_sessions': return t('sessionsPerMonthDesc');
+      case 'streak_goal': return t('dayStreakDesc');
+      case 'pr_squat': return t('squatRecordDesc');
+      case 'pr_bench': return t('benchRecordDesc');
+      default: return objective.description;
+    }
+  };
+
+  const getTranslatedUnit = (objective: Objective): string => {
+    switch (objective.id) {
+      case 'weekly_sessions':
+      case 'monthly_sessions':
+        return t('sessionsUnit');
+      case 'streak_goal':
+        return t('daysUnit');
+      default:
+        // Handle both new keys and legacy French values
+        if (objective.unit === 'days' || objective.unit === 'jours') return t('daysUnit');
+        if (objective.unit === 'sessions' || objective.unit === 'séances') return t('sessionsUnit');
+        return objective.unit;
     }
   };
 
   const handleDeleteObjective = (objective: Objective) => {
     showConfirm(
-      'Supprimer l\'objectif',
-      `Veux-tu vraiment supprimer "${objective.title}" ?`,
+      t('deleteObjectiveTitle'),
+      t('deleteObjectiveConfirm', { title: getTranslatedTitle(objective) }),
       async () => {
         const updated = objectives.filter(obj => obj.id !== objective.id);
         await saveObjectives(updated);
@@ -379,23 +434,23 @@ export default function ObjectivesScreen() {
           <Ionicons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </Pressable>
         <Text style={[styles.title, { color: theme.colors.textPrimary }]}>
-          Mes Objectifs
+          {t('myObjectives')}
         </Text>
-        <Pressable 
-          onPress={() => setAddModal(true)} 
+        <Pressable
+          onPress={() => setAddModal(true)}
           style={[styles.addButton, { backgroundColor: theme.colors.accent }]}
         >
           <Ionicons name="add" size={24} color="#fff" />
         </Pressable>
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-          Définissez vos objectifs et suivez votre progression
+          {t('defineGoalsAndTrack')}
         </Text>
 
         {objectives.map((objective) => {
@@ -417,10 +472,10 @@ export default function ObjectivesScreen() {
                   </View>
                   <View style={styles.objectiveInfo}>
                     <Text style={[styles.objectiveTitle, { color: theme.colors.textPrimary }]}>
-                      {objective.title}
+                      {getTranslatedTitle(objective)}
                     </Text>
                     <Text style={[styles.objectiveDescription, { color: theme.colors.textSecondary }]}>
-                      {objective.description}
+                      {getTranslatedDesc(objective)}
                     </Text>
                   </View>
                   <View style={styles.objectiveActions}>
@@ -449,22 +504,22 @@ export default function ObjectivesScreen() {
                 <View style={styles.progressSection}>
                   <View style={styles.progressHeader}>
                     <Text style={[styles.progressText, { color: theme.colors.textPrimary }]}>
-                      {objective.current} / {objective.target} {objective.unit}
+                      {objective.current} / {objective.target} {getTranslatedUnit(objective)}
                     </Text>
                     <Text style={[styles.progressPercentage, { color: progressColor }]}>
                       {Math.round(percentage)}%
                     </Text>
                   </View>
-                  
+
                   <View style={[styles.progressBar, { backgroundColor: theme.colors.surfaceMuted }]}>
-                    <View 
+                    <View
                       style={[
-                        styles.progressFill, 
-                        { 
+                        styles.progressFill,
+                        {
                           width: `${percentage}%`,
                           backgroundColor: progressColor,
                         }
-                      ]} 
+                      ]}
                     />
                   </View>
                 </View>
@@ -486,15 +541,15 @@ export default function ObjectivesScreen() {
           onPress={() => setEditModal(false)}
         >
           <Pressable
-            style={[styles.modalCard, { 
-              backgroundColor: theme.colors.surface, 
-              borderColor: theme.colors.border 
+            style={[styles.modalCard, {
+              backgroundColor: theme.colors.surface,
+              borderColor: theme.colors.border
             }]}
             onPress={(e) => e.stopPropagation()}
           >
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: theme.colors.textPrimary }]}>
-                Modifier l'objectif
+                {t('editObjectiveTitle')}
               </Text>
               <Pressable
                 onPress={() => setEditModal(false)}
@@ -503,11 +558,11 @@ export default function ObjectivesScreen() {
                 <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
               </Pressable>
             </View>
-            
+
             {selectedObjective && (
               <>
                 <Text style={[styles.modalDescription, { color: theme.colors.textSecondary }]}>
-                  {selectedObjective.title}
+                  {getTranslatedTitle(selectedObjective)}
                 </Text>
                 <TextInput
                   style={[styles.modalInput, {
@@ -518,7 +573,7 @@ export default function ObjectivesScreen() {
                   value={editValue}
                   onChangeText={setEditValue}
                   keyboardType="number-pad"
-                  placeholder={`Objectif en ${selectedObjective.unit}`}
+                  placeholder={t('goalInUnit', { unit: getTranslatedUnit(selectedObjective) })}
                   placeholderTextColor={theme.colors.textSecondary}
                   autoFocus
                 />
@@ -531,7 +586,7 @@ export default function ObjectivesScreen() {
                     onPress={() => setEditModal(false)}
                   >
                     <Text style={[styles.modalButtonText, { color: theme.colors.textPrimary }]}>
-                      Annuler
+                      {t('cancelLabel')}
                     </Text>
                   </Pressable>
                   <Pressable
@@ -539,7 +594,7 @@ export default function ObjectivesScreen() {
                     onPress={handleSaveEdit}
                   >
                     <Text style={[styles.modalButtonText, { color: '#FFFFFF' }]}>
-                      Enregistrer
+                      {t('saveLabel')}
                     </Text>
                   </Pressable>
                 </View>
@@ -562,15 +617,15 @@ export default function ObjectivesScreen() {
         >
           <ScrollView contentContainerStyle={styles.addModalContainer}>
             <Pressable
-              style={[styles.addModalCard, { 
-                backgroundColor: theme.colors.surface, 
-                borderColor: theme.colors.border 
+              style={[styles.addModalCard, {
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border
               }]}
               onPress={(e) => e.stopPropagation()}
             >
               <View style={styles.modalHeader}>
                 <Text style={[styles.modalTitle, { color: theme.colors.textPrimary }]}>
-                  Nouvel objectif
+                  {t('newObjectiveTitle')}
                 </Text>
                 <Pressable
                   onPress={() => setAddModal(false)}
@@ -579,10 +634,10 @@ export default function ObjectivesScreen() {
                   <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
                 </Pressable>
               </View>
-              
+
               <View style={styles.formSection}>
                 <Text style={[styles.formLabel, { color: theme.colors.textPrimary }]}>
-                  Titre *
+                  {t('titleRequired')}
                 </Text>
                 <TextInput
                   style={[styles.formInput, {
@@ -592,14 +647,14 @@ export default function ObjectivesScreen() {
                   }]}
                   value={newObjective.title}
                   onChangeText={(text) => setNewObjective(prev => ({ ...prev, title: text }))}
-                  placeholder="Ex: Record Deadlift"
+                  placeholder={t('titlePlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                 />
               </View>
 
               <View style={styles.formSection}>
                 <Text style={[styles.formLabel, { color: theme.colors.textPrimary }]}>
-                  Description
+                  {t('descriptionLabel')}
                 </Text>
                 <TextInput
                   style={[styles.formInput, {
@@ -609,7 +664,7 @@ export default function ObjectivesScreen() {
                   }]}
                   value={newObjective.description}
                   onChangeText={(text) => setNewObjective(prev => ({ ...prev, description: text }))}
-                  placeholder="Description de l'objectif"
+                  placeholder={t('objectiveDescriptionPlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                   multiline
                 />
@@ -618,7 +673,7 @@ export default function ObjectivesScreen() {
               <View style={styles.formRow}>
                 <View style={[styles.formSection, { flex: 1, marginRight: 8 }]}>
                   <Text style={[styles.formLabel, { color: theme.colors.textPrimary }]}>
-                    Objectif *
+                    {t('targetRequired')}
                   </Text>
                   <TextInput
                     style={[styles.formInput, {
@@ -636,23 +691,29 @@ export default function ObjectivesScreen() {
 
                 <View style={[styles.formSection, { flex: 1, marginLeft: 8 }]}>
                   <Text style={[styles.formLabel, { color: theme.colors.textPrimary }]}>
-                    Unité
+                    {t('unitLabel')}
                   </Text>
                   <View style={[styles.unitSelector, { backgroundColor: theme.colors.surfaceMuted }]}>
-                    {['kg', 'reps', 'min', 'km', 'jours'].map((unit) => (
+                    {[
+                      { key: 'kg', label: 'kg' },
+                      { key: 'reps', label: 'reps' },
+                      { key: 'min', label: 'min' },
+                      { key: 'km', label: 'km' },
+                      { key: 'days', label: t('unitDays') },
+                    ].map((unitOption) => (
                       <Pressable
-                        key={unit}
+                        key={unitOption.key}
                         style={[
                           styles.unitOption,
-                          newObjective.unit === unit && { backgroundColor: theme.colors.accent }
+                          newObjective.unit === unitOption.key && { backgroundColor: theme.colors.accent }
                         ]}
-                        onPress={() => setNewObjective(prev => ({ ...prev, unit }))}
+                        onPress={() => setNewObjective(prev => ({ ...prev, unit: unitOption.key }))}
                       >
                         <Text style={[
                           styles.unitText,
-                          { color: newObjective.unit === unit ? '#fff' : theme.colors.textPrimary }
+                          { color: newObjective.unit === unitOption.key ? '#fff' : theme.colors.textPrimary }
                         ]}>
-                          {unit}
+                          {unitOption.label}
                         </Text>
                       </Pressable>
                     ))}
@@ -662,7 +723,7 @@ export default function ObjectivesScreen() {
 
               <View style={styles.formSection}>
                 <Text style={[styles.formLabel, { color: theme.colors.textPrimary }]}>
-                  Couleur
+                  {t('colorLabelObj')}
                 </Text>
                 <View style={styles.colorSelector}>
                   {['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#f97316', '#06b6d4', '#84cc16'].map((color) => (
@@ -692,11 +753,11 @@ export default function ObjectivesScreen() {
                   onPress={() => setAddModal(false)}
                 >
                   <Text style={[styles.modalButtonText, { color: theme.colors.textPrimary }]}>
-                    Annuler
+                    {t('cancelLabel')}
                   </Text>
                 </Pressable>
                 <Pressable
-                  style={[styles.modalButton, { 
+                  style={[styles.modalButton, {
                     backgroundColor: theme.colors.accent,
                     opacity: (!newObjective.title.trim() || !newObjective.target.trim()) ? 0.5 : 1
                   }]}
@@ -707,7 +768,7 @@ export default function ObjectivesScreen() {
                   disabled={!newObjective.title.trim() || !newObjective.target.trim()}
                 >
                   <Text style={[styles.modalButtonText, { color: '#FFFFFF' }]}>
-                    Créer
+                    {t('createLabel')}
                   </Text>
                 </Pressable>
               </View>

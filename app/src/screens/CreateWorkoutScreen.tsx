@@ -22,6 +22,7 @@ import { EXERCISE_CATALOG } from '@/data/exercises';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { MuscleDiagram } from '@/components/MuscleDiagram';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface Props {
   workoutId?: number;
@@ -30,6 +31,7 @@ interface Props {
 export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
   const { findWorkout, updateTitle, addExercise, removeExercise, updateExercisePlan } = useWorkouts();
   const { theme, mode } = useAppTheme();
+  const { t } = useTranslations();
   const insets = useSafeAreaInsets();
   const workout = workoutId ? findWorkout(workoutId) : undefined;
 
@@ -186,10 +188,10 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
             <Ionicons name="barbell-outline" size={48} color={theme.colors.accent} />
           </View>
           <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-            Aucune séance sélectionnée
+            {t('noWorkoutSelected')}
           </Text>
           <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-            Crée une nouvelle séance depuis l&apos;accueil pour commencer ton entraînement.
+            {t('noWorkoutSelectedDesc')}
           </Text>
         </LinearGradient>
       </View>
@@ -253,7 +255,7 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
           <View style={[styles.setsRow, { borderTopColor: theme.colors.border }]}>
             <View style={styles.setsLabel}>
               <Ionicons name="layers-outline" size={14} color={theme.colors.textSecondary} />
-              <Text style={[styles.setsLabelText, { color: theme.colors.textSecondary }]}>Séries prévues</Text>
+              <Text style={[styles.setsLabelText, { color: theme.colors.textSecondary }]}>{t('plannedSets')}</Text>
             </View>
             <TextInput
               value={planDrafts[item.id] ?? ''}
@@ -352,10 +354,10 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
               <View style={[styles.heroIcon, { backgroundColor: theme.colors.accent + '20' }]}>
                 <Ionicons name="create-outline" size={24} color={theme.colors.accent} />
               </View>
-              <Text style={[styles.heroTitle, { color: theme.colors.textPrimary }]}>Créer ta séance</Text>
+              <Text style={[styles.heroTitle, { color: theme.colors.textPrimary }]}>{t('createYourWorkout')}</Text>
             </View>
             <Text style={[styles.heroSubtitle, { color: theme.colors.textSecondary }]}>
-              Compose ton entraînement sur mesure
+              {t('composeCustomWorkout')}
             </Text>
           </Animated.View>
         </LinearGradient>
@@ -375,12 +377,12 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
               <View style={[styles.sectionIcon, { backgroundColor: theme.colors.accent + '15' }]}>
                 <Ionicons name="text-outline" size={18} color={theme.colors.accent} />
               </View>
-              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Nom de la séance</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>{t('workoutNameSection')}</Text>
             </View>
             <TextInput
               defaultValue={workout.workout.title}
               onChangeText={handleTitleChange}
-              placeholder="Ex: Push Day, Jambes..."
+              placeholder={t('workoutNamePlaceholder')}
               placeholderTextColor={theme.colors.textSecondary}
               style={[
                 styles.titleInput,
@@ -400,7 +402,7 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
                 <Ionicons name="list-outline" size={18} color={theme.colors.accent} />
               </View>
               <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                Exercices sélectionnés
+                {t('selectedExercises')}
               </Text>
               <View style={[styles.countBadge, { backgroundColor: theme.colors.accent }]}>
                 <Text style={styles.countBadgeText}>{sortedExercises.length}</Text>
@@ -411,7 +413,7 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
               <View style={[styles.emptyExercises, { backgroundColor: theme.colors.surfaceMuted }]}>
                 <Ionicons name="add-circle-outline" size={32} color={theme.colors.textSecondary} />
                 <Text style={[styles.emptyExercisesText, { color: theme.colors.textSecondary }]}>
-                  Ajoute des exercices depuis le catalogue
+                  {t('addExercisesFromCatalog')}
                 </Text>
               </View>
             ) : (
@@ -429,7 +431,7 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
               <View style={[styles.sectionIcon, { backgroundColor: theme.colors.accent + '15' }]}>
                 <Ionicons name="library-outline" size={18} color={theme.colors.accent} />
               </View>
-              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>Catalogue</Text>
+              <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>{t('catalogTitle')}</Text>
               <View style={[styles.countBadge, { backgroundColor: theme.colors.surfaceMuted }]}>
                 <Text style={[styles.countBadgeTextMuted, { color: theme.colors.textSecondary }]}>
                   {filteredCatalog.length}
@@ -443,7 +445,7 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
               <TextInput
                 value={searchTerm}
                 onChangeText={setSearchTerm}
-                placeholder="Rechercher un exercice..."
+                placeholder={t('searchExercisePlaceholder')}
                 placeholderTextColor={theme.colors.textSecondary}
                 style={[styles.searchInput, { color: theme.colors.textPrimary }]}
               />
@@ -475,7 +477,7 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
                 }}
               >
                 <Text style={[styles.muscleChipText, { color: !muscleFilter ? '#FFFFFF' : theme.colors.textPrimary }]}>
-                  Tous
+                  {t('allCategory')}
                 </Text>
               </Pressable>
               {muscleGroups.map((group) => {
@@ -510,7 +512,7 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
                 <View style={styles.noResults}>
                   <Ionicons name="search-outline" size={24} color={theme.colors.textSecondary} />
                   <Text style={[styles.noResultsText, { color: theme.colors.textSecondary }]}>
-                    Aucun exercice trouvé
+                    {t('noExerciseFound')}
                   </Text>
                 </View>
               ) : (
@@ -536,8 +538,8 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
         >
           <Ionicons name="checkmark-circle" size={22} color="#FFFFFF" />
           <View style={styles.saveButtonText}>
-            <Text style={styles.saveButtonTitle}>Séance prête !</Text>
-            <Text style={styles.saveButtonSubtitle}>{sortedExercises.length} exercice{sortedExercises.length > 1 ? 's' : ''} • Sauvegarde auto</Text>
+            <Text style={styles.saveButtonTitle}>{t('workoutReady')}</Text>
+            <Text style={styles.saveButtonSubtitle}>{t('exerciseCountAutoSave', { count: sortedExercises.length })}</Text>
           </View>
         </Pressable>
       </View>
@@ -571,13 +573,13 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
                 <View style={[styles.modalChip, { backgroundColor: theme.colors.surfaceMuted }]}>
                   <Ionicons name="body-outline" size={14} color={theme.colors.accent} />
                   <Text style={[styles.modalChipText, { color: theme.colors.textPrimary }]}>
-                    {infoExercise?.muscleGroupFr ?? infoExercise?.muscleGroup ?? 'Muscles variés'}
+                    {infoExercise?.muscleGroupFr ?? infoExercise?.muscleGroup ?? t('variousMuscles')}
                   </Text>
                 </View>
                 <View style={[styles.modalChip, { backgroundColor: theme.colors.surfaceMuted }]}>
                   <Ionicons name="construct-outline" size={14} color={theme.colors.accent} />
                   <Text style={[styles.modalChipText, { color: theme.colors.textPrimary }]}>
-                    {infoExercise?.equipmentFr ?? infoExercise?.equipment?.join(', ') ?? 'Matériel libre'}
+                    {infoExercise?.equipmentFr ?? infoExercise?.equipment?.join(', ') ?? t('freeEquipment')}
                   </Text>
                 </View>
               </View>
@@ -594,12 +596,12 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
               ) : null}
 
               <View style={[styles.descriptionCard, { backgroundColor: theme.colors.surfaceMuted }]}>
-                <Text style={[styles.descriptionTitle, { color: theme.colors.textPrimary }]}>Description</Text>
+                <Text style={[styles.descriptionTitle, { color: theme.colors.textPrimary }]}>{t('descriptionLabel')}</Text>
                 <Text style={[styles.descriptionText, { color: theme.colors.textSecondary }]}>
                   {infoExercise?.descriptionFr ??
                     infoExercise?.cues ??
                     infoExercise?.commonErrors ??
-                    'Pas encore de description enregistrée.'}
+                    t('noDescriptionYet')}
                 </Text>
               </View>
 
@@ -612,7 +614,7 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
                   onPress={handleOpenExternalVideo}
                 >
                   <Ionicons name="play-circle" size={20} color="#FFFFFF" />
-                  <Text style={styles.videoButtonText}>Voir la vidéo</Text>
+                  <Text style={styles.videoButtonText}>{t('watchVideo')}</Text>
                 </Pressable>
               ) : null}
 
@@ -626,7 +628,7 @@ export const CreateWorkoutScreen: React.FC<Props> = ({ workoutId }) => {
                 >
                   <Ionicons name="open-outline" size={18} color={theme.colors.textPrimary} />
                   <Text style={[styles.sourceButtonText, { color: theme.colors.textPrimary }]}>
-                    Fiche détaillée
+                    {t('detailedSheet')}
                   </Text>
                 </Pressable>
               ) : null}

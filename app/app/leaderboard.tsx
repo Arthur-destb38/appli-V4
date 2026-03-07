@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import {
   LeaderboardEntry,
   LeaderboardResponse,
@@ -30,17 +31,17 @@ import {
 
 const CURRENT_USER_ID = 'guest-user';
 
-const TABS: { key: LeaderboardType; label: string; icon: string; gradient: [string, string] }[] = [
-  { key: 'volume', label: 'Volume', icon: 'barbell', gradient: ['#6366f1', '#8b5cf6'] },
-  { key: 'sessions', label: 'Séances', icon: 'calendar', gradient: ['#10b981', '#14b8a6'] },
-  { key: 'likes', label: 'Likes', icon: 'heart', gradient: ['#ec4899', '#f43f5e'] },
-  { key: 'followers', label: 'Abonnés', icon: 'people', gradient: ['#f59e0b', '#f97316'] },
+const TABS: { key: LeaderboardType; icon: string; gradient: [string, string] }[] = [
+  { key: 'volume', icon: 'barbell', gradient: ['#6366f1', '#8b5cf6'] },
+  { key: 'sessions', icon: 'calendar', gradient: ['#10b981', '#14b8a6'] },
+  { key: 'likes', icon: 'heart', gradient: ['#ec4899', '#f43f5e'] },
+  { key: 'followers', icon: 'people', gradient: ['#f59e0b', '#f97316'] },
 ];
 
-const PERIODS: { key: LeaderboardPeriod; label: string }[] = [
-  { key: 'week', label: '7 jours' },
-  { key: 'month', label: '30 jours' },
-  { key: 'all', label: 'Tout' },
+const PERIODS: { key: LeaderboardPeriod }[] = [
+  { key: 'week' },
+  { key: 'month' },
+  { key: 'all' },
 ];
 
 const AVATAR_COLORS: [string, string][] = [
@@ -188,7 +189,8 @@ const EntryCard: React.FC<{
   onPress: () => void;
   theme: any;
   scoreLabel: string;
-}> = ({ entry, index, onPress, theme, scoreLabel }) => {
+  t: (key: string, params?: Record<string, string | number>) => string;
+}> = ({ entry, index, onPress, theme, scoreLabel, t }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -264,7 +266,7 @@ const EntryCard: React.FC<{
             ]}
           >
             {entry.username}
-            {isCurrentUser && ' (Toi)'}
+            {isCurrentUser && ` (${t('youLabel')})`}
           </Text>
           {entry.change !== 0 && (
             <View style={styles.changeContainer}>
@@ -279,7 +281,7 @@ const EntryCard: React.FC<{
                   { color: entry.change > 0 ? '#10b981' : '#ef4444' },
                 ]}
               >
-                {Math.abs(entry.change)} place{Math.abs(entry.change) > 1 ? 's' : ''}
+                {Math.abs(entry.change)} {Math.abs(entry.change) > 1 ? t('placesLabel') : t('placeLabel')}
               </Text>
             </View>
           )}
@@ -303,6 +305,24 @@ export default function LeaderboardScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const { t, language } = useTranslations();
+
+  const getTabLabel = (key: LeaderboardType): string => {
+    switch (key) {
+      case 'volume': return t('leaderVolume');
+      case 'sessions': return t('leaderSessions');
+      case 'likes': return t('leaderLikes');
+      case 'followers': return t('leaderFollowers');
+    }
+  };
+
+  const getPeriodLabel = (key: LeaderboardPeriod): string => {
+    switch (key) {
+      case 'week': return t('sevenDays');
+      case 'month': return t('thirtyDays');
+      case 'all': return t('allTime');
+    }
+  };
 
   const [activeTab, setActiveTab] = useState<LeaderboardType>('sessions');
   const [activePeriod, setActivePeriod] = useState<LeaderboardPeriod>('week');
@@ -367,15 +387,15 @@ export default function LeaderboardScreen() {
       case 'volume':
         return 'kg';
       case 'sessions':
-        return 'séances';
+        return t('sessionsLabel').toLowerCase();
       case 'likes':
         return 'likes';
       case 'followers':
-        return 'abonnés';
+        return t('followersLabel').toLowerCase();
     }
   };
 
-  const activeTabConfig = TABS.find((t) => t.key === activeTab)!;
+  const activeTabConfig = TABS.find((tab) => tab.key === activeTab)!;
   const topThree = data?.entries.slice(0, 3) || [];
   const restOfList = data?.entries.slice(3) || [];
 
@@ -413,7 +433,7 @@ export default function LeaderboardScreen() {
             </TouchableOpacity>
             <View style={styles.headerCenter}>
               <Ionicons name="trophy" size={24} color="#FFD700" />
-              <Text style={styles.headerTitle}>Classements</Text>
+              <Text style={styles.headerTitle}>{t('rankings')}</Text>
             </View>
             <View style={{ width: 44 }} />
           </View>
@@ -440,7 +460,7 @@ export default function LeaderboardScreen() {
                     { color: activeTab === tab.key ? '#fff' : 'rgba(255,255,255,0.6)' },
                   ]}
                 >
-                  {tab.label}
+                  {getTabLabel(tab.key)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -464,7 +484,7 @@ export default function LeaderboardScreen() {
                       { opacity: activePeriod === period.key ? 1 : 0.7 },
                     ]}
                   >
-                    {period.label}
+                    {getPeriodLabel(period.key)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -479,7 +499,7 @@ export default function LeaderboardScreen() {
           <View style={[styles.loadingCard, { backgroundColor: theme.colors.surface }]}>
             <ActivityIndicator size="large" color={activeTabConfig.gradient[0]} />
             <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-              Chargement...
+              {t('loading')}
             </Text>
           </View>
         </View>
@@ -520,7 +540,7 @@ export default function LeaderboardScreen() {
                     <Ionicons name="medal" size={18} color="#fff" />
                   </LinearGradient>
                   <Text style={[styles.myRankText, { color: theme.colors.textPrimary }]}>
-                    Tu es <Text style={{ fontWeight: '800', color: activeTabConfig.gradient[0] }}>#{data.my_rank}</Text> au classement !
+                    {t('yourRankIs', { rank: String(data.my_rank) }).split(`#${data.my_rank}`)[0]}<Text style={{ fontWeight: '800', color: activeTabConfig.gradient[0] }}>#{data.my_rank}</Text>{t('yourRankIs', { rank: String(data.my_rank) }).split(`#${data.my_rank}`)[1]}
                   </Text>
                 </View>
               )}
@@ -528,7 +548,7 @@ export default function LeaderboardScreen() {
               {/* Titre section */}
               {restOfList.length > 0 && (
                 <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
-                  CLASSEMENT
+                  {t('rankingSection')}
                 </Text>
               )}
             </>
@@ -540,6 +560,7 @@ export default function LeaderboardScreen() {
               onPress={() => router.push(`/profile/${item.user_id}`)}
               theme={theme}
               scoreLabel={getScoreLabel()}
+              t={t}
             />
           )}
           ListEmptyComponent={
@@ -551,10 +572,10 @@ export default function LeaderboardScreen() {
                   </LinearGradient>
                 </View>
                 <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                  Pas encore de classement
+                  {t('noRankingYet')}
                 </Text>
                 <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                  Partage tes séances pour apparaître ici !
+                  {t('shareToAppear')}
                 </Text>
               </View>
             ) : null

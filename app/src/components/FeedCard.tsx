@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { LikeButton, DoubleTapHeart } from './LikeButton';
 import { toggleLike } from '@/services/likesApi';
 import { buildApiUrl, getAuthHeaders } from '@/utils/api';
@@ -109,6 +110,7 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
   index = 0,
 }) => {
   const { theme, mode } = useAppTheme();
+  const { t, language } = useTranslations();
   const router = useRouter();
   const isDark = mode === 'dark';
   const [liked, setLiked] = useState(initialLiked);
@@ -146,7 +148,7 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
     ]).start();
   }, []);
 
-  const formattedDate = new Date(createdAt).toLocaleDateString('fr-FR', {
+  const formattedDate = new Date(createdAt).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', {
     day: '2-digit',
     month: 'short',
   });
@@ -159,7 +161,7 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
     const days = Math.floor(diff / 86400000);
     if (minutes < 60) return `${minutes}min`;
     if (hours < 24) return `${hours}h`;
-    if (days < 7) return `${days}j`;
+    if (days < 7) return `${days}${t('daysAgo')}`;
     return formattedDate;
   };
 
@@ -234,20 +236,20 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
   const handleReport = () => {
     setMenuVisible(false);
     Alert.alert(
-      '🚨 Signaler ce post',
-      'Pourquoi signales-tu ce post ?',
+      t('reportPostTitle'),
+      t('reportPostWhy'),
       [
-        { text: 'Contenu inapproprié', onPress: () => submitReport('inappropriate') },
-        { text: 'Spam', onPress: () => submitReport('spam') },
-        { text: 'Harcèlement', onPress: () => submitReport('harassment') },
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('inappropriateContent'), onPress: () => submitReport('inappropriate') },
+        { text: t('spam'), onPress: () => submitReport('spam') },
+        { text: t('harassment'), onPress: () => submitReport('harassment') },
+        { text: t('cancel'), style: 'cancel' },
       ]
     );
   };
 
   const submitReport = (reason: string) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-    Alert.alert('✅ Merci', 'Ton signalement a été envoyé. Nous allons examiner ce post.');
+    Alert.alert(t('reportThanksTitle'), t('reportThanksMsg'));
     onReport?.(shareId);
   };
 
@@ -442,9 +444,9 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
                     <Ionicons name="flag-outline" size={20} color="#FF6B6B" />
                   </View>
                   <View>
-                    <Text style={[styles.menuItemText, { color: '#FF6B6B' }]}>Signaler</Text>
+                    <Text style={[styles.menuItemText, { color: '#FF6B6B' }]}>{t('report')}</Text>
                     <Text style={[styles.menuItemDesc, { color: theme.colors.textSecondary }]}>
-                      Contenu inapproprié
+                      {t('inappropriateContent')}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -454,16 +456,16 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
                     <Ionicons name="eye-off-outline" size={20} color={theme.colors.textPrimary} />
                   </View>
                   <View>
-                    <Text style={[styles.menuItemText, { color: theme.colors.textPrimary }]}>Masquer</Text>
+                    <Text style={[styles.menuItemText, { color: theme.colors.textPrimary }]}>{t('hide')}</Text>
                     <Text style={[styles.menuItemDesc, { color: theme.colors.textSecondary }]}>
-                      Ne plus voir ce post
+                      {t('hideSeeNoMore')}
                     </Text>
                   </View>
                 </TouchableOpacity>
                 <View style={[styles.menuDivider, { backgroundColor: theme.colors.border }]} />
                 <TouchableOpacity style={styles.menuCancelBtn} onPress={() => setMenuVisible(false)}>
                   <Text style={[styles.menuCancelText, { color: theme.colors.textSecondary }]}>
-                    Annuler
+                    {t('cancel')}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -501,13 +503,13 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
                   <View style={styles.statPillIcon}>
                     <Ionicons name="heart" size={12} color="#fff" />
                   </View>
-                  <Text style={styles.statPillText}>{exerciseCount} exercices</Text>
+                  <Text style={styles.statPillText}>{exerciseCount} {t('exercises')}</Text>
                 </View>
                 <View style={styles.statPillNew}>
                   <View style={styles.statPillIcon}>
                     <Ionicons name="layers" size={12} color="#fff" />
                   </View>
-                  <Text style={styles.statPillText}>{setCount} séries</Text>
+                  <Text style={styles.statPillText}>{setCount} {t('sets')}</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -559,7 +561,7 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
                     color="#fff"
                   />
                   <Text style={styles.saveButtonText}>
-                    {saved ? 'Enregistré' : 'Enregistrer'}
+                    {saved ? t('saved') : t('save')}
                   </Text>
                 </LinearGradient>
               </Pressable>
@@ -583,7 +585,7 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
                   ))}
                 </View>
                 <Text style={[styles.likeCountText, { color: theme.colors.textPrimary }]}>
-                  <Text style={{ fontWeight: '700' }}>{likeCount}</Text> J&apos;aime{likeCount > 1 ? 's' : ''}
+                  <Text style={{ fontWeight: '700' }}>{likeCount}</Text> {t('likesCount')}{likeCount > 1 ? 's' : ''}
                 </Text>
               </View>
             )}
@@ -591,7 +593,7 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
             <View style={styles.caption}>
               <Text style={{ color: theme.colors.textPrimary, lineHeight: 20 }}>
                 <Text style={styles.captionUsername}>{ownerUsername}</Text>
-                {' '}{caption ? caption : 'a partagé sa séance 💪'}
+                {' '}{caption ? caption : t('sharedWorkoutDefault')}
               </Text>
             </View>
 
@@ -616,8 +618,8 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
             >
               <Text style={[styles.viewComments, { color: theme.colors.textSecondary }]}>
                 {commentCount > 0
-                  ? `Voir les ${commentCount} commentaire${commentCount > 1 ? 's' : ''}`
-                  : 'Ajouter un commentaire...'}
+                  ? t('viewCommentsCount', { count: commentCount, plural: commentCount > 1 ? 's' : '' })
+                  : t('addComment')}
               </Text>
             </Pressable>
           </View>
@@ -629,7 +631,7 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
         <Pressable style={styles.shareOverlay} onPress={() => setShareModalVisible(false)}>
           <Pressable style={[styles.shareModal, { backgroundColor: theme.colors.surface }]} onPress={(e) => e.stopPropagation()}>
             <View style={styles.shareHeader}>
-              <Text style={[styles.shareTitle, { color: theme.colors.textPrimary }]}>Envoyer à...</Text>
+              <Text style={[styles.shareTitle, { color: theme.colors.textPrimary }]}>{t('sendTo')}</Text>
               <TouchableOpacity onPress={() => setShareModalVisible(false)} hitSlop={12}>
                 <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
               </TouchableOpacity>
@@ -639,7 +641,7 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
                 <ActivityIndicator size="small" color={theme.colors.accent} />
               </View>
             ) : shareUsers.length === 0 ? (
-              <Text style={[styles.shareEmptyText, { color: theme.colors.textSecondary }]}>Aucun utilisateur trouvé</Text>
+              <Text style={[styles.shareEmptyText, { color: theme.colors.textSecondary }]}>{t('noUserFound')}</Text>
             ) : (
               <FlatList
                 data={shareUsers}

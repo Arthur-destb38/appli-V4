@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useTranslations } from '@/hooks/usePreferences';
 import {
   listConversations,
   ConversationRead,
@@ -31,6 +32,7 @@ export default function MessagesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { profile } = useUserProfile();
+  const { t, language } = useTranslations();
 
   const [conversations, setConversations] = useState<ConversationRead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -107,11 +109,11 @@ export default function MessagesScreen() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 1) return t('justNow');
     if (diffMins < 60) return `${diffMins}m`;
     if (diffHours < 24) return `${diffHours}h`;
-    if (diffDays < 7) return `${diffDays}j`;
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    if (diffDays < 7) return `${diffDays}${language === 'fr' ? 'j' : 'd'}`;
+    return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' });
   };
 
   const gradientColors = isDark
@@ -213,8 +215,8 @@ export default function MessagesScreen() {
                 numberOfLines={1}
               >
                 {conversation.last_message?.content?.startsWith('💪 Séance partagée')
-                  ? `🏋️ Séance partagée : ${conversation.last_message.content.split('"')[1] || ''}`
-                  : conversation.last_message?.content || 'Aucun message'}
+                  ? `🏋️ ${t('sharedWorkoutLabel')}: ${conversation.last_message.content.split('"')[1] || ''}`
+                  : conversation.last_message?.content || t('noMessage')}
               </Text>
               {hasUnread && (
                 <View style={[styles.unreadBadge, { backgroundColor: theme.colors.primary }]}>
@@ -265,7 +267,7 @@ export default function MessagesScreen() {
             <View style={styles.topBarTitle}>
               <Ionicons name="chatbubbles" size={24} color={theme.colors.primary} />
               <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
-                Messages
+                {t('messages')}
               </Text>
               {totalUnread > 0 && (
                 <View style={[styles.headerBadge, { backgroundColor: theme.colors.primary }]}>
@@ -297,7 +299,7 @@ export default function MessagesScreen() {
                 {conversations.length}
               </Text>
               <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-                Conversations
+                {t('conversations')}
               </Text>
             </View>
             <View style={[styles.statCard, { backgroundColor: theme.colors.surface }]}>
@@ -308,7 +310,7 @@ export default function MessagesScreen() {
                 {totalUnread}
               </Text>
               <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-                Non lus
+                {t('unreadLabel')}
               </Text>
             </View>
           </View>
@@ -329,7 +331,7 @@ export default function MessagesScreen() {
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-              Chargement...
+              {t('loading')}
             </Text>
           </View>
         ) : (
@@ -353,10 +355,10 @@ export default function MessagesScreen() {
                   </View>
                 </View>
                 <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                  Aucune conversation
+                  {t('noConversation')}
                 </Text>
                 <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                  Commencez à discuter avec d&apos;autres athlètes !
+                  {t('startChattingDesc')}
                 </Text>
                 <Pressable
                   style={({ pressed }) => [
@@ -372,14 +374,14 @@ export default function MessagesScreen() {
                     style={styles.emptyBtnGradient}
                   >
                     <Ionicons name="add" size={20} color="#FFFFFF" />
-                    <Text style={styles.emptyBtnText}>Nouvelle conversation</Text>
+                    <Text style={styles.emptyBtnText}>{t('newConversation')}</Text>
                   </LinearGradient>
                 </Pressable>
               </View>
             ) : (
               <>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
-                  VOS CONVERSATIONS
+                  {t('yourConversations')}
                 </Text>
                 {conversations.map((conv, index) => (
                   <ConversationCard key={conv.id} conversation={conv} index={index} />

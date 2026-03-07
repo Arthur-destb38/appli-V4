@@ -13,11 +13,13 @@ import {
 import { useRouter, Redirect } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login, demoLogin, isLoading, isAuthenticated } = useAuth();
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -28,7 +30,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
-      setError('Veuillez remplir tous les champs');
+      setError(t('fillAllFields'));
       return;
     }
 
@@ -37,7 +39,7 @@ export default function LoginScreen() {
       await login({ username: username.trim(), password });
       router.replace('/(tabs)');
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Erreur de connexion');
+      setError(error instanceof Error ? error.message : t('connectionError'));
     }
   };
 
@@ -47,7 +49,7 @@ export default function LoginScreen() {
       await demoLogin();
       router.replace('/(tabs)');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Impossible de se connecter au compte demo');
+      setError(err instanceof Error ? err.message : t('demoConnectionError'));
     }
   };
 
@@ -60,7 +62,7 @@ export default function LoginScreen() {
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.colors.textPrimary }]}>🦍 Gorillax</Text>
           <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            Connecte-toi à ton compte
+            {t('loginTitle')}
           </Text>
         </View>
 
@@ -73,7 +75,7 @@ export default function LoginScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: theme.colors.textPrimary }]}>
-              Nom d'utilisateur
+              {t('usernameLabel')}
             </Text>
             <TextInput
               style={[
@@ -86,7 +88,7 @@ export default function LoginScreen() {
               ]}
               value={username}
               onChangeText={setUsername}
-              placeholder="Ton nom d'utilisateur"
+              placeholder={t('yourUsername')}
               placeholderTextColor={theme.colors.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
@@ -96,7 +98,7 @@ export default function LoginScreen() {
 
           <View style={styles.inputContainer}>
             <Text style={[styles.label, { color: theme.colors.textPrimary }]}>
-              Mot de passe
+              {t('passwordLabel')}
             </Text>
             <TextInput
               style={[
@@ -109,7 +111,7 @@ export default function LoginScreen() {
               ]}
               value={password}
               onChangeText={setPassword}
-              placeholder="Ton mot de passe"
+              placeholder={t('yourPassword')}
               placeholderTextColor={theme.colors.textSecondary}
               secureTextEntry
               autoCapitalize="none"
@@ -125,7 +127,7 @@ export default function LoginScreen() {
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text style={styles.buttonText}>Se connecter</Text>
+              <Text style={styles.buttonText}>{t('loginButton')}</Text>
             )}
           </TouchableOpacity>
 
@@ -137,7 +139,7 @@ export default function LoginScreen() {
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text style={styles.buttonText}>Essayer avec le compte Demo</Text>
+              <Text style={styles.buttonText}>{t('demoLoginButton')}</Text>
             )}
           </TouchableOpacity>
 
@@ -147,7 +149,7 @@ export default function LoginScreen() {
             disabled={isLoading}
           >
             <Text style={[styles.linkText, { color: theme.colors.accent }]}>
-              Pas encore inscrit ? Créer un compte
+              {t('notRegisteredYet')}
             </Text>
           </TouchableOpacity>
         </View>

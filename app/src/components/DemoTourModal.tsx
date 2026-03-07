@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Modal,
   StyleSheet,
@@ -12,59 +12,20 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 const STEP_DURATION_MS = 4000;
 const TOTAL_STEPS = 8;
 
-const DEMO_STEPS: { icon: string; iconColor: string; title: string; description: string }[] = [
-  {
-    icon: 'home',
-    iconColor: '#6366f1',
-    title: 'Accueil',
-    description: 'Ton tableau de bord : streak, objectif de la semaine et prochaine séance.',
-  },
-  {
-    icon: 'barbell',
-    iconColor: '#10b981',
-    title: 'Créer une séance',
-    description: 'Donne un titre, ajoute des exercices, note tes séries (poids, reps) pendant l\'entraînement.',
-  },
-  {
-    icon: 'calendar',
-    iconColor: '#f59e0b',
-    title: 'Mon Programme',
-    description: 'Organise tes semaines et lance une séance en un clic depuis ton programme.',
-  },
-  {
-    icon: 'people',
-    iconColor: '#ec4899',
-    title: 'Réseau (Feed)',
-    description: 'Vois les séances partagées, like, commente et consulte les profils.',
-  },
-  {
-    icon: 'trophy',
-    iconColor: '#8b5cf6',
-    title: 'Explorer & Défis',
-    description: 'Rejoins des défis communautaires et compare-toi aux autres.',
-  },
-  {
-    icon: 'chatbubbles',
-    iconColor: '#06b6d4',
-    title: 'Messages',
-    description: 'Échange en privé avec d\'autres membres depuis l\'onglet Messages.',
-  },
-  {
-    icon: 'person',
-    iconColor: '#6366f1',
-    title: 'Profil & Paramètres',
-    description: 'Gère ton profil, tes stats, les réglages et déconnecte-toi si besoin.',
-  },
-  {
-    icon: 'fitness',
-    iconColor: '#10b981',
-    title: 'C\'est parti !',
-    description: 'Tu connais les bases. Bonne séance avec Gorillax 🦍',
-  },
+const STEP_META: { icon: string; iconColor: string }[] = [
+  { icon: 'home', iconColor: '#6366f1' },
+  { icon: 'barbell', iconColor: '#10b981' },
+  { icon: 'calendar', iconColor: '#f59e0b' },
+  { icon: 'people', iconColor: '#ec4899' },
+  { icon: 'trophy', iconColor: '#8b5cf6' },
+  { icon: 'chatbubbles', iconColor: '#06b6d4' },
+  { icon: 'person', iconColor: '#6366f1' },
+  { icon: 'fitness', iconColor: '#10b981' },
 ];
 
 interface DemoTourModalProps {
@@ -74,9 +35,16 @@ interface DemoTourModalProps {
 
 export function DemoTourModal({ visible, onClose }: DemoTourModalProps) {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const [step, setStep] = useState(0);
   const progressAnim = useRef(new Animated.Value(0)).current;
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const DEMO_STEPS = useMemo(() => STEP_META.map((meta, i) => ({
+    ...meta,
+    title: t(`demoTourStep${i + 1}Title` as any),
+    description: t(`demoTourStep${i + 1}Desc` as any),
+  })), [t]);
 
   useEffect(() => {
     if (!visible) {
@@ -138,14 +106,14 @@ export function DemoTourModal({ visible, onClose }: DemoTourModalProps) {
         <Pressable style={[styles.card, { backgroundColor: theme.colors.surface }]} onPress={(e) => e.stopPropagation()}>
           <View style={styles.header}>
             <Text style={[styles.stepLabel, { color: theme.colors.textSecondary }]}>
-              Étape {step + 1}/{TOTAL_STEPS}
+              {t('demoTourStepIndicator', { current: String(step + 1), total: String(TOTAL_STEPS) })}
             </Text>
             <TouchableOpacity
               onPress={onClose}
               hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               style={[styles.skipButton, { backgroundColor: theme.colors.surfaceMuted }]}
             >
-              <Text style={[styles.skipText, { color: theme.colors.textSecondary }]}>Passer</Text>
+              <Text style={[styles.skipText, { color: theme.colors.textSecondary }]}>{t('demoTourSkip')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -170,7 +138,7 @@ export function DemoTourModal({ visible, onClose }: DemoTourModalProps) {
           </View>
 
           <Text style={[styles.hint, { color: theme.colors.textSecondary }]}>
-            Démo automatique • ~30 s
+            {t('demoTourAutoHint')}
           </Text>
         </Pressable>
       </Pressable>

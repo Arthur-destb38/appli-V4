@@ -30,6 +30,7 @@ import { FeedCard } from '@/components/FeedCard';
 import { getComments, addComment, Comment, toggleCommentLike } from '@/services/likesApi';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useTranslations } from '@/hooks/usePreferences';
 
 // Composant pour afficher un commentaire avec like
 const CommentItem: React.FC<{
@@ -38,6 +39,7 @@ const CommentItem: React.FC<{
   currentUserId: string;
   index: number;
 }> = ({ comment, theme, currentUserId, index }) => {
+  const { language } = useTranslations();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,7 +105,7 @@ const CommentItem: React.FC<{
         </View>
         <View style={styles.commentMeta}>
           <Text style={[styles.commentDate, { color: theme.colors.textSecondary }]}>
-            {new Date(comment.created_at).toLocaleDateString('fr-FR', {
+            {new Date(comment.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', {
               day: 'numeric',
               month: 'short',
               hour: '2-digit',
@@ -131,6 +133,7 @@ const CommentItem: React.FC<{
 const FeedScreen: React.FC = () => {
   const { items, load, nextCursor, isLoading, error, duplicate } = useFeed();
   const { theme, mode } = useAppTheme();
+  const { t, language } = useTranslations();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
@@ -333,7 +336,7 @@ const FeedScreen: React.FC = () => {
             <ActivityIndicator size="large" color="#fff" />
           </LinearGradient>
           <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-            Chargement du feed...
+            {t('feedLoading')}
           </Text>
         </View>
       ) : items.length === 0 ? (
@@ -346,10 +349,10 @@ const FeedScreen: React.FC = () => {
               <Ionicons name="people" size={48} color="#fff" />
             </LinearGradient>
             <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-              Ton feed est vide
+              {t('feedEmptyTitle')}
             </Text>
             <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-              Suis d&apos;autres utilisateurs pour voir leurs séances et partager les tiennes !
+              {t('feedEmptySubtitle')}
             </Text>
             <View style={styles.emptyActions}>
               <Pressable
@@ -363,7 +366,7 @@ const FeedScreen: React.FC = () => {
                   style={styles.emptyButtonGradient}
                 >
                   <Ionicons name="compass" size={18} color="#fff" />
-                  <Text style={styles.emptyButtonText}>Explorer</Text>
+                  <Text style={styles.emptyButtonText}>{t('explore')}</Text>
                 </LinearGradient>
               </Pressable>
               <Pressable
@@ -375,7 +378,7 @@ const FeedScreen: React.FC = () => {
               >
                 <Ionicons name="add" size={18} color={theme.colors.textPrimary} />
                 <Text style={[styles.emptySecondaryText, { color: theme.colors.textPrimary }]}>
-                  Créer une séance
+                  {t('createWorkout')}
                 </Text>
               </Pressable>
             </View>
@@ -415,7 +418,7 @@ const FeedScreen: React.FC = () => {
                   <Ionicons name="chevron-down" size={16} color="#fff" />
                 </LinearGradient>
                 <Text style={[styles.loadMoreText, { color: theme.colors.textPrimary }]}>
-                  Charger plus de posts
+                  {t('loadMorePosts')}
                 </Text>
               </Pressable>
             ) : (
@@ -429,7 +432,7 @@ const FeedScreen: React.FC = () => {
                 <View style={[styles.endBadge, { backgroundColor: theme.colors.surfaceMuted }]}>
                   <Ionicons name="checkmark-circle" size={16} color="#10b981" />
                   <Text style={[styles.endText, { color: theme.colors.textSecondary }]}>
-                    Tu es à jour !
+                    {t('feedUpToDate')}
                   </Text>
                 </View>
               </View>
@@ -470,7 +473,7 @@ const FeedScreen: React.FC = () => {
           <View style={[styles.commentsHeader, { borderColor: theme.colors.border }]}>
             <View style={{ width: 40 }} />
             <Text style={[styles.commentsTitle, { color: theme.colors.textPrimary }]}>
-              Commentaires
+              {t('commentsTitle')}
             </Text>
             <TouchableOpacity
               style={[styles.closeModalBtn, { backgroundColor: theme.colors.surfaceMuted }]}
@@ -485,7 +488,7 @@ const FeedScreen: React.FC = () => {
             <View style={styles.commentsLoading}>
               <ActivityIndicator size="large" color="#6366f1" />
               <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-                Chargement...
+                {t('loading')}
               </Text>
             </View>
           ) : commentsModal.comments.length === 0 ? (
@@ -494,10 +497,10 @@ const FeedScreen: React.FC = () => {
                 <Ionicons name="chatbubbles-outline" size={48} color={theme.colors.textSecondary} />
               </View>
               <Text style={[styles.noCommentsTitle, { color: theme.colors.textPrimary }]}>
-                Pas encore de commentaires
+                {t('noCommentsYet')}
               </Text>
               <Text style={[styles.noCommentsText, { color: theme.colors.textSecondary }]}>
-                Sois le premier à commenter cette séance !
+                {t('beFirstToComment')}
               </Text>
             </View>
           ) : (
@@ -530,7 +533,7 @@ const FeedScreen: React.FC = () => {
             <View style={[styles.inputWrapper, { backgroundColor: theme.colors.surfaceMuted }]}>
               <TextInput
                 style={[styles.commentInput, { color: theme.colors.textPrimary }]}
-                placeholder="Ajouter un commentaire..."
+                placeholder={t('addCommentPlaceholder')}
                 placeholderTextColor={theme.colors.textSecondary}
                 value={newComment}
                 onChangeText={setNewComment}

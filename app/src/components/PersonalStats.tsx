@@ -174,7 +174,7 @@ export const PersonalStats: React.FC<PersonalStatsProps> = ({
           iconColor="#F97316"
           title={nextMilestone.label}
           value={`${nextMilestone.current}/${nextMilestone.target}`}
-          subtitle={`Plus que ${nextMilestone.target - nextMilestone.current} !`}
+          subtitle={safeT('onlyXLeft', `Plus que ${nextMilestone.target - nextMilestone.current} !`).replace('{count}', String(nextMilestone.target - nextMilestone.current))}
           progress={(nextMilestone.current / nextMilestone.target) * 100}
         />
       )}

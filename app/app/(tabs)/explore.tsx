@@ -29,22 +29,23 @@ import {
 } from '@/services/exploreApi';
 import { followUser, unfollowUser } from '@/services/profileApi';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useTranslations } from '@/hooks/usePreferences';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CATEGORIES = [
-  { id: 'all', label: 'Tout', icon: 'grid', gradient: ['#6366f1', '#8b5cf6'] },
-  { id: 'force', label: 'Force', icon: 'barbell', gradient: ['#ef4444', '#dc2626'] },
-  { id: 'cardio', label: 'Cardio', icon: 'heart', gradient: ['#ec4899', '#db2777'] },
-  { id: 'hypertrophie', label: 'Masse', icon: 'fitness', gradient: ['#10b981', '#059669'] },
-  { id: 'perte', label: 'Perte', icon: 'flame', gradient: ['#f59e0b', '#d97706'] },
+  { id: 'all', labelKey: 'allCategory', icon: 'grid', gradient: ['#6366f1', '#8b5cf6'] },
+  { id: 'force', labelKey: 'forceCategory', icon: 'barbell', gradient: ['#ef4444', '#dc2626'] },
+  { id: 'cardio', labelKey: 'cardioCategory', icon: 'heart', gradient: ['#ec4899', '#db2777'] },
+  { id: 'hypertrophie', labelKey: 'massCategory', icon: 'fitness', gradient: ['#10b981', '#059669'] },
+  { id: 'perte', labelKey: 'lossCategory', icon: 'flame', gradient: ['#f59e0b', '#d97706'] },
 ];
 
 const CHALLENGES = [
-  { id: '1', title: '100 pompes', desc: '100 pompes en 1 jour', participants: 234, icon: '💪', gradient: ['#ef4444', '#dc2626'], category: 'force' },
-  { id: '2', title: 'Défi 7 jours', desc: '7 séances en 7 jours', participants: 156, icon: '🔥', gradient: ['#6366f1', '#8b5cf6'], category: 'all' },
-  { id: '3', title: 'PR Squad', desc: 'Bats ton PR squat', participants: 89, icon: '🏆', gradient: ['#f59e0b', '#d97706'], category: 'force' },
-  { id: '4', title: 'Cardio Master', desc: '30min cardio/jour', participants: 178, icon: '❤️', gradient: ['#ec4899', '#db2777'], category: 'cardio' },
+  { id: '1', titleKey: 'challenge100Pushups', descKey: 'challenge100PushupsDesc', participants: 234, icon: '💪', gradient: ['#ef4444', '#dc2626'], category: 'force' },
+  { id: '2', titleKey: 'challenge7Days', descKey: 'challenge7DaysDesc', participants: 156, icon: '🔥', gradient: ['#6366f1', '#8b5cf6'], category: 'all' },
+  { id: '3', titleKey: 'challengePRSquad', descKey: 'challengePRSquatDesc', participants: 89, icon: '🏆', gradient: ['#f59e0b', '#d97706'], category: 'force' },
+  { id: '4', titleKey: 'challengeCardioMaster', descKey: 'challengeCardioMasterDesc', participants: 178, icon: '❤️', gradient: ['#ec4899', '#db2777'], category: 'cardio' },
 ];
 
 // Avatar gradients
@@ -71,15 +72,26 @@ const getAvatarGradient = (name: string): [string, string] => {
   return AVATAR_GRADIENTS[index] as [string, string];
 };
 
+// ============ HELPER FUNCTIONS ============
+
+const getChallengeTitle = (challenge: typeof CHALLENGES[0], t: (key: any) => string): string => {
+  return t(challenge.titleKey);
+};
+
+const getChallengeDesc = (challenge: typeof CHALLENGES[0], t: (key: any) => string): string => {
+  return t(challenge.descKey);
+};
+
 // ============ SEPARATE COMPONENTS FOR PROPER HOOK USAGE ============
 
 interface ChallengeCardProps {
   challenge: typeof CHALLENGES[0];
   index: number;
   onPress: () => void;
+  t: (key: any, params?: Record<string, string | number>) => string;
 }
 
-const ChallengeCard = memo(({ challenge, index, onPress }: ChallengeCardProps) => {
+const ChallengeCard = memo(({ challenge, index, onPress, t }: ChallengeCardProps) => {
   const cardAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -126,12 +138,12 @@ const ChallengeCard = memo(({ challenge, index, onPress }: ChallengeCardProps) =
           </View>
 
           <View style={styles.challengeContent}>
-            <Text style={styles.challengeTitle}>{challenge.title}</Text>
-            <Text style={styles.challengeDesc}>{challenge.desc}</Text>
+            <Text style={styles.challengeTitle}>{getChallengeTitle(challenge, t)}</Text>
+            <Text style={styles.challengeDesc}>{getChallengeDesc(challenge, t)}</Text>
           </View>
 
           <View style={styles.challengeJoinBtn}>
-            <Text style={styles.challengeJoinText}>Participer</Text>
+            <Text style={styles.challengeJoinText}>{t('participate')}</Text>
             <Ionicons name="chevron-forward" size={14} color="#fff" />
           </View>
         </LinearGradient>
@@ -147,9 +159,10 @@ interface UserCardProps {
   onPress: () => void;
   onFollow: () => void;
   theme: any;
+  t: (key: any, params?: Record<string, string | number>) => string;
 }
 
-const UserCard = memo(({ user, index, isFollowing, onPress, onFollow, theme }: UserCardProps) => {
+const UserCard = memo(({ user, index, isFollowing, onPress, onFollow, theme, t }: UserCardProps) => {
   const avatarGradient = getAvatarGradient(user.username);
   const cardAnim = useRef(new Animated.Value(0)).current;
 
@@ -202,7 +215,7 @@ const UserCard = memo(({ user, index, isFollowing, onPress, onFollow, theme }: U
             {user.username}
           </Text>
           <Text style={styles.userStats}>
-            {user.followers_count} abonné{user.followers_count > 1 ? 's' : ''}
+            {user.followers_count} {user.followers_count > 1 ? t('subscribersCount') : t('subscriberCount')}
           </Text>
 
           {/* Follow button */}
@@ -223,7 +236,7 @@ const UserCard = memo(({ user, index, isFollowing, onPress, onFollow, theme }: U
               color={isFollowing ? 'rgba(255,255,255,0.8)' : '#fff'} 
             />
             <Text style={[styles.followBtnText, isFollowing && styles.followBtnTextFollowing]}>
-              {isFollowing ? 'Suivi' : 'Suivre'}
+              {isFollowing ? t('following') : t('follow')}
             </Text>
           </Pressable>
         </LinearGradient>
@@ -237,9 +250,10 @@ interface PostCardProps {
   index: number;
   onPress: () => void;
   theme: { colors: { surface: string; textPrimary: string; textSecondary: string; border: string } };
+  t: (key: any, params?: Record<string, string | number>) => string;
 }
 
-const PostCard = memo(({ post, index, onPress, theme }: PostCardProps) => {
+const PostCard = memo(({ post, index, onPress, theme, t }: PostCardProps) => {
   const accentColors = POST_GRADIENTS[index % POST_GRADIENTS.length] as [string, string];
   const cardAnim = useRef(new Animated.Value(0)).current;
 
@@ -284,7 +298,7 @@ const PostCard = memo(({ post, index, onPress, theme }: PostCardProps) => {
             <View style={[styles.postExercises, { backgroundColor: accentColors[0] + '18' }]}>
               <Ionicons name="barbell" size={12} color={accentColors[0]} />
               <Text style={[styles.postExercisesText, { color: accentColors[0] }]}>
-                {post.exercise_count} exos
+                {post.exercise_count} {t('exosCount')}
               </Text>
             </View>
             <View style={styles.postLikes}>
@@ -328,7 +342,13 @@ export default function ExploreScreen() {
   const { theme, mode } = useAppTheme();
   const insets = useSafeAreaInsets();
   const { profile } = useUserProfile();
+  const { t } = useTranslations();
   const isDark = mode === 'dark';
+
+  const getCategoryLabel = (id: string): string => {
+    const cat = CATEGORIES.find(c => c.id === id);
+    return cat ? t(cat.labelKey) : id;
+  };
 
   const currentUserId = profile?.id || 'guest-user';
 
@@ -477,7 +497,7 @@ export default function ExploreScreen() {
             styles.categoryChipText,
             { color: isSelected ? '#fff' : theme.colors.textPrimary }
           ]}>
-            {cat.label}
+            {getCategoryLabel(cat.id)}
           </Text>
         </View>
       </Pressable>
@@ -498,7 +518,7 @@ export default function ExploreScreen() {
           <ActivityIndicator size="large" color="#fff" />
         </LinearGradient>
         <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-          Chargement...
+          {t('loadingText')}
         </Text>
       </View>
     );
@@ -529,10 +549,10 @@ export default function ExploreScreen() {
           <View style={styles.headerTop}>
             <View>
               <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
-                Explorer
+                {t('exploreTitle')}
               </Text>
               <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
-                Découvre des séances inspirantes
+                {t('discoverWorkouts')}
               </Text>
             </View>
             <View style={styles.headerActions}>
@@ -572,7 +592,7 @@ export default function ExploreScreen() {
             <Ionicons name="search" size={18} color={theme.colors.textSecondary} />
             <TextInput
               style={[styles.searchInput, { color: theme.colors.textPrimary }]}
-              placeholder="Rechercher des séances, utilisateurs..."
+              placeholder={t('searchWorkoutsUsers')}
               placeholderTextColor={theme.colors.textSecondary}
               value={searchQuery}
               onChangeText={handleSearch}
@@ -605,7 +625,7 @@ export default function ExploreScreen() {
             <View style={styles.searchingContainer}>
               <ActivityIndicator size="large" color="#6366f1" />
               <Text style={[styles.searchingText, { color: theme.colors.textSecondary }]}>
-                Recherche en cours...
+                {t('searchInProgress')}
               </Text>
             </View>
           ) : searchResults ? (
@@ -618,7 +638,7 @@ export default function ExploreScreen() {
                         <Ionicons name="people" size={14} color="#fff" />
                       </LinearGradient>
                       <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                        Utilisateurs
+                        {t('usersSection')}
                       </Text>
                     </View>
                     <View style={[styles.sectionBadge, { backgroundColor: '#6366f120' }]}>
@@ -637,6 +657,7 @@ export default function ExploreScreen() {
                         onPress={() => router.push(`/profile/${user.id}`)}
                         onFollow={() => handleFollow(user.id)}
                         theme={theme}
+                        t={t}
                       />
                     ))}
                   </ScrollView>
@@ -650,7 +671,7 @@ export default function ExploreScreen() {
                         <Ionicons name="barbell" size={14} color="#fff" />
                       </LinearGradient>
                       <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                        Séances
+                        {t('workoutsSection')}
                       </Text>
                     </View>
                     <View style={[styles.sectionBadge, { backgroundColor: '#10b98120' }]}>
@@ -667,6 +688,7 @@ export default function ExploreScreen() {
                         index={i}
                         onPress={() => router.push(`/profile/${post.owner_id}`)}
                         theme={theme}
+                        t={t}
                       />
                     ))}
                   </View>
@@ -678,10 +700,10 @@ export default function ExploreScreen() {
                     <Ionicons name="search" size={32} color="#fff" />
                   </LinearGradient>
                   <Text style={[styles.noResultsTitle, { color: theme.colors.textPrimary }]}>
-                    Aucun résultat
+                    {t('noResults')}
                   </Text>
                   <Text style={[styles.noResultsText, { color: theme.colors.textSecondary }]}>
-                    Aucun résultat pour &quot;{searchQuery}&quot;
+                    {t('noResultsFor')} &quot;{searchQuery}&quot;
                   </Text>
                 </View>
               )}
@@ -713,7 +735,7 @@ export default function ExploreScreen() {
                   <Ionicons name="trophy" size={14} color="#fff" />
                 </LinearGradient>
                 <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  Défis du moment
+                  {t('challengesOfMoment')}
                 </Text>
               </View>
             </View>
@@ -728,6 +750,7 @@ export default function ExploreScreen() {
                   challenge={challenge}
                   index={i}
                   onPress={() => handleChallengePress(challenge)}
+                  t={t}
                 />
               ))}
             </ScrollView>
@@ -742,14 +765,14 @@ export default function ExploreScreen() {
                     <Ionicons name="sparkles" size={14} color="#fff" />
                   </LinearGradient>
                   <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                    À découvrir
+                    {t('toDiscover')}
                   </Text>
                 </View>
                 <Pressable
                   style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
                 >
                   <Text style={[styles.seeAll, { color: '#6366f1' }]}>
-                    Voir tout
+                    {t('seeAllLabel')}
                   </Text>
                 </Pressable>
               </View>
@@ -767,6 +790,7 @@ export default function ExploreScreen() {
                     onPress={() => router.push(`/profile/${user.id}`)}
                     onFollow={() => handleFollow(user.id)}
                     theme={theme}
+                    t={t}
                   />
                 ))}
               </ScrollView>
@@ -782,7 +806,7 @@ export default function ExploreScreen() {
                     <Ionicons name="flame" size={14} color="#fff" />
                   </LinearGradient>
                   <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                    {selectedCategory === 'all' ? 'Tendances' : CATEGORIES.find(c => c.id === selectedCategory)?.label || 'Tendances'}
+                    {selectedCategory === 'all' ? t('trendingSection') : getCategoryLabel(selectedCategory)}
                   </Text>
                 </View>
                 <View style={[styles.sectionBadge, { backgroundColor: '#ef444420' }]}>
@@ -799,6 +823,7 @@ export default function ExploreScreen() {
                     index={i}
                     onPress={() => router.push(`/profile/${post.owner_id}`)}
                     theme={theme}
+                    t={t}
                   />
                 ))}
               </View>
@@ -812,10 +837,10 @@ export default function ExploreScreen() {
                 <Ionicons name="search" size={32} color="#fff" />
               </LinearGradient>
               <Text style={[styles.noResultsCategoryTitle, { color: theme.colors.textPrimary }]}>
-                Aucune séance trouvée
+                {t('noSessionFound')}
               </Text>
               <Text style={[styles.noResultsCategoryText, { color: theme.colors.textSecondary }]}>
-                Aucune séance &quot;{CATEGORIES.find(c => c.id === selectedCategory)?.label}&quot; pour le moment
+                {t('noSessionForCategory')} &quot;{getCategoryLabel(selectedCategory)}&quot; {t('forTheMoment')}
               </Text>
               <Pressable
                 style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
@@ -827,7 +852,7 @@ export default function ExploreScreen() {
                   end={{ x: 1, y: 0 }}
                   style={styles.resetFilterBtn}
                 >
-                  <Text style={styles.resetFilterBtnText}>Voir tout</Text>
+                  <Text style={styles.resetFilterBtnText}>{t('seeEverything')}</Text>
                 </LinearGradient>
               </Pressable>
             </View>
@@ -844,10 +869,10 @@ export default function ExploreScreen() {
                 <Ionicons name="compass" size={48} color="#fff" />
               </LinearGradient>
               <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                Rien à explorer pour le moment
+                {t('nothingToExplore')}
               </Text>
               <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                Les séances partagées par la communauté apparaîtront ici
+                {t('communityWorkoutsWillAppear')}
               </Text>
               <Pressable
                 style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
@@ -860,7 +885,7 @@ export default function ExploreScreen() {
                   style={styles.emptyBtn}
                 >
                   <Ionicons name="add" size={20} color="#fff" />
-                  <Text style={styles.emptyBtnText}>Créer une séance</Text>
+                  <Text style={styles.emptyBtnText}>{t('createSession')}</Text>
                 </LinearGradient>
               </Pressable>
             </View>

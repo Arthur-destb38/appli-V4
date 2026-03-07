@@ -25,6 +25,7 @@ import {
   formatDuration,
 } from '@/utils/workoutSummary';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { AppButton } from '@/components/AppButton';
 import { AppCard } from '@/components/AppCard';
 import { Pressable } from 'react-native';
@@ -33,8 +34,8 @@ interface Props {
   workoutId: number;
 }
 
-const formatDate = (timestamp: number) =>
-  new Intl.DateTimeFormat('fr-FR', {
+const formatDate = (timestamp: number, locale: string) =>
+  new Intl.DateTimeFormat(locale, {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
@@ -42,15 +43,16 @@ const formatDate = (timestamp: number) =>
     minute: '2-digit',
   }).format(new Date(timestamp));
 
-const formatSetLine = (set: WorkoutSet) => {
-  const weightLabel = set.weight != null ? `${set.weight} kg` : 'Poids libre';
+const formatSetLine = (set: WorkoutSet, t: (key: string, params?: Record<string, string | number>) => string) => {
+  const weightLabel = set.weight != null ? `${set.weight} kg` : t('bodyweight');
   const rpeLabel = set.rpe != null ? `RPE ${set.rpe}` : 'RPE ?';
-  return `${set.reps} répétition(s) · ${weightLabel} · ${rpeLabel}`;
+  return `${t('repCount', { count: set.reps })} · ${weightLabel} · ${rpeLabel}`;
 };
 
 export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { t, language } = useTranslations();
   const insets = useSafeAreaInsets();
   const { findWorkout, duplicateWorkout } = useWorkouts();
   const { isAuthenticated } = useAuth();
@@ -113,12 +115,12 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
     return (
       <View style={[styles.emptyContainer, { backgroundColor: theme.colors.background }]}>
         <Ionicons name="alert-circle-outline" size={64} color={theme.colors.textSecondary} />
-        <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>Séance introuvable</Text>
+        <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>{t('sessionNotFound')}</Text>
         <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-          Retourne à l'historique pour sélectionner une séance valide.
+          {t('returnToHistoryDesc')}
         </Text>
         <AppButton
-          title="Revenir à l'historique"
+          title={t('backToHistory')}
           onPress={() => router.push('/history')}
           style={styles.backButton}
         />
@@ -133,8 +135,8 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
       const duplicated = await duplicateWorkout(workout.workout.id);
       if (!duplicated) {
         Alert.alert(
-          'Duplication impossible',
-          'Nous ne parvenons pas à dupliquer cette séance pour le moment.'
+          t('duplicationFailed'),
+          t('duplicationFailedDesc')
         );
         return;
       }
@@ -144,8 +146,8 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
       console.warn('Failed to duplicate workout', error);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
       Alert.alert(
-        'Duplication impossible',
-        'Une erreur est survenue lors de la duplication. Réessaie plus tard.'
+        t('duplicationFailed'),
+        t('duplicationErrorDesc')
       );
     } finally {
       setIsDuplicating(false);
@@ -159,11 +161,11 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
 
   const handleShare = () => {
     if (!isAuthenticated) {
-      Alert.alert('Connexion requise', 'Connecte-toi pour partager ta séance sur le feed.');
+      Alert.alert(t('loginRequired'), t('connectToShareDesc'));
       return;
     }
     if (!workout.workout.server_id) {
-      Alert.alert('Synchronisation en cours', 'Réessaie dans quelques secondes.');
+      Alert.alert(t('syncInProgress'), t('retryInFewSeconds'));
       return;
     }
     Haptics.selectionAsync().catch(() => {});
@@ -224,7 +226,7 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
             </View>
             <View style={styles.exerciseMetaColumn}>
               <Text style={[styles.exerciseMeta, { color: theme.colors.textSecondary }]}>
-                {exercise.sets.length} série{exercise.sets.length > 1 ? 's' : ''}
+                {exercise.sets.length} {exercise.sets.length > 1 ? t('seriesLabel') : t('serieLabel')}
                 {exercise.volume ? ` · ${Math.round(exercise.volume)} kg` : ''}
               </Text>
               <Pressable
@@ -239,7 +241,7 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
               >
                 <Ionicons name="trending-up" size={14} color={theme.colors.accent} />
                 <Text style={[styles.progressLinkText, { color: theme.colors.accent }]}>
-                  Progression
+                  {t('progression')}
                 </Text>
               </Pressable>
             </View>
@@ -247,7 +249,7 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
           {exercise.sets.length === 0 ? (
             <View style={[styles.noSetsContainer, { backgroundColor: theme.colors.surfaceMuted }]}>
               <Text style={[styles.noSets, { color: theme.colors.textSecondary }]}>
-                Aucune série enregistrée pour cet exercice.
+                {t('noSetsForExercise')}
               </Text>
             </View>
           ) : (
@@ -268,7 +270,7 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
                   <View style={styles.setHeader}>
                     <View style={styles.setTitleRow}>
                       <Text style={[styles.setTitle, { color: theme.colors.textPrimary }]}>
-                        Série {setIndex + 1}
+                        {t('trackSet')} {setIndex + 1}
                       </Text>
                       {set.done_at && (
                         <Ionicons name="checkmark-circle" size={16} color={theme.colors.primaryMuted} />
@@ -294,18 +296,18 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
                           },
                         ]}
                       >
-                        {set.done_at ? 'Validée' : 'Planifiée'}
+                        {set.done_at ? t('setValidated') : t('setPlanned')}
                       </Text>
                     </View>
                   </View>
                   <Text style={[styles.setDescription, { color: theme.colors.textPrimary }]}>
-                    {formatSetLine(set)}
+                    {formatSetLine(set, t)}
                   </Text>
                   {set.done_at && (
                     <View style={styles.setTimestampRow}>
                       <Ionicons name="time-outline" size={12} color={theme.colors.textSecondary} />
                       <Text style={[styles.setTimestamp, { color: theme.colors.textSecondary }]}>
-                        Validée le {formatDate(set.done_at)}
+                        {t('validatedOn', { date: formatDate(set.done_at, language === 'fr' ? 'fr-FR' : 'en-US') })}
                       </Text>
                     </View>
                   )}
@@ -356,43 +358,41 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
                   { color: theme.colors.textPrimary },
                 ]}
               >
-                {workout.workout.status === 'completed' ? 'Terminée' : 'Brouillon'}
+                {workout.workout.status === 'completed' ? t('statusCompleted') : t('statusDraft')}
               </Text>
             </View>
           </View>
           <Text style={[styles.metaLine, { color: theme.colors.textSecondary }]}>
-            {formatDate(workout.workout.updated_at)} · {workout.exercises.length} exercice
-            {workout.exercises.length > 1 ? 's' : ''} · {workout.sets.length} série
-            {workout.sets.length > 1 ? 's' : ''}
+            {formatDate(workout.workout.updated_at, language === 'fr' ? 'fr-FR' : 'en-US')} · {workout.exercises.length} {workout.exercises.length > 1 ? t('exercisesLabel') : t('exerciseLabel')} · {workout.sets.length} {workout.sets.length > 1 ? t('seriesLabel') : t('serieLabel')}
           </Text>
           <View style={styles.summaryRow}>
             <SummaryItem
-              label="Volume total"
+              label={t('totalVolume')}
               value={`${Math.round(summary.volume)} kg`}
               icon="barbell"
             />
             <SummaryItem
-              label="Séries validées"
+              label={t('validatedSets')}
               value={`${summary.completedSets}/${summary.totalSets || 0}`}
               icon="checkmark-circle"
             />
             <SummaryItem
-              label="Durée estimée"
-              value={summary.durationLabel ?? 'Non disponible'}
+              label={t('estimatedDuration')}
+              value={summary.durationLabel ?? t('notAvailable')}
               icon="time"
             />
           </View>
           {workout.workout.server_id && (
             <View style={[styles.syncBadge, { backgroundColor: theme.colors.accent + '20' }]}>
               <Ionicons name="checkmark-circle" size={14} color={theme.colors.accent} />
-              <Text style={[styles.syncText, { color: theme.colors.accent }]}>Synchronisée</Text>
+              <Text style={[styles.syncText, { color: theme.colors.accent }]}>{t('synced')}</Text>
             </View>
           )}
         </AppCard>
 
         <View style={styles.actionsRow}>
           <AppButton
-            title={isDuplicating ? 'Duplication…' : 'Dupliquer'}
+            title={isDuplicating ? t('duplicating') : t('duplicate')}
             onPress={handleDuplicate}
             loading={isDuplicating}
             disabled={isDuplicating}
@@ -400,7 +400,7 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
             variant="primary"
           />
           <AppButton
-            title="Relancer"
+            title={t('relaunch')}
             onPress={handleRelaunch}
             variant="secondary"
             style={styles.actionButton}
@@ -429,10 +429,10 @@ export const HistoryDetailScreen: React.FC<Props> = ({ workoutId }) => {
           <AppCard style={styles.emptyExercises}>
             <Ionicons name="fitness-outline" size={48} color={theme.colors.textSecondary} />
             <Text style={[styles.emptyExercisesTitle, { color: theme.colors.textPrimary }]}>
-              Aucun exercice enregistré
+              {t('noExerciseRecorded')}
             </Text>
             <Text style={[styles.emptyExercisesSubtitle, { color: theme.colors.textSecondary }]}>
-              Les exercices de cette séance n'ont pas encore été saisis.
+              {t('exercisesNotYetEntered')}
             </Text>
           </AppCard>
         ) : (

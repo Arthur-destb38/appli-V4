@@ -52,8 +52,8 @@ export default function HomeScreen() {
 
   // Données par défaut si pas connecté
   const displayWorkouts = workouts || [];
-  const displayProfile = profile || { username: 'Utilisateur' };
-  const displayUser = user || { username: 'Utilisateur' };
+  const displayProfile = profile || { username: t('defaultUser') };
+  const displayUser = user || { username: t('defaultUser') };
 
   const objectivesStorageKey = `user_objectives_${user?.id || 'anonymous'}`;
 
@@ -70,9 +70,9 @@ export default function HomeScreen() {
           setGoalSessions(weekly.target);
         }
         if (monthly && typeof monthly.target === 'number') {
-          setObjectivesMilestone({ target: monthly.target, label: monthly.title || 'Séances par mois', type: 'sessions' });
+          setObjectivesMilestone({ target: monthly.target, label: monthly.title || t('sessionsPerMonth'), type: 'sessions' });
         } else if (streakGoal && typeof streakGoal.target === 'number') {
-          setObjectivesMilestone({ target: streakGoal.target, label: streakGoal.title || 'Jours de suite', type: 'streak' });
+          setObjectivesMilestone({ target: streakGoal.target, label: streakGoal.title || t('daysInARowCount', { count: String(streakGoal.target) }), type: 'streak' });
         } else {
           setObjectivesMilestone(null);
         }
@@ -276,48 +276,48 @@ export default function HomeScreen() {
       {
         id: 'objective',
         value: `${stats.completedThisWeek}/${goalSessions}`,
-        label: 'Objectif',
+        label: t('objectiveLabel'),
         icon: 'checkmark-circle' as const,
         trend: stats.completedThisWeek >= goalSessions ? 'up' : 'neutral' as const,
         color: '#10B981',
-        explanation: `Nombre de séances terminées cette semaine par rapport à ton objectif de ${goalSessions} séances par semaine.`,
+        explanation: t('objectiveExplanation', { goal: String(goalSessions) }),
         editable: true,
         onEdit: handleEditGoal,
       },
       {
         id: 'volume',
         value: stats.volume7d > 1000 ? `${(stats.volume7d / 1000).toFixed(1)}k` : stats.volume7d,
-        label: 'Volume (kg)',
+        label: t('volumeKg'),
         icon: 'barbell' as const,
         trend: volumeChange > 0 ? 'up' : volumeChange < 0 ? 'down' : 'neutral' as const,
         trendValue: volumeChange !== 0 ? `${volumeChange > 0 ? '+' : ''}${volumeChange}%` : undefined,
         color: '#8B5CF6',
-        explanation: 'Volume total soulevé cette semaine (poids × répétitions). Compare avec la semaine précédente.',
+        explanation: t('volumeExplanation'),
       },
       {
         id: 'streak',
         value: stats.streak,
-        label: 'Streak 🔥',
+        label: t('streak') + ' 🔥',
         icon: 'flame' as const,
         trend: stats.streak >= 7 ? 'up' : 'neutral' as const,
         color: '#F59E0B',
-        explanation: 'Nombre de jours consécutifs avec au moins une séance terminée. Continue pour maintenir ta série !',
+        explanation: t('streakExplanation'),
       },
       {
         id: 'drafts',
         value: stats.drafts,
-        label: 'Brouillons',
+        label: t('drafts'),
         icon: 'create-outline' as const,
         color: '#F97316',
-        explanation: 'Séances en cours de création ou en attente.',
+        explanation: t('draftsExplanation'),
       },
       {
         id: 'completed',
         value: stats.completed,
-        label: 'Terminées',
+        label: t('completedLabel'),
         icon: 'trophy' as const,
         color: '#22C55E',
-        explanation: 'Séances complètement terminées et enregistrées.',
+        explanation: t('completedExplanation'),
       },
     ];
   }, [stats, goalSessions]);
@@ -369,14 +369,14 @@ export default function HomeScreen() {
   };
 
   const menuItems = [
-    { label: 'Progression', route: '/history', icon: 'trending-up-outline' as const },
-    { label: 'Mon Programme', route: '/programme', icon: 'calendar-outline' as const },
-    { label: 'Paramètres', route: '/settings', icon: 'settings-outline' as const },
+    { label: t('progressionNav'), route: '/history', icon: 'trending-up-outline' as const },
+    { label: t('myProgram'), route: '/programme', icon: 'calendar-outline' as const },
+    { label: t('parameters'), route: '/settings', icon: 'settings-outline' as const },
   ];
 
   const actionItems = [
-    { label: 'Créer une séance', action: () => handleCreate(), icon: 'add-circle-outline' as const },
-    { label: 'Créer un programme', action: () => router.push('/programme/create' as never), icon: 'clipboard-outline' as const },
+    { label: t('createWorkout'), action: () => handleCreate(), icon: 'add-circle-outline' as const },
+    { label: t('createProgram'), action: () => router.push('/programme/create' as never), icon: 'clipboard-outline' as const },
   ];
 
   const goTo = (route: string) => {
@@ -449,10 +449,10 @@ export default function HomeScreen() {
               </View>
 
               <Text style={[styles.welcomeTitle, { color: theme.colors.textPrimary }]}>
-                {t('welcome') || 'Bienvenue'}, {username} !
+                {t('welcome')}, {username} !
               </Text>
               <Text style={[styles.welcomeSubtitle, { color: theme.colors.textSecondary }]}>
-                {t('welcomeEmpty') || "C'est le moment de commencer ton parcours fitness. Crée ta premiere seance pour suivre tes progres !"}
+                {t('welcomeEmpty')}
               </Text>
 
               <Pressable onPress={handleCreate} style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}>
@@ -463,7 +463,7 @@ export default function HomeScreen() {
                   end={{ x: 1, y: 0 }}
                 >
                   <Ionicons name="add-circle" size={22} color="#fff" />
-                  <Text style={styles.welcomeCtaText}>{t('createMyFirstWorkout') || 'Creer ma premiere seance'}</Text>
+                  <Text style={styles.welcomeCtaText}>{t('createMyFirstWorkout')}</Text>
                 </LinearGradient>
               </Pressable>
 
@@ -473,7 +473,7 @@ export default function HomeScreen() {
               >
                 <Ionicons name="calendar-outline" size={18} color="#6366f1" />
                 <Text style={[styles.welcomeSecondaryText, { color: '#6366f1' }]}>
-                  {t('discoverPrograms') || 'Decouvrir les programmes'}
+                  {t('discoverPrograms')}
                 </Text>
               </Pressable>
             </View>
@@ -485,10 +485,10 @@ export default function HomeScreen() {
                   <Ionicons name="barbell-outline" size={20} color="#F97316" />
                 </View>
                 <Text style={[styles.welcomeTipTitle, { color: theme.colors.textPrimary }]}>
-                  {t('tipCreateTitle') || 'Cree'}
+                  {t('tipCreateTitle')}
                 </Text>
                 <Text style={[styles.welcomeTipDesc, { color: theme.colors.textSecondary }]}>
-                  {t('tipCreateDesc') || 'Compose ta seance avec tes exercices'}
+                  {t('tipCreateDesc')}
                 </Text>
               </View>
               <View style={[styles.welcomeTip, { backgroundColor: theme.colors.surface }]}>
@@ -496,10 +496,10 @@ export default function HomeScreen() {
                   <Ionicons name="trending-up" size={20} color="#22C55E" />
                 </View>
                 <Text style={[styles.welcomeTipTitle, { color: theme.colors.textPrimary }]}>
-                  {t('tipTrackTitle') || 'Progresse'}
+                  {t('tipTrackTitle')}
                 </Text>
                 <Text style={[styles.welcomeTipDesc, { color: theme.colors.textSecondary }]}>
-                  {t('tipTrackDesc') || 'Suis tes stats et bats tes records'}
+                  {t('tipTrackDesc')}
                 </Text>
               </View>
             </View>
@@ -539,29 +539,29 @@ export default function HomeScreen() {
               type: 'sessions' as const,
               current: stats.completed,
               target: 10,
-              label: '10 séances'
+              label: t('sessionsCount', { count: '10' })
             };
             if (stats.streak < 7) return {
               type: 'streak' as const,
               current: stats.streak,
               target: 7,
-              label: '7 jours de suite'
+              label: t('daysInARowCount', { count: '7' })
             };
             if (stats.completed < 25) return {
               type: 'sessions' as const,
               current: stats.completed,
               target: 25,
-              label: '25 séances'
+              label: t('sessionsCount', { count: '25' })
             };
             return {
               type: 'sessions' as const,
               current: stats.completed,
               target: Math.ceil(stats.completed / 50) * 50,
-              label: `${Math.ceil(stats.completed / 50) * 50} séances`
+              label: t('sessionsCount', { count: String(Math.ceil(stats.completed / 50) * 50) })
             };
           })()}
           personalRecord={stats.volume7d > 0 ? {
-            label: 'Volume cette semaine',
+            label: t('volumeThisWeek'),
             value: stats.volume7d > 1000 ? `${(stats.volume7d / 1000).toFixed(1)}k kg` : `${stats.volume7d} kg`,
             isNew: stats.volume7d > stats.prevVolume7d
           } : undefined}
@@ -708,7 +708,7 @@ export default function HomeScreen() {
                   <View style={styles.emptyStateCtaSecondary}>
                     <Ionicons name="play" size={18} color="#22C55E" />
                     <Text style={[styles.emptyStateCtaSecondaryText, { color: '#22C55E' }]}>
-                      Commencer une séance
+                      {t('startWorkout')}
                     </Text>
                   </View>
                 </Pressable>

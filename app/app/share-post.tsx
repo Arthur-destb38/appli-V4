@@ -22,6 +22,7 @@ import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { useWorkouts } from '@/hooks/useWorkouts';
+import { useTranslations } from '@/hooks/usePreferences';
 
 const COLOR_PALETTE = [
   { hex: '#6366f1', label: 'Indigo' },
@@ -48,6 +49,7 @@ export default function SharePostScreen() {
   const insets = useSafeAreaInsets();
   const { theme, mode } = useAppTheme();
   const { shareWorkout } = useWorkouts();
+  const { t } = useTranslations();
   const isDark = mode === 'dark';
 
   const [caption, setCaption] = useState('');
@@ -79,7 +81,7 @@ export default function SharePostScreen() {
     Haptics.selectionAsync().catch(() => {});
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission requise', "Autorise l'accès à ta galerie pour ajouter une photo.");
+      Alert.alert(t('permissionRequired'), t('photoPermissionMessage'));
       return;
     }
 
@@ -120,7 +122,7 @@ export default function SharePostScreen() {
       router.replace('/(tabs)/feed');
     } catch (error: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
-      Alert.alert('Erreur', error?.message || 'Impossible de publier.');
+      Alert.alert(t('error'), error?.message || t('cannotPublish'));
     } finally {
       setIsPublishing(false);
     }
@@ -148,7 +150,7 @@ export default function SharePostScreen() {
           <Ionicons name="close" size={22} color={theme.colors.textPrimary} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
-          Nouveau post
+          {t('newPost')}
         </Text>
         <Pressable
           style={({ pressed }) => [
@@ -169,7 +171,7 @@ export default function SharePostScreen() {
             ) : (
               <>
                 <Ionicons name="paper-plane" size={16} color="#fff" />
-                <Text style={styles.publishText}>Publier</Text>
+                <Text style={styles.publishText}>{t('publish')}</Text>
               </>
             )}
           </LinearGradient>
@@ -190,7 +192,7 @@ export default function SharePostScreen() {
             {/* Workout Preview Card */}
             <View style={styles.previewSection}>
               <Text style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                Aperçu
+                {t('previewLabel')}
               </Text>
               <View style={[styles.previewCard, { backgroundColor: selectedColor + '15' }]}>
                 <LinearGradient
@@ -205,20 +207,20 @@ export default function SharePostScreen() {
                   <View style={styles.workoutCardOverlay}>
                     <View style={styles.workoutBadge}>
                       <Ionicons name="fitness" size={14} color="#fff" />
-                      <Text style={styles.workoutBadgeText}>Séance</Text>
+                      <Text style={styles.workoutBadgeText}>{t('workoutLabelSingle')}</Text>
                     </View>
                     <Text style={styles.workoutTitle} numberOfLines={2}>
-                      {workoutTitle || 'Ma séance'}
+                      {workoutTitle || t('myWorkout')}
                     </Text>
                     <View style={styles.workoutStats}>
                       <View style={styles.workoutStat}>
                         <Text style={styles.workoutStatValue}>{exerciseCount || '0'}</Text>
-                        <Text style={styles.workoutStatLabel}>exercices</Text>
+                        <Text style={styles.workoutStatLabel}>{t('exercisesLabel')}</Text>
                       </View>
                       <View style={styles.statDivider} />
                       <View style={styles.workoutStat}>
                         <Text style={styles.workoutStatValue}>{setCount || '0'}</Text>
-                        <Text style={styles.workoutStatLabel}>séries</Text>
+                        <Text style={styles.workoutStatLabel}>{t('setsLabel')}</Text>
                       </View>
                     </View>
                   </View>
@@ -248,7 +250,7 @@ export default function SharePostScreen() {
             {/* Caption */}
             <View style={styles.captionSection}>
               <Text style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                Description
+                {t('descriptionLabel')}
               </Text>
               <View
                 style={[
@@ -261,7 +263,7 @@ export default function SharePostScreen() {
               >
                 <TextInput
                   style={[styles.captionInput, { color: theme.colors.textPrimary }]}
-                  placeholder="Raconte ta séance, tes ressentis, tes progrès..."
+                  placeholder={t('describeWorkout')}
                   placeholderTextColor={theme.colors.textSecondary}
                   value={caption}
                   onChangeText={setCaption}
@@ -278,7 +280,7 @@ export default function SharePostScreen() {
             {/* Color Picker */}
             <View style={styles.colorSection}>
               <Text style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                Couleur
+                {t('colorLabel')}
               </Text>
               <ScrollView
                 horizontal
@@ -323,7 +325,7 @@ export default function SharePostScreen() {
             {/* Photo Button */}
             <View style={styles.photoSection}>
               <Text style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>
-                Photo
+                {t('photoLabel')}
               </Text>
               <Pressable
                 style={({ pressed }) => [
@@ -349,10 +351,10 @@ export default function SharePostScreen() {
                   </View>
                   <View style={styles.photoBtnContent}>
                     <Text style={[styles.photoBtnTitle, { color: theme.colors.textPrimary }]}>
-                      {imageUri ? 'Changer la photo' : 'Ajouter une photo'}
+                      {imageUri ? t('changePhoto') : t('addPhoto')}
                     </Text>
                     <Text style={[styles.photoBtnSubtitle, { color: theme.colors.textSecondary }]}>
-                      {imageUri ? 'Appuie pour remplacer' : 'Depuis ta galerie'}
+                      {imageUri ? t('tapToReplace') : t('fromGallery')}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />

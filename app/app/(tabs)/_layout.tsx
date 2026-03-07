@@ -20,11 +20,6 @@ export default function TabLayout() {
     return <Redirect href="/login" />;
   }
 
-  // Si les traductions sont en cours de chargement, utiliser les valeurs par défaut
-  const getTitle = (key: string, fallback: string) => {
-    return isLoading ? fallback : t(key as any);
-  };
-
   return (
     <Tabs
       screenOptions={{
@@ -49,12 +44,12 @@ export default function TabLayout() {
         <Tabs.Screen
           name="index"
           options={{
-            title: getTitle('home', 'Accueil'),
+            title: t('home'),
             tabBarIcon: ({ color, size, focused }) => (
-              <Ionicons 
-                name={focused ? 'home' : 'home-outline'} 
-                size={24} 
-                color={color} 
+              <Ionicons
+                name={focused ? 'home' : 'home-outline'}
+                size={24}
+                color={color}
               />
             ),
           }}
@@ -62,12 +57,12 @@ export default function TabLayout() {
         <Tabs.Screen
           name="feed"
           options={{
-            title: getTitle('feed', 'Réseau'),
+            title: t('feed'),
             tabBarIcon: ({ color, size, focused }) => (
-              <Ionicons 
-                name={focused ? 'people' : 'people-outline'} 
-                size={24} 
-                color={color} 
+              <Ionicons
+                name={focused ? 'people' : 'people-outline'}
+                size={24}
+                color={color}
               />
             ),
           }}
@@ -75,12 +70,12 @@ export default function TabLayout() {
         <Tabs.Screen
           name="messages"
           options={{
-            title: getTitle('messages', 'Messages'),
+            title: t('messages'),
             tabBarIcon: ({ color, size, focused }) => (
-              <Ionicons 
-                name={focused ? 'chatbubbles' : 'chatbubbles-outline'} 
-                size={24} 
-                color={color} 
+              <Ionicons
+                name={focused ? 'chatbubbles' : 'chatbubbles-outline'}
+                size={24}
+                color={color}
               />
             ),
           }}
@@ -88,12 +83,12 @@ export default function TabLayout() {
         <Tabs.Screen
           name="explore"
           options={{
-            title: getTitle('explore', 'Explorer'),
+            title: t('explore'),
             tabBarIcon: ({ color, size, focused }) => (
-              <Ionicons 
-                name={focused ? 'compass' : 'compass-outline'} 
-                size={24} 
-                color={color} 
+              <Ionicons
+                name={focused ? 'compass' : 'compass-outline'}
+                size={24}
+                color={color}
               />
             ),
           }}
@@ -101,7 +96,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="profile"
           options={{
-            title: getTitle('profile', 'Profil'),
+            title: t('profile'),
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons 
                 name={focused ? 'person' : 'person-outline'} 

@@ -3,6 +3,7 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface ProgressCardProps {
   // Stats principales
@@ -29,6 +30,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
   volumeChangePercent,
 }) => {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   // Animation du cercle
@@ -67,10 +69,10 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
     <View style={[styles.container, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.title, { color: theme.colors.textPrimary }]}>Progression</Text>
+        <Text style={[styles.title, { color: theme.colors.textPrimary }]}>{t('progression')}</Text>
         <View style={[styles.badge, { backgroundColor: theme.colors.accentMuted }]}>
           <Text style={[styles.badgeText, { color: theme.colors.accent }]}>
-            {sessionsThisWeek}/{weeklyGoal} séances
+            {t('sessionsOfGoal', { current: sessionsThisWeek, goal: weeklyGoal })}
           </Text>
         </View>
       </View>
@@ -118,7 +120,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
               {Math.round(goalProgressPercent)}%
             </Text>
             <Text style={[styles.percentLabel, { color: theme.colors.textSecondary }]}>
-              de l'objectif
+              {t('ofGoal')}
             </Text>
           </View>
         </View>
@@ -136,7 +138,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
               </Text>
             </View>
             <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-              Cette semaine
+              {t('thisWeek')}
             </Text>
           </View>
 
@@ -146,7 +148,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
               {totalSessions}
             </Text>
             <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-              Total séances
+              {t('totalSessions')}
             </Text>
           </View>
 
@@ -161,7 +163,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
               </Text>
             </View>
             <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-              Kg soulevés
+              {t('kgLifted')}
             </Text>
           </View>
         </View>
@@ -171,7 +173,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
       {goalProgressPercent >= 100 && (
         <View style={[styles.successBanner, { backgroundColor: theme.colors.success + '15' }]}>
           <Text style={[styles.successText, { color: theme.colors.success }]}>
-            🎉 Objectif de la semaine atteint !
+            🎉 {t('weeklyGoalReached')}
           </Text>
         </View>
       )}
@@ -180,7 +182,7 @@ export const ProgressCard: React.FC<ProgressCardProps> = ({
       {totalSessions === 0 && (
         <View style={[styles.emptyBanner, { backgroundColor: theme.colors.surfaceMuted }]}>
           <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-            💪 Commence ta première séance pour voir tes stats ici
+            💪 {t('startFirstSession')}
           </Text>
         </View>
       )}

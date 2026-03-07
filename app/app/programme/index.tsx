@@ -19,6 +19,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { listPrograms } from '@/services/programsApi';
 import { Program, ProgramSession } from '@/types/program';
 import { useWorkouts } from '@/hooks/useWorkouts';
@@ -39,6 +40,7 @@ const getObjectiveColors = (objective?: string) => {
 
 const ProgramsScreen: React.FC = () => {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [programs, setPrograms] = useState<Program[]>([]);
@@ -77,7 +79,7 @@ const ProgramsScreen: React.FC = () => {
       const data = await listPrograms();
       setPrograms(data);
     } catch (e: any) {
-      setError(e?.message || 'Impossible de charger les programmes');
+      setError(e?.message || t('cannotLoadPrograms'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -106,15 +108,15 @@ const ProgramsScreen: React.FC = () => {
 
   const handleStartSession = async (program: Program, sess: ProgramSession) => {
     if (!sess.sets?.length) {
-      Alert.alert('Séance vide', 'Cette séance ne contient pas de séries.');
+      Alert.alert(t('emptySessionAlert'), t('emptySessionAlertDesc'));
       return;
     }
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
       setLaunchingSession(`${program.id}-${sess.day_index}`);
-      const draft = await createDraft(sess.title || `Séance ${sess.day_index + 1}`);
+      const draft = await createDraft(sess.title || `${t('sessionLabel')} ${sess.day_index + 1}`);
       if (!draft) {
-        throw new Error('Impossible de créer la séance');
+        throw new Error(t('cannotCreateSession'));
       }
 
       const grouped = sess.sets.reduce<Record<string, typeof sess.sets>>((acc, set) => {
@@ -137,7 +139,7 @@ const ProgramsScreen: React.FC = () => {
 
       router.push(`/track/${draft.workout.id}`);
     } catch (err: any) {
-      Alert.alert('Erreur', err?.message || 'Impossible de démarrer la séance');
+      Alert.alert(t('errorTitle'), err?.message || t('cannotStartSession'));
     } finally {
       setLaunchingSession(null);
     }
@@ -155,7 +157,7 @@ const ProgramsScreen: React.FC = () => {
         <View style={[styles.loadingSpinner, { backgroundColor: theme.colors.surface }]}>
           <ActivityIndicator size="large" color={theme.colors.accent} />
           <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-            Chargement des programmes...
+            {t('loadingPrograms')}
           </Text>
         </View>
       </View>
@@ -168,14 +170,14 @@ const ProgramsScreen: React.FC = () => {
         <View style={[styles.errorIconCircle, { backgroundColor: theme.colors.error + '20' }]}>
           <Ionicons name="warning-outline" size={48} color={theme.colors.error} />
         </View>
-        <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]}>Erreur</Text>
+        <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]}>{t('errorTitle')}</Text>
         <Text style={[styles.errorText, { color: theme.colors.textSecondary }]}>{error}</Text>
         <TouchableOpacity 
           style={[styles.retryButton, { backgroundColor: theme.colors.accent }]}
           onPress={fetchPrograms}
         >
           <Ionicons name="refresh" size={18} color="#fff" />
-          <Text style={styles.retryButtonText}>Réessayer</Text>
+          <Text style={styles.retryButtonText}>{t('retryLabel')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -228,7 +230,7 @@ const ProgramsScreen: React.FC = () => {
               >
                 <Ionicons name="arrow-back" size={22} color="#fff" />
               </TouchableOpacity>
-              <Text style={styles.navTitle}>Mes Programmes</Text>
+              <Text style={styles.navTitle}>{t('myProgramsTitle')}</Text>
               <View style={{ width: 40 }} />
             </View>
 
@@ -237,9 +239,9 @@ const ProgramsScreen: React.FC = () => {
                 <Ionicons name="calendar" size={28} color="#fff" />
               </View>
               <Text style={styles.headerSubtitle}>
-                {programs.length === 0 
-                  ? 'Crée ton premier programme'
-                  : `${programs.length} programme${programs.length > 1 ? 's' : ''} • ${programs.reduce((acc, p) => acc + p.sessions.length, 0)} séances`
+                {programs.length === 0
+                  ? t('createYourFirstProgram')
+                  : `${programs.length} ${programs.length > 1 ? t('programsCountPlural') : t('programsCount')} • ${programs.reduce((acc, p) => acc + p.sessions.length, 0)} ${t('sessionsCountLabel')}`
                 }
               </Text>
             </View>
@@ -260,7 +262,7 @@ const ProgramsScreen: React.FC = () => {
                 style={styles.createButtonGradient}
               >
                 <Ionicons name="add-circle" size={20} color="#fff" />
-                <Text style={styles.createButtonText}>Créer un programme</Text>
+                <Text style={styles.createButtonText}>{t('createProgramButton')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </LinearGradient>
@@ -289,10 +291,10 @@ const ProgramsScreen: React.FC = () => {
                 <Ionicons name="fitness-outline" size={40} color={theme.colors.accent} />
               </View>
               <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                Aucun programme
+                {t('noPrograms')}
               </Text>
               <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                Crée ton premier programme personnalisé pour organiser tes séances d'entraînement
+                {t('emptyProgramDesc')}
               </Text>
             </View>
           ) : (
@@ -329,11 +331,11 @@ const ProgramsScreen: React.FC = () => {
                         <View style={styles.programMeta}>
                           <View style={[styles.metaBadge, { backgroundColor: colors.accent + '20' }]}>
                             <Text style={[styles.metaBadgeText, { color: colors.accent }]}>
-                              {program.objective || 'Général'}
+                              {program.objective || t('generalLabel')}
                             </Text>
                           </View>
                           <Text style={[styles.metaText, { color: theme.colors.textSecondary }]}>
-                            {program.duration_weeks} sem.
+                            {program.duration_weeks} {t('semLabel')}
                           </Text>
                         </View>
                       </View>
@@ -344,7 +346,7 @@ const ProgramsScreen: React.FC = () => {
                           {program.sessions.length}
                         </Text>
                         <Text style={[styles.sessionsBadgeLabel, { color: theme.colors.textSecondary }]}>
-                          séances
+                          {t('sessionsCountLabel')}
                         </Text>
                       </View>
                       <Ionicons

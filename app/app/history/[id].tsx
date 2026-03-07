@@ -3,6 +3,7 @@ import { View, Pressable, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 import HistoryDetailScreen from '../../src/screens/HistoryDetailScreen';
 
@@ -12,6 +13,7 @@ export default function HistoryDetailRoute() {
   const router = useRouter();
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslations();
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -19,7 +21,7 @@ export default function HistoryDetailRoute() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>Détail séance</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>{t('sessionDetail')}</Text>
         <View style={{ width: 32 }} />
       </View>
       <HistoryDetailScreen workoutId={Number.isFinite(workoutId) ? workoutId : -1} />

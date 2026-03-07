@@ -8,7 +8,7 @@ const CLOUD_API_URL = 'https://appli-v2.onrender.com';
 // Pour le dev local (téléphone sur le même Wi‑Fi que la machine)
 // Option 1 : définir EXPO_PUBLIC_API_URL dans app/.env (ex: http://192.168.1.45:8000)
 // Option 2 : USE_LOCAL_API = true et mettre l’IP de ta machine ci‑dessous
-const LOCAL_API_IP = 'http://192.168.1.45:8000';
+const LOCAL_API_IP = 'http://192.168.1.175:8000';
 const LOCAL_API_WEB = 'http://localhost:8000';
 
 // Toggle pour basculer entre local et cloud

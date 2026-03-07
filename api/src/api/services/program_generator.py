@@ -563,15 +563,21 @@ def generate_program(
             'sessions': sessions_data,
         })
     
-    # Pour la première semaine seulement (comme dans la V2 actuelle)
-    first_week_sessions = weeks[0]['sessions'] if weeks else []
-    
+    # Aplatir toutes les semaines en une seule liste avec day_index séquentiel
+    all_sessions = []
+    global_index = 0
+    for week in weeks:
+        for sess in week['sessions']:
+            sess['day_index'] = global_index
+            all_sessions.append(sess)
+            global_index += 1
+
     return {
         'title': title,
         'objective': profile.get('objective'),
         'duration_weeks': duration_weeks,
         'user_id': profile.get('user_id'),
-        'sessions': first_week_sessions,
+        'sessions': all_sessions,
     }
 
 

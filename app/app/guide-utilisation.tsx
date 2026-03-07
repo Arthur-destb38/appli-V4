@@ -128,7 +128,7 @@ export default function GuideUtilisationScreen() {
             <Ionicons name="book" size={20} color="#fff" />
           </LinearGradient>
           <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
-            Guide d&apos;utilisation
+            {t('guideTitle')}
           </Text>
         </View>
         <View style={{ width: 44 }} />
@@ -158,8 +158,7 @@ export default function GuideUtilisationScreen() {
             </LinearGradient>
           </View>
           <Text style={[styles.introText, { color: theme.colors.textSecondary }]}>
-            Découvre comment tirer le meilleur parti de Gorillax : suivi des séances, programmes,
-            feed social et plus encore.
+            {t('guideIntro')}
           </Text>
           <TouchableOpacity
             style={[styles.demoButton, { backgroundColor: theme.colors.accent + '20', marginTop: 12 }]}
@@ -174,97 +173,77 @@ export default function GuideUtilisationScreen() {
 
         <GuideSection
           number="1"
-          title="Accueil"
+          title={t('guideHomeTitle')}
           icon="home"
           iconColor="#6366f1"
           delay={100}
         >
-          Sur l&apos;onglet Accueil tu vois ton tableau de bord : ton streak (jours consécutifs),
-          l&apos;objectif de la semaine (ex. 3/4 séances) et ta prochaine séance. Utilise le menu
-          (icône hamburger) pour accéder à la Progression, à Mon Programme et aux Paramètres. Tu
-          peux lancer une séance en un clic depuis la carte « Prochaine séance ».
+          {t('guideHomeContent')}
         </GuideSection>
 
         <GuideSection
           number="2"
-          title="Créer et faire une séance"
+          title={t('guideCreateTitle')}
           icon="barbell"
           iconColor="#10b981"
           delay={150}
         >
-          Depuis l&apos;accueil ou le menu, choisis « Créer une séance ». Donne un titre (ex. Push
-          Day), ajoute des exercices depuis la bibliothèque (recherche par nom). Pendant
-          l&apos;entraînement, note tes séries : poids, reps, RPE. Le chrono entre les séries t&apos;aide
-          à garder le rythme. Quand tu as fini, marque la séance comme terminée : elle sera
-          enregistrée dans ton historique et ta progression.
+          {t('guideCreateContent')}
         </GuideSection>
 
         <GuideSection
           number="3"
-          title="Mon Programme"
+          title={t('guideProgramTitle')}
           icon="calendar"
           iconColor="#f59e0b"
           delay={200}
         >
-          Dans Mon Programme tu organises tes semaines : tu vois tes séances par jour. Clique sur une
-          séance pour la lancer et la faire. Tu peux aussi créer un nouveau programme (Créer un
-          programme) pour planifier plusieurs semaines à l&apos;avance.
+          {t('guideProgramContent')}
         </GuideSection>
 
         <GuideSection
           number="4"
-          title="Réseau (Feed)"
+          title={t('guideFeedTitle')}
           icon="people"
           iconColor="#ec4899"
           delay={250}
         >
-          L&apos;onglet Réseau affiche le feed : les séances partagées par la communauté. Tu peux liker
-          un post (cœur), commenter, et cliquer sur un pseudo pour voir le profil public (stats, bio,
-          séances). Le classement (volume, fréquence) est accessible depuis le feed pour te comparer
-          aux autres.
+          {t('guideFeedContent')}
         </GuideSection>
 
         <GuideSection
           number="5"
-          title="Explorer et défis"
+          title={t('guideExploreTitle')}
           icon="trophy"
           iconColor="#8b5cf6"
           delay={300}
         >
-          Dans l&apos;onglet Explorer tu découvres les défis communautaires. Ouvre un défi pour voir les
-          règles et les récompenses, puis rejoins-le. Tu peux aussi rechercher des séances ou des
-          utilisateurs depuis la barre de recherche.
+          {t('guideExploreContent')}
         </GuideSection>
 
         <GuideSection
           number="6"
-          title="Messages"
+          title={t('guideMessagesTitle')}
           icon="chatbubbles"
           iconColor="#06b6d4"
           delay={350}
         >
-          L&apos;onglet Messages liste tes conversations. Ouvre une conversation ou crée un nouveau
-          message pour échanger en privé avec un autre membre. Tu peux aussi envoyer un message
-          depuis le profil d&apos;un utilisateur (bouton « Envoyer un message »).
+          {t('guideMessagesContent')}
         </GuideSection>
 
         <GuideSection
           number="7"
-          title="Profil et paramètres"
+          title={t('guideProfileTitle')}
           icon="person"
           iconColor="#6366f1"
           delay={400}
         >
-          Sur ton Profil tu vois ton avatar, pseudo, bio, objectif et tes stats (séances, exercices).
-          Depuis le menu du profil : Mon profil public, Progression, Mon Programme, Mes Objectifs,
-          Notifications. Les Réglages donnent accès aux Paramètres (infos, préférences, apparence,
-          langue), aux Conditions d&apos;utilisation et à la Confidentialité. Le bouton Déconnexion te
-          ramène à l&apos;écran de connexion.
+          {t('guideProfileContent')}
         </GuideSection>
 
         <View style={[styles.footer, { marginTop: 24, marginBottom: 40 }]}>
           <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>
-            Bonne séance avec Gorillax 🦍
+            {t('guideFooter')} 🦍
           </Text>
         </View>
       </ScrollView>

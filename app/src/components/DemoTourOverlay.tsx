@@ -11,6 +11,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { useDemo } from '../contexts/DemoContext';
 import type { ArrowPosition } from '../contexts/DemoContext';
 
@@ -33,6 +34,7 @@ function ArrowTriangle({ point, color }: { point: ArrowPosition; color: string }
 
 export function DemoTourOverlay() {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const { isDemoActive, demoStep, steps, nextStep, stopDemo } = useDemo();
   const router = useRouter();
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -139,9 +141,9 @@ export function DemoTourOverlay() {
             </TouchableOpacity>
           </View>
 
-          <Text style={[styles.title, { color: theme.colors.textPrimary }]}>{step.title}</Text>
+          <Text style={[styles.title, { color: theme.colors.textPrimary }]}>{t(step.title as any)}</Text>
           <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
-            {step.description}
+            {t(step.description as any)}
           </Text>
 
           <View style={[styles.progressTrack, { backgroundColor: theme.colors.border }]}>
@@ -156,7 +158,7 @@ export function DemoTourOverlay() {
             activeOpacity={0.8}
           >
             <Text style={styles.nextButtonText}>
-              {demoStep >= steps.length - 1 ? 'Terminer' : 'Suivant'}
+              {demoStep >= steps.length - 1 ? t('finish') : t('next')}
             </Text>
             <Ionicons name="arrow-forward" size={18} color="#fff" />
           </TouchableOpacity>

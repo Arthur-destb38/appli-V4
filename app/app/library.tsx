@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { formatDate } from '@/utils/formatting';
 import { EXERCISE_CATALOG } from '@/src/data/exercises';
@@ -29,7 +30,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const showConfirm = (
   title: string,
   message: string,
-  onConfirm: () => void
+  onConfirm: () => void,
+  cancelLabel: string,
+  deleteLabel: string
 ) => {
   if (Platform.OS === 'web') {
     // eslint-disable-next-line no-alert
@@ -38,14 +41,14 @@ const showConfirm = (
     }
   } else {
     Alert.alert(title, message, [
-      { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: onConfirm },
+      { text: cancelLabel, style: 'cancel' },
+      { text: deleteLabel, style: 'destructive', onPress: onConfirm },
     ]);
   }
 };
 
 // Grouper les workouts par période
-const getTimePeriod = (timestamp: number): string => {
+const getTimePeriod = (timestamp: number, t: (key: string) => string, language: string): string => {
   const now = Date.now();
   const date = new Date(timestamp);
   const today = new Date();
@@ -55,17 +58,18 @@ const getTimePeriod = (timestamp: number): string => {
   thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay());
   const thisMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  if (date.toDateString() === today.toDateString()) return 'Aujourd\'hui';
-  if (date.toDateString() === yesterday.toDateString()) return 'Hier';
-  if (date >= thisWeekStart) return 'Cette semaine';
-  if (date >= thisMonthStart) return 'Ce mois-ci';
-  return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  if (date.toDateString() === today.toDateString()) return t('today');
+  if (date.toDateString() === yesterday.toDateString()) return t('yesterday');
+  if (date >= thisWeekStart) return t('thisWeek');
+  if (date >= thisMonthStart) return t('thisMonth');
+  return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' });
 };
 
 export default function LibraryScreen() {
   const { theme, mode } = useAppTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { t, language } = useTranslations();
   const params = useLocalSearchParams<{ filter?: string }>();
   const { workouts, deleteWorkout } = useWorkouts();
 
@@ -159,7 +163,7 @@ export default function LibraryScreen() {
   const groupedWorkouts = useMemo(() => {
     const groups: { [key: string]: typeof filteredWorkouts } = {};
     filteredWorkouts.forEach((item) => {
-      const period = getTimePeriod(item.workout.updated_at);
+      const period = getTimePeriod(item.workout.updated_at, t, language);
       if (!groups[period]) groups[period] = [];
       groups[period].push(item);
     });
@@ -193,14 +197,16 @@ export default function LibraryScreen() {
 
   const handleDelete = useCallback((workoutId: number, title: string) => {
     showConfirm(
-      'Supprimer la séance',
-      `Veux-tu vraiment supprimer "${title || 'Sans titre'}" ?`,
+      t('deleteWorkoutTitle'),
+      t('confirmDeleteWorkout', { title: title || t('untitled') }),
       () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         deleteWorkout(workoutId);
-      }
+      },
+      t('cancel'),
+      t('delete')
     );
-  }, [deleteWorkout]);
+  }, [deleteWorkout, t]);
 
   const handleSearchFocus = useCallback((focused: boolean) => {
     Animated.spring(searchFocusAnim, {
@@ -297,9 +303,9 @@ export default function LibraryScreen() {
       const minutes = Math.floor(diff / 60000);
       const hours = Math.floor(diff / 3600000);
       const days = Math.floor(diff / 86400000);
-      if (minutes < 60) return `il y a ${minutes}min`;
-      if (hours < 24) return `il y a ${hours}h`;
-      if (days < 7) return `il y a ${days}j`;
+      if (minutes < 60) return t('minutesAgo', { n: String(minutes) });
+      if (hours < 24) return t('hoursAgo', { n: String(hours) });
+      if (days < 7) return t('daysAgo', { days: String(days) });
       return formatDate(timestamp);
     };
 
@@ -344,7 +350,7 @@ export default function LibraryScreen() {
               
               <View style={styles.cardTitleBlock}>
                 <Text style={[styles.cardTitle, { color: theme.colors.textPrimary }]} numberOfLines={1}>
-                  {item.workout.title || 'Sans titre'}
+                  {item.workout.title || t('untitled')}
                 </Text>
                 <Text style={[styles.cardTimeAgo, { color: theme.colors.textSecondary }]}>
                   {getTimeAgo(item.workout.updated_at)}
@@ -354,7 +360,7 @@ export default function LibraryScreen() {
               <View style={[styles.statusBadge, { backgroundColor: cardColor + '20' }]}>
                 <View style={[styles.statusDot, { backgroundColor: cardColor }]} />
                 <Text style={[styles.statusText, { color: cardColor }]}>
-                  {isCompleted ? 'Terminé' : 'En cours'}
+                  {isCompleted ? t('doneLabel') : t('inProgressLabel')}
                 </Text>
               </View>
             </View>
@@ -371,7 +377,7 @@ export default function LibraryScreen() {
                   />
                 </View>
                 <Text style={[styles.progressText, { color: theme.colors.textSecondary }]}>
-                  {completedSets}/{totalSets} séries
+                  {t('setsProgress', { completed: String(completedSets), total: String(totalSets) })}
                 </Text>
               </View>
             )}
@@ -411,14 +417,14 @@ export default function LibraryScreen() {
               <View style={styles.cardStat}>
                 <Ionicons name="barbell-outline" size={14} color={theme.colors.textSecondary} />
                 <Text style={[styles.cardStatText, { color: theme.colors.textSecondary }]}>
-                  {item.exercises.length} exercice{item.exercises.length > 1 ? 's' : ''}
+                  {item.exercises.length} {t('exercisesLabel').toLowerCase()}
                 </Text>
               </View>
               <View style={[styles.cardStatDivider, { backgroundColor: theme.colors.border }]} />
               <View style={styles.cardStat}>
                 <Ionicons name="layers-outline" size={14} color={theme.colors.textSecondary} />
                 <Text style={[styles.cardStatText, { color: theme.colors.textSecondary }]}>
-                  {totalSets} série{totalSets > 1 ? 's' : ''}
+                  {totalSets} {t('setsLabel')}
                 </Text>
               </View>
               {isCompleted && (
@@ -426,7 +432,7 @@ export default function LibraryScreen() {
                   <View style={[styles.cardStatDivider, { backgroundColor: theme.colors.border }]} />
                   <View style={styles.cardStat}>
                     <Ionicons name="trophy-outline" size={14} color={cardColor} />
-                    <Text style={[styles.cardStatText, { color: cardColor }]}>Complété</Text>
+                    <Text style={[styles.cardStatText, { color: cardColor }]}>{t('completedStatus')}</Text>
                   </View>
                 </>
               )}
@@ -457,7 +463,7 @@ export default function LibraryScreen() {
               >
                 <Ionicons name={isCompleted ? 'eye' : 'play'} size={16} color="#FFFFFF" />
                 <Text style={styles.mainActionText}>
-                  {isCompleted ? 'Consulter' : 'Démarrer'}
+                  {isCompleted ? t('viewLabel') : t('startLabel')}
                 </Text>
                 <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
               </LinearGradient>
@@ -538,10 +544,10 @@ export default function LibraryScreen() {
             
             <View style={styles.topBarTitleContainer}>
               <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
-                Ma Bibliothèque
+                {t('myLibrary')}
               </Text>
               <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
-                {stats.drafts + stats.completed} séances au total
+                {t('totalWorkoutsCount', { count: String(stats.drafts + stats.completed) })}
               </Text>
             </View>
             
@@ -589,7 +595,7 @@ export default function LibraryScreen() {
             <Ionicons name="search-outline" size={18} color={theme.colors.textSecondary} />
             <TextInput
               style={[styles.searchInput, { color: theme.colors.textPrimary }]}
-              placeholder="Rechercher une séance..."
+              placeholder={t('searchWorkout')}
               placeholderTextColor={theme.colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -618,10 +624,10 @@ export default function LibraryScreen() {
               </LinearGradient>
               <View style={styles.statTextBlock}>
                 <Text style={[styles.statValueNew, { color: theme.colors.textPrimary }]}>{stats.drafts}</Text>
-                <Text style={[styles.statLabelNew, { color: theme.colors.textSecondary }]}>En cours</Text>
+                <Text style={[styles.statLabelNew, { color: theme.colors.textSecondary }]}>{t('inProgressLabel')}</Text>
               </View>
             </View>
-            
+
             <View style={[styles.statCardNew, { backgroundColor: theme.colors.surface }]}>
               <LinearGradient
                 colors={filterColors.completed.accentGradient}
@@ -631,10 +637,10 @@ export default function LibraryScreen() {
               </LinearGradient>
               <View style={styles.statTextBlock}>
                 <Text style={[styles.statValueNew, { color: theme.colors.textPrimary }]}>{stats.completed}</Text>
-                <Text style={[styles.statLabelNew, { color: theme.colors.textSecondary }]}>Terminées</Text>
+                <Text style={[styles.statLabelNew, { color: theme.colors.textSecondary }]}>{t('completedLabel')}</Text>
               </View>
             </View>
-            
+
             <View style={[styles.statCardNew, { backgroundColor: theme.colors.surface }]}>
               <LinearGradient
                 colors={['#8b5cf6', '#7c3aed']}
@@ -644,10 +650,10 @@ export default function LibraryScreen() {
               </LinearGradient>
               <View style={styles.statTextBlock}>
                 <Text style={[styles.statValueNew, { color: theme.colors.textPrimary }]}>{stats.totalExercises}</Text>
-                <Text style={[styles.statLabelNew, { color: theme.colors.textSecondary }]}>Exercices</Text>
+                <Text style={[styles.statLabelNew, { color: theme.colors.textSecondary }]}>{t('exercisesLabel')}</Text>
               </View>
             </View>
-            
+
             <View style={[styles.statCardNew, { backgroundColor: theme.colors.surface }]}>
               <LinearGradient
                 colors={['#ec4899', '#db2777']}
@@ -657,7 +663,7 @@ export default function LibraryScreen() {
               </LinearGradient>
               <View style={styles.statTextBlock}>
                 <Text style={[styles.statValueNew, { color: theme.colors.textPrimary }]}>{stats.totalSets}</Text>
-                <Text style={[styles.statLabelNew, { color: theme.colors.textSecondary }]}>Séries</Text>
+                <Text style={[styles.statLabelNew, { color: theme.colors.textSecondary }]}>{t('setsLabel')}</Text>
               </View>
             </View>
           </ScrollView>
@@ -700,7 +706,7 @@ export default function LibraryScreen() {
                     styles.filterTabTextNew,
                     { color: isActive ? '#FFFFFF' : theme.colors.textPrimary }
                   ]}>
-                    {filter === 'draft' ? 'En cours' : 'Terminées'}
+                    {filter === 'draft' ? t('inProgressLabel') : t('completedLabel')}
                   </Text>
                   <View style={[
                     styles.filterCountBadge,
@@ -748,12 +754,12 @@ export default function LibraryScreen() {
                 />
               </LinearGradient>
               <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                {activeFilter === 'draft' ? 'Aucune séance en cours' : 'Aucune séance terminée'}
+                {activeFilter === 'draft' ? t('noWorkoutInProgress') : t('noCompletedWorkout')}
               </Text>
               <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
                 {activeFilter === 'draft'
-                  ? 'Crée une nouvelle séance pour commencer ton entraînement'
-                  : 'Termine une séance pour la voir apparaître ici'}
+                  ? t('createFirstWorkout')
+                  : t('completeWorkoutToSee')}
               </Text>
               {activeFilter === 'draft' && (
                 <Pressable
@@ -767,7 +773,7 @@ export default function LibraryScreen() {
                     style={styles.emptyBtnGradient}
                   >
                     <Ionicons name="add" size={20} color="#FFFFFF" />
-                    <Text style={styles.emptyBtnText}>Nouvelle séance</Text>
+                    <Text style={styles.emptyBtnText}>{t('newSession')}</Text>
                   </LinearGradient>
                 </Pressable>
               )}

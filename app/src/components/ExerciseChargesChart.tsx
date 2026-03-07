@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { findExerciseById } from '@/data/exercises';
 import * as Haptics from 'expo-haptics';
 import { useNavigation } from 'expo-router';
@@ -39,9 +40,10 @@ interface ExerciseChargesChartProps {
 
 export const ExerciseChargesChart: React.FC<ExerciseChargesChartProps> = ({
   workouts,
-  title = 'Charges par exercice',
+  title,
 }) => {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const navigation = useNavigation();
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -178,7 +180,7 @@ export const ExerciseChargesChart: React.FC<ExerciseChargesChartProps> = ({
               {exercise.exerciseName}
             </Text>
             <Text style={[styles.sessionCount, { color: theme.colors.textSecondary }]}>
-              {exercise.sessionCount} séance{exercise.sessionCount > 1 ? 's' : ''}
+              {t('sessionCount').replace('{count}', String(exercise.sessionCount))}
             </Text>
           </View>
 

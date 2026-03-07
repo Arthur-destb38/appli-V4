@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, Pro
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { clearAllUserDataForLogout } from '@/db/clearUserData';
 import { buildApiUrl } from '@/utils/api';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface LoginRequest {
   username: string;
@@ -58,6 +59,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [tokens, setTokens] = useState<AuthTokens | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { t } = useTranslations();
 
   // Charger les données sauvegardées au démarrage
   useEffect(() => {
@@ -175,7 +177,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     });
 
     if (!response.ok) {
-      throw new Error('Impossible de récupérer le profil utilisateur');
+      throw new Error(t('errorFetchProfile'));
     }
 
     return await response.json();
@@ -202,8 +204,8 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Erreur de connexion' }));
-        throw new Error(error.detail || 'Nom d\'utilisateur ou mot de passe incorrect');
+        const error = await response.json().catch(() => ({ detail: t('errorConnection') }));
+        throw new Error(error.detail || t('errorWrongCredentials'));
       }
 
       const authTokens: AuthTokens = await response.json();
@@ -214,7 +216,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     } catch (error: unknown) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error('Le serveur met trop de temps à répondre. Réessaie dans quelques secondes (serveur au réveil).');
+          throw new Error(t('errorServerTimeout'));
         }
         throw error;
       }
@@ -243,7 +245,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error('Impossible de se connecter au compte demo');
+        throw new Error(t('errorDemoConnection'));
       }
 
       const authTokens: AuthTokens = await response.json();
@@ -252,7 +254,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     } catch (error: unknown) {
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error('Le serveur met trop de temps à répondre. Réessaie dans quelques secondes.');
+          throw new Error(t('errorServerTimeoutShort'));
         }
         throw error;
       }
@@ -275,8 +277,8 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       });
 
       if (!response.ok) {
-        const error = await response.json().catch(() => ({ detail: 'Erreur d\'inscription' }));
-        throw new Error(error.detail || 'Erreur lors de l\'inscription');
+        const error = await response.json().catch(() => ({ detail: t('errorRegistration') }));
+        throw new Error(error.detail || t('errorRegistrationGeneric'));
       }
 
       const authTokens: AuthTokens = await response.json();

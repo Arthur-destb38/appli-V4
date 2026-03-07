@@ -3,6 +3,7 @@ import { View, Pressable, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 import { TrackWorkoutScreen } from '@/src/screens/TrackWorkoutScreen';
 
@@ -12,6 +13,7 @@ export default function TrackRoute() {
   const router = useRouter();
   const { theme } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslations();
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
@@ -19,7 +21,7 @@ export default function TrackRoute() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>Suivi séance</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>{t('sessionTracking')}</Text>
         <View style={{ width: 32 }} />
       </View>
       <TrackWorkoutScreen

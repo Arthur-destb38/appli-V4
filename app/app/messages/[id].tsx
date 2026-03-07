@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslations } from '@/hooks/usePreferences';
 import {
   listMessages,
   sendMessage,
@@ -28,7 +29,7 @@ import {
 } from '@/services/messagingApi';
 import { getProfile } from '@/services/profileApi';
 
-function WorkoutMessageCard({ content, isMe, theme, router }: { content: string; isMe: boolean; theme: any; router: any }) {
+function WorkoutMessageCard({ content, isMe, theme, router, t }: { content: string; isMe: boolean; theme: any; router: any; t: (key: string) => string }) {
   const shareMatch = content.match(/\[share:(sh_[^\]]+)\]/);
   const extractedShareId = shareMatch ? shareMatch[1] : null;
 
@@ -39,7 +40,7 @@ function WorkoutMessageCard({ content, isMe, theme, router }: { content: string;
           <Ionicons name="barbell" size={16} color="#fff" />
         </LinearGradient>
         <Text style={[styles.workoutCardTitle, { color: isMe ? '#fff' : theme.colors.textPrimary }]} numberOfLines={2}>
-          {content.split('"')[1] || 'Séance'}
+          {content.split('"')[1] || t('workoutFallback')}
         </Text>
       </View>
       {content.includes('•') && (
@@ -61,7 +62,7 @@ function WorkoutMessageCard({ content, isMe, theme, router }: { content: string;
         >
           <Ionicons name="eye-outline" size={15} color={isMe ? '#fff' : theme.colors.primary} />
           <Text style={[styles.viewWorkoutText, { color: isMe ? '#fff' : theme.colors.primary }]}>
-            Voir la séance
+            {t('viewWorkout')}
           </Text>
           <Ionicons name="chevron-forward" size={14} color={isMe ? 'rgba(255,255,255,0.7)' : theme.colors.primary} />
         </Pressable>
@@ -79,6 +80,7 @@ export default function ChatScreen() {
     participantId: string;
   }>();
   const { user } = useAuth();
+  const { t, language } = useTranslations();
 
   const [messages, setMessages] = useState<MessageRead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -160,7 +162,7 @@ export default function ChatScreen() {
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString(language === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
   const formatDate = (dateString: string) => {
@@ -169,9 +171,9 @@ export default function ChatScreen() {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) return "Aujourd'hui";
-    if (date.toDateString() === yesterday.toDateString()) return 'Hier';
-    return date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (date.toDateString() === today.toDateString()) return t('today');
+    if (date.toDateString() === yesterday.toDateString()) return t('yesterday');
+    return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long' });
   };
 
   const groupedMessages = messages.reduce((groups, message) => {
@@ -219,11 +221,11 @@ export default function ChatScreen() {
             </LinearGradient>
             <View style={styles.headerInfo}>
               <Text style={[styles.headerName, { color: theme.colors.textPrimary }]} numberOfLines={1}>
-                {participantName || 'Chargement...'}
+                {participantName || t('loading')}
               </Text>
               <View style={styles.onlineRow}>
                 <View style={styles.onlineDot} />
-                <Text style={styles.onlineText}>En ligne</Text>
+                <Text style={styles.onlineText}>{t('onlineStatus')}</Text>
               </View>
             </View>
           </Pressable>
@@ -296,7 +298,7 @@ export default function ChatScreen() {
                             !isMe && isLast && styles.bubbleOtherLastRadius,
                           ]}
                         >
-                          <WorkoutMessageCard content={message.content} isMe={isMe} theme={theme} router={router} />
+                          <WorkoutMessageCard content={message.content} isMe={isMe} theme={theme} router={router} t={t} />
                           <View style={styles.messageFooter}>
                             <Text style={[styles.messageTime, { color: isMe ? 'rgba(255,255,255,0.6)' : theme.colors.textSecondary }]}>
                               {formatTime(message.created_at)}
@@ -357,10 +359,10 @@ export default function ChatScreen() {
                 <Ionicons name="chatbubble-ellipses-outline" size={36} color={theme.colors.primary} />
               </View>
               <Text style={[styles.emptyChatTitle, { color: theme.colors.textPrimary }]}>
-                Commencez la conversation
+                {t('startConversation')}
               </Text>
               <Text style={[styles.emptyChatSub, { color: theme.colors.textSecondary }]}>
-                Envoyez votre premier message à {participantName || 'cet utilisateur'}
+                {t('sendFirstMessageTo', { name: participantName || t('defaultUser') })}
               </Text>
             </View>
           )}
@@ -381,7 +383,7 @@ export default function ChatScreen() {
         <View style={[styles.inputWrapper, { backgroundColor: isDark ? 'rgba(255,255,255,0.06)' : '#f0f0f5', borderColor: isDark ? 'rgba(255,255,255,0.08)' : 'transparent' }]}>
           <TextInput
             style={[styles.input, { color: theme.colors.textPrimary }]}
-            placeholder="Écrivez un message..."
+            placeholder={t('writeMessage')}
             placeholderTextColor={theme.colors.textSecondary}
             value={inputText}
             onChangeText={setInputText}

@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface ProfileData {
   // Étape 1: Informations de base
@@ -33,40 +34,45 @@ interface ProfileData {
   consent_to_public_share: boolean;
 }
 
-const OBJECTIVES = [
-  { key: 'muscle_gain', label: 'Prise de masse', icon: '💪' },
-  { key: 'weight_loss', label: 'Perte de poids', icon: '🔥' },
-  { key: 'strength', label: 'Force', icon: '🏋️' },
-  { key: 'endurance', label: 'Endurance', icon: '🏃' },
-  { key: 'general_fitness', label: 'Forme générale', icon: '✨' },
-  { key: 'sport_specific', label: 'Sport spécifique', icon: '⚽' },
+const OBJECTIVE_KEYS = [
+  { key: 'muscle_gain', translationKey: 'muscleGain' as const, icon: '💪' },
+  { key: 'weight_loss', translationKey: 'weightLoss' as const, icon: '🔥' },
+  { key: 'strength', translationKey: 'strength' as const, icon: '🏋️' },
+  { key: 'endurance', translationKey: 'endurance' as const, icon: '🏃' },
+  { key: 'general_fitness', translationKey: 'generalFitness' as const, icon: '✨' },
+  { key: 'sport_specific', translationKey: 'sportSpecific' as const, icon: '⚽' },
 ];
 
-const EXPERIENCE_LEVELS = [
-  { key: 'beginner', label: 'Débutant', description: 'Moins de 6 mois' },
-  { key: 'intermediate', label: 'Intermédiaire', description: '6 mois - 2 ans' },
-  { key: 'advanced', label: 'Avancé', description: 'Plus de 2 ans' },
+const EXPERIENCE_LEVEL_KEYS = [
+  { key: 'beginner', labelKey: 'beginner' as const, descKey: 'beginnerDesc' as const },
+  { key: 'intermediate', labelKey: 'intermediate' as const, descKey: 'intermediateDesc' as const },
+  { key: 'advanced', labelKey: 'advanced' as const, descKey: 'advancedDesc' as const },
 ];
 
-const EQUIPMENT_OPTIONS = [
-  'Haltères',
-  'Barre olympique',
-  'Machines',
-  'Kettlebells',
-  'Élastiques',
-  'Poids du corps',
-  'TRX',
-  'Banc',
-  'Rack à squat',
-  'Cardio (tapis, vélo...)',
+const EQUIPMENT_KEYS = [
+  'dumbbells' as const,
+  'barbell' as const,
+  'machines' as const,
+  'kettlebells' as const,
+  'bands' as const,
+  'bodyweight' as const,
+  'trx' as const,
+  'bench' as const,
+  'squat_rack' as const,
+  'cardio' as const,
 ];
 
 export default function ProfileSetupScreen() {
+  const { t } = useTranslations();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData>({
     consent_to_public_share: false,
   });
+
+  const OBJECTIVES = OBJECTIVE_KEYS.map(o => ({ ...o, label: t(o.translationKey) }));
+  const EXPERIENCE_LEVELS = EXPERIENCE_LEVEL_KEYS.map(l => ({ ...l, label: t(l.labelKey), description: t(l.descKey) }));
+  const EQUIPMENT_OPTIONS = EQUIPMENT_KEYS.map(k => ({ key: k, label: t(k) }));
 
   const totalSteps = 3;
   const progress = (currentStep / totalSteps) * 100;
@@ -108,14 +114,14 @@ export default function ProfileSetupScreen() {
 
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Parlez-nous de vous</Text>
-      <Text style={styles.stepSubtitle}>Ces informations nous aideront à personnaliser votre expérience</Text>
+      <Text style={styles.stepTitle}>{t('tellAboutYourself')}</Text>
+      <Text style={styles.stepSubtitle}>{t('personalizeExperience')}</Text>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Bio (optionnel)</Text>
+        <Text style={styles.label}>{t('bioOptional')}</Text>
         <TextInput
           style={styles.textArea}
-          placeholder="Décrivez-vous en quelques mots..."
+          placeholder={t('describeBriefly')}
           value={profileData.bio}
           onChangeText={(text) => updateField('bio', text)}
           multiline
@@ -125,7 +131,7 @@ export default function ProfileSetupScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Localisation (optionnel)</Text>
+        <Text style={styles.label}>{t('locationOptional')}</Text>
         <TextInput
           style={styles.input}
           placeholder="Paris, France"
@@ -136,7 +142,7 @@ export default function ProfileSetupScreen() {
 
       <View style={styles.row}>
         <View style={[styles.inputGroup, { flex: 1, marginRight: 10 }]}>
-          <Text style={styles.label}>Taille (cm)</Text>
+          <Text style={styles.label}>{t('heightCm')}</Text>
           <TextInput
             style={styles.input}
             placeholder="175"
@@ -146,7 +152,7 @@ export default function ProfileSetupScreen() {
           />
         </View>
         <View style={[styles.inputGroup, { flex: 1, marginLeft: 10 }]}>
-          <Text style={styles.label}>Poids (kg)</Text>
+          <Text style={styles.label}>{t('weightKg')}</Text>
           <TextInput
             style={styles.input}
             placeholder="70"
@@ -158,13 +164,13 @@ export default function ProfileSetupScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Genre (optionnel)</Text>
+        <Text style={styles.label}>{t('genderOptional')}</Text>
         <View style={styles.optionsRow}>
           {[
-            { key: 'male', label: 'Homme' },
-            { key: 'female', label: 'Femme' },
-            { key: 'other', label: 'Autre' },
-            { key: 'prefer_not_to_say', label: 'Préfère ne pas dire' },
+            { key: 'male', label: t('male') },
+            { key: 'female', label: t('female') },
+            { key: 'other', label: t('other') },
+            { key: 'prefer_not_to_say', label: t('preferNotToSay') },
           ].map((option) => (
             <TouchableOpacity
               key={option.key}
@@ -191,11 +197,11 @@ export default function ProfileSetupScreen() {
 
   const renderStep2 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Vos objectifs fitness</Text>
-      <Text style={styles.stepSubtitle}>Aidez-nous à créer des programmes adaptés</Text>
+      <Text style={styles.stepTitle}>{t('fitnessObjectives')}</Text>
+      <Text style={styles.stepSubtitle}>{t('adaptedPrograms')}</Text>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Objectif principal</Text>
+        <Text style={styles.label}>{t('mainObjective')}</Text>
         <View style={styles.objectivesGrid}>
           {OBJECTIVES.map((objective) => (
             <TouchableOpacity
@@ -221,7 +227,7 @@ export default function ProfileSetupScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Niveau d'expérience</Text>
+        <Text style={styles.label}>{t('experienceLevel')}</Text>
         {EXPERIENCE_LEVELS.map((level) => (
           <TouchableOpacity
             key={level.key}
@@ -257,7 +263,7 @@ export default function ProfileSetupScreen() {
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Fréquence d'entraînement souhaitée</Text>
+        <Text style={styles.label}>{t('desiredFrequency')}</Text>
         <View style={styles.frequencyContainer}>
           {[1, 2, 3, 4, 5, 6, 7].map((freq) => (
             <TouchableOpacity
@@ -279,24 +285,24 @@ export default function ProfileSetupScreen() {
             </TouchableOpacity>
           ))}
         </View>
-        <Text style={styles.frequencyLabel}>fois par semaine</Text>
+        <Text style={styles.frequencyLabel}>{t('timesPerWeek')}</Text>
       </View>
     </View>
   );
 
   const renderStep3 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Préférences</Text>
-      <Text style={styles.stepSubtitle}>Dernière étape pour personnaliser votre expérience</Text>
+      <Text style={styles.stepTitle}>{t('preferencesTitle')}</Text>
+      <Text style={styles.stepSubtitle}>{t('lastStepPersonalize')}</Text>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Équipement disponible</Text>
+        <Text style={styles.label}>{t('availableEquipment')}</Text>
         <View style={styles.equipmentGrid}>
           {EQUIPMENT_OPTIONS.map((equipment) => {
-            const isSelected = profileData.equipment_available?.includes(equipment);
+            const isSelected = profileData.equipment_available?.includes(equipment.key);
             return (
               <TouchableOpacity
-                key={equipment}
+                key={equipment.key}
                 style={[
                   styles.equipmentChip,
                   isSelected && styles.equipmentChipSelected,
@@ -304,9 +310,9 @@ export default function ProfileSetupScreen() {
                 onPress={() => {
                   const current = profileData.equipment_available || [];
                   if (isSelected) {
-                    updateField('equipment_available', current.filter(e => e !== equipment));
+                    updateField('equipment_available', current.filter(e => e !== equipment.key));
                   } else {
-                    updateField('equipment_available', [...current, equipment]);
+                    updateField('equipment_available', [...current, equipment.key]);
                   }
                 }}
               >
@@ -316,7 +322,7 @@ export default function ProfileSetupScreen() {
                     isSelected && styles.equipmentTextSelected,
                   ]}
                 >
-                  {equipment}
+                  {equipment.label}
                 </Text>
               </TouchableOpacity>
             );
@@ -335,11 +341,11 @@ export default function ProfileSetupScreen() {
             )}
           </View>
           <Text style={styles.checkboxLabel}>
-            J'accepte de partager mes séances publiquement
+            {t('consentPublicShare')}
           </Text>
         </TouchableOpacity>
         <Text style={styles.checkboxDescription}>
-          Vous pourrez modifier ce paramètre à tout moment dans les réglages
+          {t('canChangeSettingsLater')}
         </Text>
       </View>
     </View>
@@ -357,7 +363,7 @@ export default function ProfileSetupScreen() {
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, { width: `${progress}%` }]} />
             </View>
-            <Text style={styles.progressText}>Étape {currentStep} sur {totalSteps}</Text>
+            <Text style={styles.progressText}>{t('stepOf', { current: currentStep, total: totalSteps })}</Text>
           </View>
         </View>
 
@@ -373,7 +379,7 @@ export default function ProfileSetupScreen() {
           <View style={styles.buttonRow}>
             {currentStep > 1 && (
               <TouchableOpacity style={styles.backButton} onPress={prevStep}>
-                <Text style={styles.backButtonText}>Retour</Text>
+                <Text style={styles.backButtonText}>{t('back')}</Text>
               </TouchableOpacity>
             )}
             
@@ -383,7 +389,7 @@ export default function ProfileSetupScreen() {
               disabled={loading}
             >
               <Text style={styles.nextButtonText}>
-                {loading ? 'Sauvegarde...' : currentStep === totalSteps ? 'Terminer' : 'Suivant'}
+                {loading ? t('saving') : currentStep === totalSteps ? t('finish') : t('next')}
               </Text>
             </TouchableOpacity>
             
@@ -396,14 +402,14 @@ export default function ProfileSetupScreen() {
                   router.replace('/(tabs)');
                 }}
               >
-                <Text style={styles.nextButtonText}>🧪 Test Terminer</Text>
+                <Text style={styles.nextButtonText}>{t('testFinish')}</Text>
               </TouchableOpacity>
             )}
           </View>
 
           {currentStep === 1 && (
             <TouchableOpacity style={styles.skipButton} onPress={() => router.replace('/(tabs)')}>
-              <Text style={styles.skipButtonText}>Passer pour l'instant</Text>
+              <Text style={styles.skipButtonText}>{t('skipForNow')}</Text>
             </TouchableOpacity>
           )}
         </View>

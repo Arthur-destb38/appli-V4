@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface Exercise {
   name: string;
@@ -68,6 +69,7 @@ export const NextWorkoutCard: React.FC<NextWorkoutCardProps> = ({
   onEdit,
 }) => {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -109,7 +111,7 @@ export const NextWorkoutCard: React.FC<NextWorkoutCardProps> = ({
             {title}
           </Text>
           <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
-            {exercises.length} exercices • {estimatedDuration} min
+            {t('exercisesMinFormat', { count: exercises.length, duration: estimatedDuration })}
           </Text>
         </View>
         <TouchableOpacity onPress={onEdit} style={styles.editButton}>
@@ -144,7 +146,7 @@ export const NextWorkoutCard: React.FC<NextWorkoutCardProps> = ({
         activeOpacity={0.8}
       >
         <Ionicons name="play" size={16} color="#fff" />
-        <Text style={styles.startButtonText}>Lancer</Text>
+        <Text style={styles.startButtonText}>{t('launchAction')}</Text>
       </TouchableOpacity>
     </Animated.View>
   );

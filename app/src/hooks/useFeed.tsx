@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { fetchFeed, followUser, unfollowUser, fetchSharedWorkout } from '@/services/feedApi';
 import { useWorkouts } from '@/hooks/useWorkouts';
+import { useTranslations } from '@/hooks/usePreferences';
 
 const slugify = (value: string) =>
   value
@@ -17,6 +18,7 @@ export const useFeed = () => {
   const { user, isAuthenticated } = useAuth();
   const { profile } = useUserProfile();
   const { createDraft, addExercise, addSet } = useWorkouts();
+  const { t } = useTranslations();
   const [items, setItems] = useState([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -36,12 +38,12 @@ export const useFeed = () => {
         setItems((prev) => (reset ? response.items : [...prev, ...response.items]));
         setNextCursor(response.next_cursor);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Impossible de charger le feed');
+        setError(err instanceof Error ? err.message : t('errorFeedLoad'));
       } finally {
         setIsLoading(false);
       }
     },
-    [userId, nextCursor]
+    [userId, nextCursor, t]
   );
 
   const toggleFollow = useCallback(
@@ -59,7 +61,7 @@ export const useFeed = () => {
   const duplicate = useCallback(
     async (shareId: string) => {
       const snapshot = await fetchSharedWorkout(shareId);
-      const created = await createDraft(snapshot.title ?? 'Séance du feed');
+      const created = await createDraft(snapshot.title ?? t('feedWorkoutTitle'));
       if (!created) {
         return;
       }
@@ -81,7 +83,7 @@ export const useFeed = () => {
         }
       }
     },
-    [addExercise, addSet, createDraft]
+    [addExercise, addSet, createDraft, t]
   );
 
   return {

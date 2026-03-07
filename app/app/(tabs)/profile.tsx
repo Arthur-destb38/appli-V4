@@ -27,9 +27,11 @@ import { useAppTheme } from '@/theme/ThemeProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { apiCall } from '@/utils/api';
+import { useTranslations } from '@/hooks/usePreferences';
 
 export default function ProfileScreen() {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const { user, logout, updateProfile } = useAuth();
   const { workouts } = useWorkouts();
   const router = useRouter();
@@ -66,18 +68,18 @@ export default function ProfileScreen() {
   const totalExercises = workouts.reduce((acc, w) => acc + w.exercises.length, 0);
 
   const menuItems = [
-    ...(user?.id ? [{ label: 'Mon profil public', route: `/profile/${user.id}`, icon: 'person' as const, color: '#6366f1' as const }] : []),
-    { label: 'Carte membre / Pass Salle', route: '/pass-salle', icon: 'wallet' as const, color: '#0ea5e9' as const },
-    { label: 'Progression', route: '/history', icon: 'trending-up' as const, color: '#10b981' },
-    { label: 'Mon Programme', route: '/programme', icon: 'calendar' as const, color: '#f59e0b' },
-    { label: 'Mes Objectifs', route: '/objectives', icon: 'flag' as const, color: '#ec4899' },
-    { label: 'Notifications', route: '/notifications', icon: 'notifications' as const, color: '#8b5cf6' },
+    ...(user?.id ? [{ label: t('myPublicProfile'), route: `/profile/${user.id}`, icon: 'person' as const, color: '#6366f1' as const }] : []),
+    { label: t('memberCard'), route: '/pass-salle', icon: 'wallet' as const, color: '#0ea5e9' as const },
+    { label: t('progressionNav'), route: '/history', icon: 'trending-up' as const, color: '#10b981' },
+    { label: t('myProgram'), route: '/programme', icon: 'calendar' as const, color: '#f59e0b' },
+    { label: t('myObjectives'), route: '/objectives', icon: 'flag' as const, color: '#ec4899' },
+    { label: t('notifications'), route: '/notifications', icon: 'notifications' as const, color: '#8b5cf6' },
   ];
 
   const settingsItems = [
-    { label: 'Paramètres', route: '/settings', icon: 'settings' as const },
-    { label: 'Conditions d\'utilisation', route: '/legal/terms', icon: 'document-text' as const },
-    { label: 'Confidentialité', route: '/legal/privacy', icon: 'shield-checkmark' as const },
+    { label: t('settings'), route: '/settings', icon: 'settings' as const },
+    { label: t('termsOfUse'), route: '/legal/terms', icon: 'document-text' as const },
+    { label: t('privacyLabel'), route: '/legal/privacy', icon: 'shield-checkmark' as const },
   ];
 
   const openEditModal = () => {
@@ -90,7 +92,7 @@ export default function ProfileScreen() {
 
   const handleSaveProfile = async () => {
     if (!editUsername.trim()) {
-      Alert.alert('Erreur', 'Le nom d\'utilisateur ne peut pas être vide');
+      Alert.alert(t('error'), t('usernameRequired'));
       return;
     }
 
@@ -109,17 +111,17 @@ export default function ProfileScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
         await updateProfile();
         setEditModalVisible(false);
-        Alert.alert('✅ Profil mis à jour !');
+        Alert.alert(t('profileUpdated'));
       } else {
         const error = await response.json().catch(() => ({ detail: 'Erreur' }));
         if (error.detail === 'username_taken') {
-          Alert.alert('Erreur', 'Ce nom d\'utilisateur est déjà pris');
+          Alert.alert(t('error'), t('usernameTaken'));
         } else {
-          Alert.alert('Erreur', 'Impossible de sauvegarder le profil');
+          Alert.alert(t('error'), t('cannotSaveProfile'));
         }
       }
     } catch (error) {
-      Alert.alert('Erreur', 'Impossible de sauvegarder le profil');
+      Alert.alert(t('error'), t('cannotSaveProfile'));
     } finally {
       setSaving(false);
     }
@@ -129,7 +131,7 @@ export default function ProfileScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      Alert.alert('Permission requise', 'Autorise l\'accès à tes photos pour changer ton avatar.');
+      Alert.alert(t('permissionRequired'), t('photoPermissionDesc'));
       return;
     }
 
@@ -142,7 +144,7 @@ export default function ProfileScreen() {
 
     if (!result.canceled) {
       // Pour l'instant, on simule juste le changement d'avatar
-      Alert.alert('Info', 'Fonctionnalité d\'upload d\'avatar à venir !');
+      Alert.alert(t('info'), t('avatarUploadComingSoon'));
     }
   };
 
@@ -218,8 +220,8 @@ export default function ProfileScreen() {
             </TouchableOpacity>
 
             {/* Infos utilisateur */}
-            <Text style={styles.username}>{user?.username || 'Utilisateur'}</Text>
-            <Text style={styles.bio}>{user?.bio || 'Aucune bio définie'}</Text>
+            <Text style={styles.username}>{user?.username || t('defaultUser')}</Text>
+            <Text style={styles.bio}>{user?.bio || t('noBioDefined')}</Text>
 
             {user?.objective && (
               <View style={styles.objectiveBadge}>
@@ -231,24 +233,24 @@ export default function ProfileScreen() {
             {/* Bouton modifier */}
             <TouchableOpacity style={styles.editButton} onPress={openEditModal} activeOpacity={0.8}>
               <Ionicons name="pencil" size={16} color="#fff" />
-              <Text style={styles.editButtonText}>Modifier le profil</Text>
+              <Text style={styles.editButtonText}>{t('editProfile')}</Text>
             </TouchableOpacity>
 
             {/* Stats rapides */}
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{completedWorkouts}</Text>
-                <Text style={styles.statLabel}>Séances</Text>
+                <Text style={styles.statLabel}>{t('sessionsLabel')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{totalExercises}</Text>
-                <Text style={styles.statLabel}>Exercices</Text>
+                <Text style={styles.statLabel}>{t('exercisesLabel')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{workouts.length}</Text>
-                <Text style={styles.statLabel}>Total</Text>
+                <Text style={styles.statLabel}>{t('total')}</Text>
               </View>
             </View>
           </LinearGradient>
@@ -272,7 +274,7 @@ export default function ProfileScreen() {
           ]}
         >
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
-            Menu
+            {t('menu')}
           </Text>
           <View style={[styles.menuCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
             {menuItems.map((item, index) => (
@@ -323,7 +325,7 @@ export default function ProfileScreen() {
           ]}
         >
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
-            Réglages
+            {t('settingsSection')}
           </Text>
           <View style={[styles.menuCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
             {settingsItems.map((item, index) => (
@@ -363,23 +365,23 @@ export default function ProfileScreen() {
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
               if (Platform.OS === 'web') {
-                if (typeof window !== 'undefined' && window.confirm('Es-tu sûr de vouloir te déconnecter ?')) {
+                if (typeof window !== 'undefined' && window.confirm(t('logoutConfirm'))) {
                   handleLogout();
                 }
               } else {
-                Alert.alert('Déconnexion', 'Es-tu sûr de vouloir te déconnecter ?', [
-                  { text: 'Annuler', style: 'cancel' },
-                  { text: 'Déconnexion', style: 'destructive', onPress: handleLogout },
+                Alert.alert(t('logoutButton'), t('logoutConfirm'), [
+                  { text: t('cancel'), style: 'cancel' },
+                  { text: t('logoutButton'), style: 'destructive', onPress: handleLogout },
                 ]);
               }
             }}
           >
             <Ionicons name="log-out-outline" size={20} color={theme.colors.error} />
-            <Text style={[styles.logoutText, { color: theme.colors.error }]}>Déconnexion</Text>
+            <Text style={[styles.logoutText, { color: theme.colors.error }]}>{t('logoutButton')}</Text>
           </TouchableOpacity>
           
           <Text style={[styles.version, { color: theme.colors.textSecondary }]}>
-            Gorillax v1.0.0
+            {t('version')}
           </Text>
         </View>
       </ScrollView>
@@ -404,7 +406,7 @@ export default function ProfileScreen() {
             
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: theme.colors.textPrimary }]}>
-                Modifier le profil
+                {t('editProfile')}
               </Text>
               <TouchableOpacity 
                 onPress={() => setEditModalVisible(false)}
@@ -416,7 +418,7 @@ export default function ProfileScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                Nom d'utilisateur
+                {t('username')}
               </Text>
               <View style={[styles.inputWrapper, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
                 <Ionicons name="person-outline" size={18} color={theme.colors.textSecondary} />
@@ -424,7 +426,7 @@ export default function ProfileScreen() {
                   style={[styles.input, { color: theme.colors.textPrimary }]}
                   value={editUsername}
                   onChangeText={setEditUsername}
-                  placeholder="Ton pseudo"
+                  placeholder={t('yourUsername')}
                   placeholderTextColor={theme.colors.textSecondary}
                   autoCapitalize="none"
                 />
@@ -433,14 +435,14 @@ export default function ProfileScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                Bio
+                {t('bio')}
               </Text>
               <View style={[styles.inputWrapper, styles.textAreaWrapper, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
                 <TextInput
                   style={[styles.input, styles.textArea, { color: theme.colors.textPrimary }]}
                   value={editBio}
                   onChangeText={setEditBio}
-                  placeholder="Parle de toi..."
+                  placeholder={t('tellAboutYou')}
                   placeholderTextColor={theme.colors.textSecondary}
                   multiline
                   numberOfLines={3}
@@ -450,7 +452,7 @@ export default function ProfileScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={[styles.inputLabel, { color: theme.colors.textSecondary }]}>
-                Objectif
+                {t('objectiveLabel')}
               </Text>
               <View style={[styles.inputWrapper, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
                 <Ionicons name="flag-outline" size={18} color={theme.colors.textSecondary} />
@@ -458,7 +460,7 @@ export default function ProfileScreen() {
                   style={[styles.input, { color: theme.colors.textPrimary }]}
                   value={editObjective}
                   onChangeText={setEditObjective}
-                  placeholder="Ex: Prise de masse, Perte de poids..."
+                  placeholder={t('objectivePlaceholder')}
                   placeholderTextColor={theme.colors.textSecondary}
                 />
               </View>
@@ -481,7 +483,7 @@ export default function ProfileScreen() {
                 ) : (
                   <>
                     <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                    <Text style={styles.saveButtonText}>Enregistrer</Text>
+                    <Text style={styles.saveButtonText}>{t('save')}</Text>
                   </>
                 )}
               </LinearGradient>

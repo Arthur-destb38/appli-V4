@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface WorkoutCardProps {
   title: string;
@@ -40,11 +41,12 @@ export const WorkoutCard: React.FC<WorkoutCardProps> = ({
   onDelete,
 }) => {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const isCompleted = status === 'completed';
   const colors = isCompleted ? COMPLETED_COLORS : DRAFT_COLORS;
 
   const iconName = isCompleted ? 'trophy-outline' : status === 'in_progress' ? 'play-circle' : 'barbell-outline';
-  const buttonText = isCompleted ? 'Consulter' : status === 'in_progress' ? 'Continuer' : 'Démarrer';
+  const buttonText = isCompleted ? t('viewAction') : status === 'in_progress' ? t('continueAction') : t('startAction');
 
   return (
     <Pressable
@@ -88,12 +90,12 @@ export const WorkoutCard: React.FC<WorkoutCardProps> = ({
         </View>
 
         <Text style={[styles.title, { color: theme.colors.textPrimary }]} numberOfLines={2}>
-          {title || 'Séance sans nom'}
+          {title || t('untitledWorkout')}
         </Text>
         <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
           {date}
           {exerciseCount !== undefined && exerciseCount > 0
-            ? ` · ${exerciseCount} exercice${exerciseCount > 1 ? 's' : ''}`
+            ? ` · ${t('exercisesCount', { count: exerciseCount })}`
             : ''}
         </Text>
 

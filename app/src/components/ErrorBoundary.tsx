@@ -1,5 +1,27 @@
 import React, { Component, PropsWithChildren } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTranslations } from '@/hooks/usePreferences';
+
+interface FallbackUIProps {
+  error: Error | null;
+  onReset: () => void;
+}
+
+const FallbackUI: React.FC<FallbackUIProps> = ({ error, onReset }) => {
+  const { t } = useTranslations();
+  return (
+    <View style={styles.container}>
+      <Text style={styles.emoji}>😵</Text>
+      <Text style={styles.title}>{t('errorBoundaryTitle')}</Text>
+      <Text style={styles.message}>
+        {error?.message || t('errorBoundaryMessage')}
+      </Text>
+      <TouchableOpacity style={styles.button} onPress={onReset}>
+        <Text style={styles.buttonText}>{t('retry')}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 interface State {
   hasError: boolean;
@@ -19,18 +41,7 @@ export class ErrorBoundary extends Component<PropsWithChildren, State> {
 
   render() {
     if (this.state.hasError) {
-      return (
-        <View style={styles.container}>
-          <Text style={styles.emoji}>😵</Text>
-          <Text style={styles.title}>Oups, quelque chose a planté</Text>
-          <Text style={styles.message}>
-            {this.state.error?.message || 'Une erreur inattendue est survenue.'}
-          </Text>
-          <TouchableOpacity style={styles.button} onPress={this.handleReset}>
-            <Text style={styles.buttonText}>Réessayer</Text>
-          </TouchableOpacity>
-        </View>
-      );
+      return <FallbackUI error={this.state.error} onReset={this.handleReset} />;
     }
 
     return this.props.children;

@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'rea
 
 import { AppButton } from './AppButton';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 export const LoadingState: React.FC<{ message?: string }> = ({ message }) => {
   const { theme } = useAppTheme();
@@ -25,13 +26,15 @@ export const EmptyState: React.FC<{ title: string; subtitle?: string; actionLabe
   );
 };
 
-export const ErrorState: React.FC<{ message: string; retryLabel?: string; onRetry?: () => void }> = ({ message, retryLabel = 'Réessayer', onRetry }) => {
+export const ErrorState: React.FC<{ message: string; retryLabel?: string; onRetry?: () => void }> = ({ message, retryLabel, onRetry }) => {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
+  const label = retryLabel || t('retry');
   return (
     <View style={styles.container}>
       <Text style={[styles.title, { color: theme.colors.error }]}>Oops…</Text>
       <Text style={[styles.text, { color: theme.colors.textSecondary }]}>{message}</Text>
-      {onRetry ? <AppButton title={retryLabel} onPress={onRetry} /> : null}
+      {onRetry ? <AppButton title={label} onPress={onRetry} /> : null}
     </View>
   );
 };

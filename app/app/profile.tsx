@@ -15,11 +15,13 @@ import {
 import { useRouter } from 'expo-router';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslations } from '@/hooks/usePreferences';
 
 const ProfileScreen: React.FC = () => {
   const router = useRouter();
   const { profile, isLoading, updateProfile, error } = useUserProfile();
   const { logout, user } = useAuth();
+  const { t } = useTranslations();
   const [username, setUsername] = useState('');
   const [consent, setConsent] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -33,7 +35,7 @@ const ProfileScreen: React.FC = () => {
 
   const handleSave = async () => {
     if (!username.trim()) {
-      Alert.alert('Pseudo requis', 'Merci de saisir un pseudo.');
+      Alert.alert(t('pseudoRequired'), t('enterPseudo'));
       return;
     }
     setSaving(true);
@@ -42,11 +44,11 @@ const ProfileScreen: React.FC = () => {
         username,
         consent_to_public_share: consent,
       });
-      Alert.alert('Profil enregistré', 'Tes préférences ont été mises à jour.');
+      Alert.alert(t('profileRegistered'), t('preferencesUpdated'));
     } catch (err) {
       Alert.alert(
-        'Enregistrement impossible',
-        err instanceof Error ? err.message : 'Réessaie plus tard.'
+        t('savingFailed'),
+        err instanceof Error ? err.message : t('retryLater')
       );
     } finally {
       setSaving(false);
@@ -57,7 +59,7 @@ const ProfileScreen: React.FC = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Chargement du profil…</Text>
+        <Text style={styles.loadingText}>{t('loadingProfile')}</Text>
       </View>
     );
   }
@@ -65,11 +67,11 @@ const ProfileScreen: React.FC = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.title}>Mon profil</Text>
+        <Text style={styles.title}>{t('myProfileTitle')}</Text>
         <Text style={styles.subtitle}>
-          Choisis un pseudo et indique si tu acceptes de rendre tes séances partagées publiques.
+          {t('profilePageDesc')}
         </Text>
-        <Text style={styles.label}>Pseudo</Text>
+        <Text style={styles.label}>{t('pseudo')}</Text>
         <TextInput
           value={username}
           onChangeText={setUsername}
@@ -80,9 +82,9 @@ const ProfileScreen: React.FC = () => {
         />
         <View style={styles.switchRow}>
           <View style={styles.switchLabels}>
-            <Text style={styles.switchTitle}>Partager publiquement</Text>
+            <Text style={styles.switchTitle}>{t('sharePublicly')}</Text>
             <Text style={styles.switchHelp}>
-              Active ce réglage pour autoriser tes séances partagées à apparaître dans le feed.
+              {t('sharePubliclyDesc')}
             </Text>
           </View>
           <Switch value={consent} onValueChange={setConsent} />
@@ -95,7 +97,7 @@ const ProfileScreen: React.FC = () => {
           {saving ? (
             <ActivityIndicator color="white" />
           ) : (
-            <Text style={styles.saveButtonText}>Enregistrer</Text>
+            <Text style={styles.saveButtonText}>{t('save')}</Text>
           )}
         </TouchableOpacity>
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -103,8 +105,8 @@ const ProfileScreen: React.FC = () => {
 
       {user && (
         <View style={styles.card}>
-          <Text style={styles.title}>Compte</Text>
-          <Text style={styles.subtitle}>Connecté en tant que : {user.username}</Text>
+          <Text style={styles.title}>{t('accountSection')}</Text>
+          <Text style={styles.subtitle}>{t('loggedInAs')} {user.username}</Text>
           <TouchableOpacity
             style={styles.logoutButton}
             onPress={async () => {
@@ -113,22 +115,22 @@ const ProfileScreen: React.FC = () => {
                 router.replace('/login');
               };
               if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                if (window.confirm('Es-tu sûr de vouloir te déconnecter ?')) {
+                if (window.confirm(t('logoutConfirm'))) {
                   await doLogout();
                 }
               } else {
                 Alert.alert(
-                  'Déconnexion',
-                  'Es-tu sûr de vouloir te déconnecter ?',
+                  t('disconnectTitle'),
+                  t('logoutConfirm'),
                   [
-                    { text: 'Annuler', style: 'cancel' },
-                    { text: 'Déconnexion', style: 'destructive', onPress: doLogout },
+                    { text: t('cancel'), style: 'cancel' },
+                    { text: t('disconnectTitle'), style: 'destructive', onPress: doLogout },
                   ]
                 );
               }
             }}
           >
-            <Text style={styles.logoutButtonText}>Se déconnecter</Text>
+            <Text style={styles.logoutButtonText}>{t('disconnectLabel')}</Text>
           </TouchableOpacity>
         </View>
       )}

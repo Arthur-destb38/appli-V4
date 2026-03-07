@@ -15,6 +15,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 // Données des défis (à terme, récupérées depuis le backend)
 const CHALLENGES_DATA: Record<string, {
@@ -98,6 +99,7 @@ export default function ChallengeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const insets = useSafeAreaInsets();
   const [isJoined, setIsJoined] = useState(false);
 
@@ -106,7 +108,7 @@ export default function ChallengeDetailScreen() {
   if (!challenge) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Text style={{ color: theme.colors.textPrimary }}>Défi introuvable</Text>
+        <Text style={{ color: theme.colors.textPrimary }}>{t('challengeNotFound')}</Text>
       </View>
     );
   }
@@ -115,9 +117,9 @@ export default function ChallengeDetailScreen() {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     setIsJoined(true);
     Alert.alert(
-      '🎉 Inscrit !',
-      `Tu participes maintenant au défi "${challenge.title}". Bonne chance !`,
-      [{ text: 'C\'est parti !' }]
+      t('challengeJoinedTitle'),
+      t('challengeJoinedMsg', { title: challenge.title }),
+      [{ text: t('challengeJoinedBtn') }]
     );
   };
 
@@ -128,25 +130,25 @@ export default function ChallengeDetailScreen() {
     };
 
     if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.confirm('Quitter le défi ? Tu perdras ta progression si tu quittes maintenant.')) {
+      if (typeof window !== 'undefined' && window.confirm(`${t('challengeLeaveTitle')} ${t('challengeLeaveMsg')}`)) {
         doLeave();
       }
     } else {
       Alert.alert(
-        'Quitter le défi ?',
-        'Tu perdras ta progression si tu quittes maintenant.',
+        t('challengeLeaveTitle'),
+        t('challengeLeaveMsg'),
         [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Quitter', style: 'destructive', onPress: doLeave },
+          { text: t('cancel'), style: 'cancel' },
+          { text: t('challengeLeaveBtn'), style: 'destructive', onPress: doLeave },
         ]
       );
     }
   };
 
   const difficultyConfig = {
-    Facile: { bg: '#10B981', label: 'Facile' },
-    Moyen: { bg: '#F59E0B', label: 'Moyen' },
-    Difficile: { bg: '#EF4444', label: 'Difficile' },
+    Facile: { bg: '#10B981', label: t('difficultyEasy') },
+    Moyen: { bg: '#F59E0B', label: t('difficultyMedium') },
+    Difficile: { bg: '#EF4444', label: t('difficultyHard') },
   }[challenge.difficulty];
 
   return (
@@ -154,8 +156,8 @@ export default function ChallengeDetailScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          headerTitle: 'Défi',
-          headerBackTitle: 'Retour',
+          headerTitle: t('challengeHeader'),
+          headerBackTitle: t('backLabel'),
           headerTransparent: true,
           headerTintColor: '#fff',
         }}
@@ -179,7 +181,7 @@ export default function ChallengeDetailScreen() {
           <View style={styles.heroStats}>
             <View style={styles.heroStat}>
               <Ionicons name="people-outline" size={18} color="rgba(255,255,255,0.95)" />
-              <Text style={styles.heroStatText}>{challenge.participants} participants</Text>
+              <Text style={styles.heroStatText}>{challenge.participants} {t('participantsLabel')}</Text>
             </View>
             <View style={styles.heroStat}>
               <Ionicons name="time-outline" size={18} color="rgba(255,255,255,0.95)" />
@@ -200,7 +202,7 @@ export default function ChallengeDetailScreen() {
                 <Ionicons name="document-text-outline" size={18} color={theme.colors.accent} />
               </View>
               <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                Description
+                {t('descriptionLabel')}
               </Text>
             </View>
             <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
@@ -215,7 +217,7 @@ export default function ChallengeDetailScreen() {
                 <Ionicons name="list-outline" size={18} color={theme.colors.accent} />
               </View>
               <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                Règles
+                {t('rulesLabel')}
               </Text>
             </View>
             {challenge.rules.map((rule, index) => (
@@ -240,7 +242,7 @@ export default function ChallengeDetailScreen() {
                 <Ionicons name="gift-outline" size={18} color={theme.colors.accent} />
               </View>
               <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                Récompenses
+                {t('rewardsLabel')}
               </Text>
             </View>
             <View style={styles.rewardsGrid}>
@@ -273,7 +275,7 @@ export default function ChallengeDetailScreen() {
                 <View style={[styles.joinedBadge, { backgroundColor: theme.colors.accent + '18' }]}>
                   <Ionicons name="checkmark-circle" size={22} color={theme.colors.accent} />
                   <Text style={[styles.joinedText, { color: theme.colors.accent }]}>
-                    Tu participes à ce défi
+                    {t('challengeParticipating')}
                   </Text>
                 </View>
                 <Pressable
@@ -284,7 +286,7 @@ export default function ChallengeDetailScreen() {
                   onPress={handleLeave}
                 >
                   <Text style={[styles.leaveBtnText, { color: theme.colors.error }]}>
-                    Quitter le défi
+                    {t('challengeLeave')}
                   </Text>
                 </Pressable>
               </>
@@ -297,7 +299,7 @@ export default function ChallengeDetailScreen() {
                   style={styles.joinBtn}
                 >
                   <Ionicons name="flash" size={22} color="#fff" />
-                  <Text style={styles.joinBtnText}>Rejoindre le défi</Text>
+                  <Text style={styles.joinBtnText}>{t('challengeJoin')}</Text>
                 </LinearGradient>
               </Pressable>
             )}

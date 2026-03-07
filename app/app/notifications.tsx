@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { useAuth } from '@/hooks/useAuth';
 import {
   Notification,
@@ -26,19 +27,19 @@ import {
   markRead,
 } from '@/services/notificationsApi';
 
-function formatTimeAgo(dateString: string): string {
+function formatTimeAgo(dateString: string, t: (key: string, params?: Record<string, string | number>) => string, language: string): string {
   const date = new Date(dateString);
   const now = new Date();
   const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (seconds < 60) return 'À l\'instant';
+  if (seconds < 60) return t('justNow');
   if (seconds < 3600) return `${Math.floor(seconds / 60)} min`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)} h`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)} j`;
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)}${language === 'fr' ? 'j' : 'd'}`;
+  return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' });
 }
 
-function getNotificationConfig(type: string) {
+function getNotificationConfig(type: string, t: (key: string) => string) {
   switch (type) {
     case 'like':
       return {
@@ -52,33 +53,33 @@ function getNotificationConfig(type: string) {
         icon: 'chatbubble',
         gradient: ['#6366f1', '#8b5cf6'] as [string, string],
         color: '#6366f1',
-        label: 'Commentaire',
+        label: t('commentLabel'),
       };
     case 'follow':
       return {
         icon: 'person-add',
         gradient: ['#10b981', '#14b8a6'] as [string, string],
         color: '#10b981',
-        label: 'Abonnement',
+        label: t('subscriptionLabel'),
       };
     case 'mention':
       return {
         icon: 'at',
         gradient: ['#f59e0b', '#f97316'] as [string, string],
         color: '#f59e0b',
-        label: 'Mention',
+        label: t('mentionLabel'),
       };
     default:
       return {
         icon: 'notifications',
         gradient: ['#64748b', '#94a3b8'] as [string, string],
         color: '#64748b',
-        label: 'Notification',
+        label: t('notificationLabel'),
       };
   }
 }
 
-function groupNotificationsByTime(notifications: Notification[]) {
+function groupNotificationsByTime(notifications: Notification[], t: (key: string) => string) {
   const now = new Date();
   const today: Notification[] = [];
   const thisWeek: Notification[] = [];
@@ -98,9 +99,9 @@ function groupNotificationsByTime(notifications: Notification[]) {
   });
 
   const sections = [];
-  if (today.length > 0) sections.push({ title: 'Aujourd\'hui', data: today });
-  if (thisWeek.length > 0) sections.push({ title: 'Cette semaine', data: thisWeek });
-  if (older.length > 0) sections.push({ title: 'Plus ancien', data: older });
+  if (today.length > 0) sections.push({ title: t('today'), data: today });
+  if (thisWeek.length > 0) sections.push({ title: t('thisWeek'), data: thisWeek });
+  if (older.length > 0) sections.push({ title: t('olderLabel'), data: older });
 
   return sections;
 }
@@ -110,10 +111,12 @@ interface NotificationItemProps {
   index: number;
   onPress: (item: Notification) => void;
   theme: any;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  language: string;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ item, index, onPress, theme }) => {
-  const config = getNotificationConfig(item.type);
+const NotificationItem: React.FC<NotificationItemProps> = ({ item, index, onPress, theme, t, language }) => {
+  const config = getNotificationConfig(item.type, t);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
@@ -161,10 +164,10 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ item, index, onPres
         <View style={styles.contentContainer}>
           <View style={styles.contentHeader}>
             <Text style={[styles.actorName, { color: theme.colors.textPrimary }]} numberOfLines={1}>
-              {item.actor_username || 'Quelqu\'un'}
+              {item.actor_username || t('someone')}
             </Text>
             <Text style={[styles.time, { color: theme.colors.textSecondary }]}>
-              {formatTimeAgo(item.created_at)}
+              {formatTimeAgo(item.created_at, t, language)}
             </Text>
           </View>
           <View style={[styles.typeBadge, { backgroundColor: config.color + '18', alignSelf: 'flex-start' }]}>
@@ -191,6 +194,7 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { theme, mode } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const { t, language } = useTranslations();
   const { user } = useAuth();
   const userId = user?.id ?? '';
 
@@ -273,7 +277,7 @@ export default function NotificationsScreen() {
     }
   };
 
-  const sections = groupNotificationsByTime(notifications);
+  const sections = groupNotificationsByTime(notifications, t);
 
   if (loading) {
     return (
@@ -281,7 +285,7 @@ export default function NotificationsScreen() {
         <View style={[styles.loadingCard, { backgroundColor: theme.colors.surface }]}>
           <ActivityIndicator size="large" color="#6366f1" />
           <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-            Chargement...
+            {t('loading')}
           </Text>
         </View>
       </View>
@@ -324,7 +328,7 @@ export default function NotificationsScreen() {
             <Ionicons name="notifications" size={20} color="#fff" />
           </LinearGradient>
           <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
-            Notifications
+            {t('notifications')}
           </Text>
           {unreadCount > 0 && (
             <View style={styles.unreadBadge}>
@@ -368,21 +372,21 @@ export default function NotificationsScreen() {
             <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
               {notifications.filter((n) => n.type === 'like').length}
             </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Likes</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>{t('likesLabel')}</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: isDark ? '#6366f118' : '#6366f112' }]}>
             <Ionicons name="chatbubble" size={18} color="#6366f1" />
             <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
               {notifications.filter((n) => n.type === 'comment').length}
             </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Commentaires</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>{t('commentsLabel')}</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: isDark ? '#10b98118' : '#10b98112' }]}>
             <Ionicons name="person-add" size={18} color="#10b981" />
             <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
               {notifications.filter((n) => n.type === 'follow').length}
             </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Abonnés</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>{t('followersLabel')}</Text>
           </View>
         </Animated.View>
       )}
@@ -397,6 +401,8 @@ export default function NotificationsScreen() {
             index={index}
             onPress={handleNotificationPress}
             theme={theme}
+            t={t}
+            language={language}
           />
         )}
         renderSectionHeader={({ section: { title } }) => (
@@ -424,10 +430,10 @@ export default function NotificationsScreen() {
               </LinearGradient>
             </View>
             <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-              Pas de notifications
+              {t('noNotifications')}
             </Text>
             <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-              Tu recevras des notifications quand quelqu'un interagit avec tes séances
+              {t('notificationEmptyDesc')}
             </Text>
             <TouchableOpacity
               style={styles.emptyButton}
@@ -435,7 +441,7 @@ export default function NotificationsScreen() {
             >
               <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.emptyButtonGradient}>
                 <Ionicons name="compass" size={18} color="#fff" />
-                <Text style={styles.emptyButtonText}>Explorer le feed</Text>
+                <Text style={styles.emptyButtonText}>{t('exploreFeed')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

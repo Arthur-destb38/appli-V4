@@ -14,6 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 import { uploadAvatar, deleteAvatar } from '@/services/profileApi';
 
 interface AvatarPickerProps {
@@ -34,6 +35,7 @@ export function AvatarPicker({
   editable = true,
 }: AvatarPickerProps) {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const [uploading, setUploading] = useState(false);
   const [localAvatar, setLocalAvatar] = useState<string | null>(currentAvatarUrl);
 
@@ -49,8 +51,8 @@ export function AvatarPicker({
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert(
-        'Permission requise',
-        'Autorise l\'accès à ta galerie pour changer ton avatar.'
+        t('permissionRequired'),
+        t('photoPermissionDesc')
       );
       return;
     }
@@ -80,7 +82,7 @@ export function AvatarPicker({
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (error) {
       console.error('Failed to upload avatar:', error);
-      Alert.alert('Erreur', 'Impossible d\'uploader l\'avatar. Réessaie.');
+      Alert.alert(t('error'), t('avatarUploadError'));
     } finally {
       setUploading(false);
     }
@@ -92,12 +94,12 @@ export function AvatarPicker({
     Haptics.selectionAsync().catch(() => {});
 
     Alert.alert(
-      'Supprimer l\'avatar',
-      'Tu veux vraiment supprimer ta photo de profil ?',
+      t('avatarDeleteTitle'),
+      t('avatarDeleteConfirm'),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t('delete'),
           style: 'destructive',
           onPress: async () => {
             setUploading(true);
@@ -107,7 +109,7 @@ export function AvatarPicker({
               onAvatarChange?.(null);
             } catch (error) {
               console.error('Failed to delete avatar:', error);
-              Alert.alert('Erreur', 'Impossible de supprimer l\'avatar.');
+              Alert.alert(t('error'), t('avatarDeleteError'));
             } finally {
               setUploading(false);
             }
@@ -122,12 +124,12 @@ export function AvatarPicker({
 
     if (avatarUrl) {
       Alert.alert(
-        'Photo de profil',
-        'Que veux-tu faire ?',
+        t('profilePhoto'),
+        t('whatToDo'),
         [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Changer la photo', onPress: pickImage },
-          { text: 'Supprimer', style: 'destructive', onPress: removeAvatar },
+          { text: t('cancel'), style: 'cancel' },
+          { text: t('changePhoto'), onPress: pickImage },
+          { text: t('delete'), style: 'destructive', onPress: removeAvatar },
         ]
       );
     } else {

@@ -23,6 +23,7 @@ import { useRouter } from 'expo-router';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { WorkoutExercise, WorkoutSet } from '@/types/workout';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { useTranslations } from '@/hooks/usePreferences';
 
 interface Props {
   workoutId: number;
@@ -38,6 +39,7 @@ const DEFAULT_SET: { reps: number; weight: number | null; rpe: number | null } =
 export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = false }) => {
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const {
     findWorkout,
     addSet,
@@ -94,15 +96,15 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
         <View style={[styles.emptyIconCircle, { backgroundColor: theme.colors.error + '20' }]}>
           <Ionicons name="alert-circle-outline" size={48} color={theme.colors.error} />
         </View>
-        <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>Séance introuvable</Text>
+        <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>{t('trackWorkoutNotFoundTitle')}</Text>
         <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-          Revenez à l'accueil pour créer ou sélectionner une séance.
+          {t('trackWorkoutNotFoundDesc')}
         </Text>
         <TouchableOpacity
           style={[styles.emptyButton, { backgroundColor: theme.colors.accent }]}
           onPress={() => router.push('/')}
         >
-          <Text style={styles.emptyButtonText}>Retour à l'accueil</Text>
+          <Text style={styles.emptyButtonText}>{t('trackBackToHome')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -163,7 +165,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
   const openVideo = (exerciseSlug: string) => {
     const query = exerciseSlug.replace(/-/g, ' ');
     const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(query + ' exercise')}`;
-    Linking.openURL(url).catch(() => Alert.alert('Impossible d\'ouvrir la vidéo'));
+    Linking.openURL(url).catch(() => Alert.alert(t('trackOpenVideoError')));
   };
 
   const startRestTimer = () => {
@@ -272,11 +274,11 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
                   <View style={styles.headerMeta}>
                     <View style={styles.metaBadge}>
                       <Ionicons name="barbell" size={14} color="rgba(255,255,255,0.9)" />
-                      <Text style={styles.metaText}>{workout.exercises.length} exercice{workout.exercises.length > 1 ? 's' : ''}</Text>
+                      <Text style={styles.metaText}>{workout.exercises.length > 1 ? t('trackExercisesMeta', { count: workout.exercises.length }) : t('trackExerciseMeta', { count: workout.exercises.length })}</Text>
                     </View>
                     <View style={styles.metaBadge}>
                       <Ionicons name="layers" size={14} color="rgba(255,255,255,0.9)" />
-                      <Text style={styles.metaText}>{totalSets} série{totalSets > 1 ? 's' : ''}</Text>
+                      <Text style={styles.metaText}>{totalSets > 1 ? t('trackSetsMeta', { count: totalSets }) : t('trackSetMeta', { count: totalSets })}</Text>
                     </View>
                   </View>
                 </View>
@@ -291,8 +293,8 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
               {/* Barre de progression */}
               <View style={styles.progressSection}>
                 <View style={styles.progressHeader}>
-                  <Text style={styles.progressLabel}>Progression</Text>
-                  <Text style={styles.progressValue}>{completedSets}/{totalSets} séries</Text>
+                  <Text style={styles.progressLabel}>{t('progression')}</Text>
+                  <Text style={styles.progressValue}>{t('trackSetsHeader', { completed: completedSets, total: totalSets })}</Text>
                 </View>
                 <View style={styles.progressBarBg}>
                   <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
@@ -302,7 +304,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
               {/* Timer de repos */}
               <View style={styles.timerSection}>
                 <View style={styles.timerControls}>
-                  <Text style={styles.timerLabel}>Repos</Text>
+                  <Text style={styles.timerLabel}>{t('trackRest')}</Text>
                   <View style={styles.timerAdjust}>
                     <TouchableOpacity
                       style={styles.timerBtn}
@@ -344,7 +346,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
               {hasPendingMutations && (
                 <View style={styles.syncBadge}>
                   <Ionicons name="cloud-upload-outline" size={14} color="#f59e0b" />
-                  <Text style={styles.syncBadgeText}>{pendingMutations} en attente de sync</Text>
+                  <Text style={styles.syncBadgeText}>{t('trackPendingSync', { count: pendingMutations })}</Text>
                 </View>
               )}
             </View>
@@ -356,9 +358,9 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
           <View style={[styles.emptyIconCircle, { backgroundColor: theme.colors.accent + '20' }]}>
             <Ionicons name="barbell-outline" size={32} color={theme.colors.accent} />
           </View>
-          <Text style={[styles.emptyExercisesTitle, { color: theme.colors.textPrimary }]}>Aucun exercice</Text>
+          <Text style={[styles.emptyExercisesTitle, { color: theme.colors.textPrimary }]}>{t('trackNoExerciseTitle')}</Text>
           <Text style={[styles.emptyExercisesSubtitle, { color: theme.colors.textSecondary }]}>
-            Ajoute des exercices depuis l'écran de création pour commencer le suivi.
+            {t('trackNoExerciseDesc')}
           </Text>
         </View>
       }
@@ -381,7 +383,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
                 style={styles.completeGradient}
               >
                 <Ionicons name="checkmark-circle" size={24} color="#fff" />
-                <Text style={styles.completeText}>Terminer la séance</Text>
+                <Text style={styles.completeText}>{t('trackFinishWorkout')}</Text>
                 <View style={styles.completeProgress}>
                   <Text style={styles.completeProgressText}>{Math.round(progress)}%</Text>
                 </View>
@@ -415,7 +417,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
                     {formatExerciseName(item.exercise_id)}
                   </Text>
                   <Text style={[styles.exerciseProgress, { color: theme.colors.textSecondary }]}>
-                    {exerciseCompleted}/{exerciseSets.length} séries validées
+                    {exerciseCompleted}/{exerciseSets.length} {t('trackSetsValidated')}
                   </Text>
                 </View>
               </View>
@@ -428,21 +430,21 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
                 style={[styles.actionBtn, { backgroundColor: theme.colors.surfaceMuted }]}
               >
                 <Ionicons name="play-circle-outline" size={18} color={theme.colors.accent} />
-                <Text style={[styles.actionBtnText, { color: theme.colors.accent }]}>Vidéo</Text>
+                <Text style={[styles.actionBtnText, { color: theme.colors.accent }]}>{t('trackVideo')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleAddSet(item)}
                 style={[styles.actionBtn, styles.actionBtnPrimary, { backgroundColor: theme.colors.accent }]}
               >
                 <Ionicons name="add-circle-outline" size={18} color="#fff" />
-                <Text style={[styles.actionBtnText, { color: '#fff' }]}>Série</Text>
+                <Text style={[styles.actionBtnText, { color: '#fff' }]}>{t('trackSet')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => handleRepeatLast(item)}
                 style={[styles.actionBtn, { backgroundColor: theme.colors.surfaceMuted }]}
               >
                 <Ionicons name="copy-outline" size={18} color={theme.colors.textSecondary} />
-                <Text style={[styles.actionBtnText, { color: theme.colors.textSecondary }]}>Répéter</Text>
+                <Text style={[styles.actionBtnText, { color: theme.colors.textSecondary }]}>{t('trackRepeat')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -451,7 +453,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
               <View style={[styles.emptySetsBox, { backgroundColor: theme.colors.surfaceMuted }]}>
                 <Ionicons name="fitness-outline" size={24} color={theme.colors.textSecondary} />
                 <Text style={[styles.emptySetsHint, { color: theme.colors.textSecondary }]}>
-                  Ajoute ta première série
+                  {t('trackAddFirstSet')}
                 </Text>
               </View>
             ) : (
@@ -487,6 +489,7 @@ interface SetRowProps {
 
 const SetRow: React.FC<SetRowProps> = ({ set, index, onAdjust, onSetValue, onToggle, onRemove }) => {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const isDone = Boolean(set.done_at);
 
   return (
@@ -503,21 +506,21 @@ const SetRow: React.FC<SetRowProps> = ({ set, index, onAdjust, onSetValue, onTog
       <View style={styles.setHeader}>
         <View style={styles.setLabelRow}>
           <View style={[styles.setDot, { backgroundColor: isDone ? theme.colors.success : theme.colors.border }]} />
-          <Text style={[styles.setLabel, { color: theme.colors.textPrimary }]}>Série {index + 1}</Text>
+          <Text style={[styles.setLabel, { color: theme.colors.textPrimary }]}>{t('trackSet')} {index + 1}</Text>
         </View>
         {isDone ? (
           <View style={[styles.setStatusBadge, { backgroundColor: theme.colors.success + '20' }]}>
             <Ionicons name="checkmark" size={12} color={theme.colors.success} />
-            <Text style={[styles.setStatusText, { color: theme.colors.success }]}>Validée</Text>
+            <Text style={[styles.setStatusText, { color: theme.colors.success }]}>{t('setValidated')}</Text>
           </View>
         ) : (
-          <Text style={[styles.setHint, { color: theme.colors.textSecondary }]}>Appui long</Text>
+          <Text style={[styles.setHint, { color: theme.colors.textSecondary }]}>{t('trackLongPress')}</Text>
         )}
       </View>
 
       <View style={styles.steppersRow}>
         <StepperModern
-          label="Reps"
+          label={t('trackReps')}
           value={set.reps}
           suffix=""
           icon="repeat"
@@ -531,7 +534,7 @@ const SetRow: React.FC<SetRowProps> = ({ set, index, onAdjust, onSetValue, onTog
           onSetValue={(v) => onSetValue(set, 'reps', v)}
         />
         <StepperModern
-          label="Poids"
+          label={t('trackWeight')}
           value={set.weight ?? 0}
           suffix="kg"
           icon="barbell"
@@ -545,7 +548,7 @@ const SetRow: React.FC<SetRowProps> = ({ set, index, onAdjust, onSetValue, onTog
           onSetValue={(v) => onSetValue(set, 'weight', v)}
         />
         <StepperModern
-          label="RPE"
+          label={t('trackRpe')}
           value={set.rpe ?? 0}
           suffix=""
           icon="speedometer"
@@ -571,7 +574,7 @@ const SetRow: React.FC<SetRowProps> = ({ set, index, onAdjust, onSetValue, onTog
             color={isDone ? theme.colors.textSecondary : theme.colors.success} 
           />
           <Text style={[styles.setFooterBtnText, { color: isDone ? theme.colors.textSecondary : theme.colors.success }]}>
-            {isDone ? 'Annuler' : 'Valider'}
+            {isDone ? t('cancel') : t('trackValidate')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity 
@@ -615,6 +618,7 @@ const StepperModern: React.FC<StepperModernProps> = ({
   onSetValue,
 }) => {
   const { theme } = useAppTheme();
+  const { t } = useTranslations();
   const [modalVisible, setModalVisible] = useState(false);
   const [inputText, setInputText] = useState('');
   const displayValue = Number.isFinite(value) ? value : 0;
@@ -708,7 +712,7 @@ const StepperModern: React.FC<StepperModernProps> = ({
 
               <View style={styles.modalActions}>
                 <TouchableOpacity style={[styles.modalCancelBtn, { backgroundColor: theme.colors.surfaceMuted }]} onPress={() => setModalVisible(false)}>
-                  <Text style={[styles.modalCancelText, { color: theme.colors.textSecondary }]}>Annuler</Text>
+                  <Text style={[styles.modalCancelText, { color: theme.colors.textSecondary }]}>{t('cancel')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.modalConfirmBtn, { backgroundColor: color }]} onPress={confirmValue}>
                   <Text style={styles.modalConfirmText}>OK</Text>

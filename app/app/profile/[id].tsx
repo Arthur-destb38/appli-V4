@@ -28,6 +28,7 @@ import {
 } from '@/services/profileApi';
 import { createOrGetConversation } from '@/services/messagingApi';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useTranslations } from '@/hooks/usePreferences';
 
 export default function ProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -35,6 +36,7 @@ export default function ProfileScreen() {
   const { theme, mode } = useAppTheme();
   const insets = useSafeAreaInsets();
   const { profile: currentUserProfile } = useUserProfile();
+  const { t } = useTranslations();
   const isDark = mode === 'dark';
 
   const CURRENT_USER_ID = currentUserProfile?.id || 'guest-user';
@@ -146,7 +148,7 @@ export default function ProfileScreen() {
         <View style={[styles.loadingSpinner, { backgroundColor: theme.colors.surface }]}>
           <ActivityIndicator size="large" color={theme.colors.accent} />
           <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-            Chargement...
+            {t('loading')}
           </Text>
         </View>
       </View>
@@ -160,17 +162,17 @@ export default function ProfileScreen() {
           <Ionicons name="person-outline" size={48} color={theme.colors.error} />
         </View>
         <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]}>
-          Profil introuvable
+          {t('profileNotFound')}
         </Text>
         <Text style={[styles.errorSubtitle, { color: theme.colors.textSecondary }]}>
-          Ce profil n'existe pas ou a été supprimé
+          {t('profileNotFoundDesc')}
         </Text>
         <Pressable
           style={({ pressed }) => [styles.errorButton, { backgroundColor: theme.colors.accent, opacity: pressed ? 0.9 : 1 }]}
           onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={18} color="#fff" />
-          <Text style={styles.errorButtonText}>Retour</Text>
+          <Text style={styles.errorButtonText}>{t('back')}</Text>
         </Pressable>
       </View>
     );
@@ -257,17 +259,17 @@ export default function ProfileScreen() {
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{profile.posts_count}</Text>
-                <Text style={styles.statLabel}>Posts</Text>
+                <Text style={styles.statLabel}>{t('postsTab')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{profile.followers_count}</Text>
-                <Text style={styles.statLabel}>Abonnés</Text>
+                <Text style={styles.statLabel}>{t('subscribersLabel')}</Text>
               </View>
               <View style={styles.statDivider} />
               <View style={styles.statItem}>
                 <Text style={styles.statValue}>{profile.following_count}</Text>
-                <Text style={styles.statLabel}>Suivis</Text>
+                <Text style={styles.statLabel}>{t('followingCountLabel')}</Text>
               </View>
             </View>
 
@@ -283,12 +285,12 @@ export default function ProfileScreen() {
               {profile.bio ? (
                 <Text style={styles.bioText}>{profile.bio}</Text>
               ) : !profile.objective && (
-                <Text style={styles.bioPlaceholder}>Aucune bio</Text>
+                <Text style={styles.bioPlaceholder}>{t('noBio')}</Text>
               )}
               {profile.total_likes > 0 && (
                 <View style={styles.likesRow}>
                   <Ionicons name="heart" size={14} color="#ef4444" />
-                  <Text style={styles.likesText}>{profile.total_likes} J'aime reçus</Text>
+                  <Text style={styles.likesText}>{t('likesReceived', { count: profile.total_likes })}</Text>
                 </View>
               )}
             </View>
@@ -301,7 +303,7 @@ export default function ProfileScreen() {
                   onPress={() => router.push('/(tabs)/profile')}
                 >
                   <Ionicons name="pencil" size={16} color="#fff" />
-                  <Text style={styles.editProfileText}>Modifier le profil</Text>
+                  <Text style={styles.editProfileText}>{t('editProfileLabel')}</Text>
                 </Pressable>
               ) : (
                 <>
@@ -327,7 +329,7 @@ export default function ProfileScreen() {
                           styles.followBtnText,
                           profile.is_following && styles.followingBtnText,
                         ]}>
-                          {profile.is_following ? 'Abonné' : 'Suivre'}
+                          {profile.is_following ? t('followedLabel') : t('follow')}
                         </Text>
                       </>
                     )}
@@ -342,7 +344,7 @@ export default function ProfileScreen() {
                     ) : (
                       <>
                         <Ionicons name="chatbubble-outline" size={18} color="#fff" />
-                        <Text style={styles.messageBtnText}>Message</Text>
+                        <Text style={styles.messageBtnText}>{t('messageLabel')}</Text>
                       </>
                     )}
                   </Pressable>
@@ -384,7 +386,7 @@ export default function ProfileScreen() {
                 color={activeTab === 'posts' ? theme.colors.accent : theme.colors.textSecondary}
               />
               <Text style={[styles.tabText, { color: activeTab === 'posts' ? theme.colors.accent : theme.colors.textSecondary }]}>
-                Posts
+                {t('postsTab')}
               </Text>
             </Pressable>
             <Pressable
@@ -400,7 +402,7 @@ export default function ProfileScreen() {
                 color={activeTab === 'saved' ? theme.colors.accent : theme.colors.textSecondary}
               />
               <Text style={[styles.tabText, { color: activeTab === 'saved' ? theme.colors.accent : theme.colors.textSecondary }]}>
-                Sauvegardés
+                {t('savedTab')}
               </Text>
             </Pressable>
             <View
@@ -429,16 +431,16 @@ export default function ProfileScreen() {
                 />
               </LinearGradient>
               <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                {activeTab === 'posts' ? 'Aucune séance partagée' : 'Aucun post sauvegardé'}
+                {activeTab === 'posts' ? t('noSharedWorkout') : t('noSavedPost')}
               </Text>
               <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
                 {activeTab === 'posts'
-                  ? 'Les séances que tu partages apparaîtront ici'
-                  : 'Les posts que tu sauvegardes apparaîtront ici'}
+                  ? t('sharedWorkoutsWillAppear')
+                  : t('savedPostsWillAppear')}
               </Text>
               {activeTab === 'posts' && !profile.is_own_profile && (
                 <Text style={[styles.emptyHint, { color: theme.colors.textSecondary }]}>
-                  Ce profil n'a pas encore partagé de séance
+                  {t('profileNotSharedYet')}
                 </Text>
               )}
             </View>
