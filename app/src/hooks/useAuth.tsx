@@ -73,12 +73,63 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       ]);
 
       if (storedAccessToken && storedRefreshToken && storedUser) {
+        const userData = JSON.parse(storedUser);
+
+        // Charger les tokens en mémoire immédiatement (offline-first)
         setTokens({
           access_token: storedAccessToken,
           refresh_token: storedRefreshToken,
           token_type: 'bearer',
         });
-        setUser(JSON.parse(storedUser));
+        setUser(userData);
+
+        // Tenter un refresh en arrière-plan (non bloquant)
+        try {
+          const testResponse = await fetch(buildApiUrl('/auth/me'), {
+            headers: {
+              'Authorization': `Bearer ${storedAccessToken}`,
+              'Content-Type': 'application/json',
+            },
+          }).catch(() => null);
+
+          if (testResponse && testResponse.status === 401) {
+            // Token expiré (pas une erreur réseau), tenter un refresh
+            const refreshResponse = await fetch(buildApiUrl('/auth/refresh'), {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${storedRefreshToken}`,
+                'Content-Type': 'application/json',
+              },
+            }).catch(() => null);
+
+            if (refreshResponse?.ok) {
+              const newTokens = await refreshResponse.json();
+              await Promise.all([
+                AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, newTokens.access_token),
+                AsyncStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, newTokens.refresh_token),
+              ]);
+              setTokens({
+                access_token: newTokens.access_token,
+                refresh_token: newTokens.refresh_token,
+                token_type: 'bearer',
+              });
+            } else if (refreshResponse && refreshResponse.status === 401) {
+              // Refresh token aussi expiré — déconnecter
+              await Promise.all([
+                AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN),
+                AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN),
+                AsyncStorage.removeItem(STORAGE_KEYS.USER),
+              ]);
+              setTokens(null);
+              setUser(null);
+            }
+            // Si refreshResponse est null (erreur réseau/serveur qui dort),
+            // on garde les tokens existants — apiCall gérera le refresh plus tard
+          }
+          // Si testResponse est null (erreur réseau), on garde les tokens
+        } catch {
+          // Erreur réseau — garder les tokens existants
+        }
       }
     } catch (error) {
       console.warn('[useAuth] Failed to load stored auth:', error);
@@ -133,7 +184,12 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const handleLogin = useCallback(async (credentials: LoginRequest) => {
     setIsLoading(true);
     try {
-      await clearAllUserDataForLogout();
+      // Ne vider les données locales que si c'est un utilisateur différent
+      const previousUser = await AsyncStorage.getItem(STORAGE_KEYS.USER);
+      const previousUsername = previousUser ? JSON.parse(previousUser).username : null;
+      if (previousUsername && previousUsername !== credentials.username) {
+        await clearAllUserDataForLogout();
+      }
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -171,7 +227,11 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const handleDemoLogin = useCallback(async () => {
     setIsLoading(true);
     try {
-      await clearAllUserDataForLogout();
+      const previousUser = await AsyncStorage.getItem(STORAGE_KEYS.USER);
+      const previousUsername = previousUser ? JSON.parse(previousUser).username : null;
+      if (previousUsername && previousUsername !== 'demo') {
+        await clearAllUserDataForLogout();
+      }
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000);
@@ -205,6 +265,7 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const handleRegister = useCallback(async (credentials: RegisterRequest) => {
     setIsLoading(true);
     try {
+      // Nouveau compte → toujours vider les données de l'ancien utilisateur
       await clearAllUserDataForLogout();
 
       const response = await fetch(buildApiUrl('/auth/register-v2'), {
