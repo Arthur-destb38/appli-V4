@@ -371,8 +371,23 @@ def save_program(
     # Récupérer toutes les sessions du programme
     prog_sessions = session.exec(select(ProgramSession).where(ProgramSession.program_id == program.id)).all()
     
+    def _parse_reps(reps_str: str | None) -> int:
+        """Parse reps string like '8-12' into an int (takes the lower bound)."""
+        if not reps_str:
+            return 10
+        reps_str = reps_str.strip()
+        if '-' in reps_str:
+            try:
+                return int(reps_str.split('-')[0])
+            except ValueError:
+                return 10
+        try:
+            return int(reps_str)
+        except ValueError:
+            return 10
+
     workouts_created = []
-    user_id = current_user.id  # Use authenticated user
+    user_id = current_user.id
     now = datetime.now(timezone.utc)
 
     for prog_session in prog_sessions:
@@ -418,7 +433,7 @@ def save_program(
             for set_index, prog_set in enumerate(sets_list):
                 set_entry = Set(
                     workout_exercise_id=workout_exercise.id,
-                    reps=prog_set.reps,
+                    reps=_parse_reps(prog_set.reps),
                     weight=prog_set.weight,
                     rpe=prog_set.rpe,
                     order=set_index,
