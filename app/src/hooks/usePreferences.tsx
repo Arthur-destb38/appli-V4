@@ -143,7 +143,17 @@ export const translations = {
     createFirstWorkout: 'Crée ta première séance pour commencer',
     noCompletedWorkout: 'Aucune séance terminée',
     completeWorkoutToSee: 'Termine une séance pour la voir apparaître ici',
-    
+
+    // Welcome empty state
+    welcome: 'Bienvenue',
+    welcomeEmpty: "C'est le moment de commencer ton parcours fitness. Crée ta première séance pour suivre tes progrès !",
+    createMyFirstWorkout: 'Créer ma première séance',
+    discoverPrograms: 'Découvrir les programmes',
+    tipCreateTitle: 'Crée',
+    tipCreateDesc: 'Compose ta séance avec tes exercices',
+    tipTrackTitle: 'Progresse',
+    tipTrackDesc: 'Suis tes stats et bats tes records',
+
     // Actions
     createWorkout: 'Créer une séance',
     newWorkout: 'Nouvelle séance',
@@ -318,7 +328,17 @@ export const translations = {
     createFirstWorkout: 'Create your first workout to get started',
     noCompletedWorkout: 'No completed workout',
     completeWorkoutToSee: 'Complete a workout to see it here',
-    
+
+    // Welcome empty state
+    welcome: 'Welcome',
+    welcomeEmpty: "Time to start your fitness journey. Create your first workout to track your progress!",
+    createMyFirstWorkout: 'Create my first workout',
+    discoverPrograms: 'Discover programs',
+    tipCreateTitle: 'Create',
+    tipCreateDesc: 'Build your workout with your exercises',
+    tipTrackTitle: 'Progress',
+    tipTrackDesc: 'Track your stats and beat your records',
+
     // Actions
     createWorkout: 'Create workout',
     newWorkout: 'New workout',

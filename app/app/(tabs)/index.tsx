@@ -430,6 +430,82 @@ export default function HomeScreen() {
             nextLevelXp={xpData.nextLevelXp}
           />
 
+        {/* ===== EMPTY STATE: aucune séance ===== */}
+        {displayWorkouts.length === 0 && !isLoading ? (
+          <View style={styles.welcomeContainer}>
+            <View style={[styles.welcomeCard, { backgroundColor: theme.colors.surface }]}>
+              <LinearGradient
+                colors={['#6366f118', '#8b5cf612', 'transparent']}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              />
+              <View style={styles.welcomeIconWrap}>
+                <View style={styles.welcomeIconCircle}>
+                  <Ionicons name="fitness" size={48} color="#6366f1" />
+                </View>
+                <View style={[styles.welcomeDecoBubble, { top: -10, right: -14, width: 52, height: 52, backgroundColor: 'rgba(99,102,241,0.1)' }]} />
+                <View style={[styles.welcomeDecoBubble, { bottom: -6, left: -18, width: 36, height: 36, backgroundColor: 'rgba(139,92,246,0.08)' }]} />
+              </View>
+
+              <Text style={[styles.welcomeTitle, { color: theme.colors.textPrimary }]}>
+                {t('welcome') || 'Bienvenue'}, {username} !
+              </Text>
+              <Text style={[styles.welcomeSubtitle, { color: theme.colors.textSecondary }]}>
+                {t('welcomeEmpty') || "C'est le moment de commencer ton parcours fitness. Crée ta premiere seance pour suivre tes progres !"}
+              </Text>
+
+              <Pressable onPress={handleCreate} style={({ pressed }) => [{ opacity: pressed ? 0.92 : 1 }]}>
+                <LinearGradient
+                  colors={['#F97316', '#EA580C']}
+                  style={styles.welcomeCtaGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Ionicons name="add-circle" size={22} color="#fff" />
+                  <Text style={styles.welcomeCtaText}>{t('createMyFirstWorkout') || 'Creer ma premiere seance'}</Text>
+                </LinearGradient>
+              </Pressable>
+
+              <Pressable
+                onPress={() => router.push('/programme' as never)}
+                style={({ pressed }) => [styles.welcomeSecondaryBtn, { borderColor: theme.colors.border, opacity: pressed ? 0.85 : 1 }]}
+              >
+                <Ionicons name="calendar-outline" size={18} color="#6366f1" />
+                <Text style={[styles.welcomeSecondaryText, { color: '#6366f1' }]}>
+                  {t('discoverPrograms') || 'Decouvrir les programmes'}
+                </Text>
+              </Pressable>
+            </View>
+
+            {/* Tips rapides */}
+            <View style={styles.welcomeTipsRow}>
+              <View style={[styles.welcomeTip, { backgroundColor: theme.colors.surface }]}>
+                <View style={[styles.welcomeTipIcon, { backgroundColor: 'rgba(249,115,22,0.15)' }]}>
+                  <Ionicons name="barbell-outline" size={20} color="#F97316" />
+                </View>
+                <Text style={[styles.welcomeTipTitle, { color: theme.colors.textPrimary }]}>
+                  {t('tipCreateTitle') || 'Cree'}
+                </Text>
+                <Text style={[styles.welcomeTipDesc, { color: theme.colors.textSecondary }]}>
+                  {t('tipCreateDesc') || 'Compose ta seance avec tes exercices'}
+                </Text>
+              </View>
+              <View style={[styles.welcomeTip, { backgroundColor: theme.colors.surface }]}>
+                <View style={[styles.welcomeTipIcon, { backgroundColor: 'rgba(34,197,94,0.15)' }]}>
+                  <Ionicons name="trending-up" size={20} color="#22C55E" />
+                </View>
+                <Text style={[styles.welcomeTipTitle, { color: theme.colors.textPrimary }]}>
+                  {t('tipTrackTitle') || 'Progresse'}
+                </Text>
+                <Text style={[styles.welcomeTipDesc, { color: theme.colors.textSecondary }]}>
+                  {t('tipTrackDesc') || 'Suis tes stats et bats tes records'}
+                </Text>
+              </View>
+            </View>
+          </View>
+        ) : (
+          <>
         <PersonalStats
           lastWorkoutDays={(() => {
             if (!displayWorkouts.length) return 999;
@@ -652,6 +728,8 @@ export default function HomeScreen() {
             ))
           )}
         </View>
+          </>
+        )}
       </ScrollView>
 
       {/* Modal pour éditer l'objectif */}
@@ -1297,5 +1375,109 @@ const styles = StyleSheet.create({
   goalModalButtonText: {
     fontSize: 16,
     fontWeight: '700',
+  },
+
+  // ===== Welcome / Empty State =====
+  welcomeContainer: {
+    marginHorizontal: 16,
+    gap: 16,
+  },
+  welcomeCard: {
+    borderRadius: 24,
+    overflow: 'hidden',
+    paddingVertical: 36,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(99,102,241,0.15)',
+  },
+  welcomeIconWrap: {
+    position: 'relative',
+    marginBottom: 24,
+  },
+  welcomeIconCircle: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(99,102,241,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  welcomeDecoBubble: {
+    position: 'absolute',
+    borderRadius: 999,
+  },
+  welcomeTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: -0.3,
+  },
+  welcomeSubtitle: {
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 28,
+    paddingHorizontal: 8,
+  },
+  welcomeCtaGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+  },
+  welcomeCtaText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  welcomeSecondaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+    borderWidth: 1.5,
+  },
+  welcomeSecondaryText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  welcomeTipsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  welcomeTip: {
+    flex: 1,
+    borderRadius: 18,
+    padding: 16,
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.04)',
+  },
+  welcomeTipIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  welcomeTipTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  welcomeTipDesc: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 17,
   },
 });
