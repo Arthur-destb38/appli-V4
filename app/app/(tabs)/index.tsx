@@ -1210,13 +1210,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  drawerCloseBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   drawerSection: {
     paddingHorizontal: 24,
     marginBottom: 32,
@@ -1300,16 +1293,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     flex: 1,
     marginRight: 8,
-  },
-  drawerCountBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  drawerCountText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
   },
   drawerEmptyText: {
     fontSize: 14,

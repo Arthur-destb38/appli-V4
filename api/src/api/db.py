@@ -64,8 +64,10 @@ def init_db() -> None:
         User, Workout, Exercise, WorkoutExercise, Set, Program, ProgramSession,
         ProgramSet, Share, Follower, Like, Comment, Notification, Story,
         RefreshToken, LoginAttempt, SyncEvent, PassToken, SalleAuditLog,
+        Conversation, Message, CommentLike, ProgramWorkout,
+        SubscriptionEvent, CoachProfile, ProgramTemplate, ProgramPurchase,
     )
-    
+
     url = _database_url()
     parsed_url = make_url(url)
     if parsed_url.get_backend_name() == "sqlite" and parsed_url.database:
@@ -75,6 +77,7 @@ def init_db() -> None:
     _ensure_slug_column(engine)
     _ensure_workout_exercise_columns(engine)
     _ensure_share_columns(engine)
+    _ensure_subscription_columns(engine)
 
 
 def _ensure_slug_column(engine: Engine) -> None:
@@ -173,6 +176,25 @@ def _ensure_share_columns(engine: Engine) -> None:
             connection.execute(text("ALTER TABLE share ADD COLUMN color TEXT"))
         if "image_url" not in cols:
             connection.execute(text("ALTER TABLE share ADD COLUMN image_url TEXT"))
+        connection.commit()
+
+
+def _ensure_subscription_columns(engine: Engine) -> None:
+    """Ajouter les colonnes abonnement sur la table user si absentes."""
+    url = _database_url()
+    parsed_url = make_url(url)
+    is_sqlite = parsed_url.get_backend_name() == "sqlite"
+
+    with engine.connect() as connection:
+        cols = _get_table_columns(connection, "user", is_sqlite)
+        if "subscription_tier" not in cols:
+            connection.execute(text("ALTER TABLE \"user\" ADD COLUMN subscription_tier TEXT DEFAULT 'free'"))
+        if "subscription_expires_at" not in cols:
+            connection.execute(text("ALTER TABLE \"user\" ADD COLUMN subscription_expires_at TIMESTAMP"))
+        if "revenuecat_app_user_id" not in cols:
+            connection.execute(text("ALTER TABLE \"user\" ADD COLUMN revenuecat_app_user_id TEXT"))
+        if "ai_programs_generated" not in cols:
+            connection.execute(text("ALTER TABLE \"user\" ADD COLUMN ai_programs_generated INTEGER DEFAULT 0"))
         connection.commit()
 
 

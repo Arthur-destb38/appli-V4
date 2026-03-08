@@ -1,4 +1,4 @@
-import { buildApiUrl, getAuthHeaders } from '@/utils/api';
+import { apiCall } from '@/utils/api';
 
 export type FeedItem = {
   share_id: string;
@@ -31,19 +31,12 @@ export type SharedWorkoutSnapshot = {
   }>;
 };
 
-const FEED_BASE = buildApiUrl('/feed');
-const FOLLOW_BASE = buildApiUrl('/feed/follow');
-const SHARED_WORKOUT_BASE = buildApiUrl('/workouts/shared');
-
 export const fetchFeed = async (userId: string, limit = 10, cursor?: string) => {
   const params = new URLSearchParams({ user_id: userId, limit: String(limit) });
   if (cursor) {
     params.append('cursor', cursor);
   }
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${FEED_BASE}?${params.toString()}`, {
-    headers,
-  });
+  const response = await apiCall(`/feed?${params.toString()}`);
   if (!response.ok) {
     throw new Error('Impossible de charger le feed');
   }
@@ -51,10 +44,8 @@ export const fetchFeed = async (userId: string, limit = 10, cursor?: string) => 
 };
 
 export const followUser = async (followerId: string, targetId: string) => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${FOLLOW_BASE}/${targetId}`, {
+  const response = await apiCall(`/feed/follow/${targetId}`, {
     method: 'POST',
-    headers,
     body: JSON.stringify({ follower_id: followerId }),
   });
   if (!response.ok) {
@@ -63,10 +54,8 @@ export const followUser = async (followerId: string, targetId: string) => {
 };
 
 export const unfollowUser = async (followerId: string, targetId: string) => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${FOLLOW_BASE}/${targetId}`, {
+  const response = await apiCall(`/feed/follow/${targetId}`, {
     method: 'DELETE',
-    headers,
     body: JSON.stringify({ follower_id: followerId }),
   });
   if (!response.ok) {
@@ -75,10 +64,7 @@ export const unfollowUser = async (followerId: string, targetId: string) => {
 };
 
 export const fetchSharedWorkout = async (shareId: string): Promise<SharedWorkoutSnapshot> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${SHARED_WORKOUT_BASE}/${shareId}`, {
-    headers,
-  });
+  const response = await apiCall(`/workouts/shared/${shareId}`);
   if (!response.ok) {
     throw new Error('Séance partagée introuvable');
   }

@@ -1,43 +1,5 @@
-import { buildApiUrl, getAuthHeaders } from '@/utils/api';
+import { apiCall } from '@/utils/api';
 import { Program } from '@/types/program';
-
-const PROGRAMS_BASE = buildApiUrl('/programs');
-
-/**
- * Récupère la liste de tous les programmes enregistrés
- */
-export const listPrograms = async (): Promise<Program[]> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(PROGRAMS_BASE, {
-    method: 'GET',
-    headers,
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'Impossible de récupérer les programmes');
-  }
-
-  return (await response.json()) as Program[];
-};
-
-/**
- * Récupère un programme par son ID
- */
-export const getProgram = async (programId: string): Promise<Program> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${PROGRAMS_BASE}/${programId}`, {
-    method: 'GET',
-    headers,
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || 'Programme introuvable');
-  }
-
-  return (await response.json()) as Program;
-};
 
 export type GenerateProgramPayload = {
   title?: string;
@@ -46,25 +8,40 @@ export type GenerateProgramPayload = {
   frequency?: number;
   user_id?: string | null;
   exercises_per_session?: number;
-  // Nouveaux paramètres de la V1
-  niveau?: string; // Débutant, Intermédiaire, Avancé
-  duree_seance?: string; // "45", "60", etc.
-  priorite?: string; // "haut", "bas", "specifique"
+  niveau?: string;
+  duree_seance?: string;
+  priorite?: string;
   priorite_first?: string;
   priorite_second?: string;
   has_blessure?: boolean;
   blessure_first?: string;
   blessure_second?: string;
   equipment_available?: string[];
-  cardio?: string; // "oui" ou "non"
-  methode_preferee?: string; // "fullbody", "upperlower", "split", "ppl"
+  cardio?: string;
+  methode_preferee?: string;
+};
+
+export const listPrograms = async (): Promise<Program[]> => {
+  const response = await apiCall('/programs');
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Impossible de récupérer les programmes');
+  }
+  return (await response.json()) as Program[];
+};
+
+export const getProgram = async (programId: string): Promise<Program> => {
+  const response = await apiCall(`/programs/${programId}`);
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Programme introuvable');
+  }
+  return (await response.json()) as Program;
 };
 
 export const generateProgram = async (payload: GenerateProgramPayload): Promise<Program> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${PROGRAMS_BASE}/generate`, {
+  const response = await apiCall('/programs/generate', {
     method: 'POST',
-    headers,
     body: JSON.stringify({
       title: payload.title || 'Programme personnalisé',
       objective: payload.objective,
@@ -94,14 +71,9 @@ export const generateProgram = async (payload: GenerateProgramPayload): Promise<
   return (await response.json()) as Program;
 };
 
-/**
- * Sauvegarde un programme et crée les séances associées
- */
 export const saveProgram = async (programId: string): Promise<{ program_id: string; workouts_created: number; workouts: Array<{ id: string; title: string; day_index: number }> }> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${PROGRAMS_BASE}/${programId}/save`, {
+  const response = await apiCall(`/programs/${programId}/save`, {
     method: 'POST',
-    headers,
   });
 
   if (!response.ok) {

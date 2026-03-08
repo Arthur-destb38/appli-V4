@@ -83,10 +83,10 @@ export default function TabLayout() {
         <Tabs.Screen
           name="explore"
           options={{
-            title: t('explore'),
+            title: t('rankings'),
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons
-                name={focused ? 'compass' : 'compass-outline'}
+                name={focused ? 'trophy' : 'trophy-outline'}
                 size={24}
                 color={color}
               />

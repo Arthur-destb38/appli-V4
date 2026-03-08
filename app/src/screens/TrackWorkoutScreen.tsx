@@ -38,7 +38,7 @@ const DEFAULT_SET: { reps: number; weight: number | null; rpe: number | null } =
 
 export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = false }) => {
   const router = useRouter();
-  const { theme } = useAppTheme();
+  const { theme, mode } = useAppTheme();
   const { t } = useTranslations();
   const {
     findWorkout,
@@ -52,7 +52,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
   const [restSeconds, setRestSeconds] = useState(90);
   const [timerRunning, setTimerRunning] = useState(false);
   const [remaining, setRemaining] = useState(0);
-  const intervalRef = useRef<NodeJS.Timer | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const spinAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(1)).current;
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -178,7 +178,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
     intervalRef.current = setInterval(() => {
       setRemaining((prev) => {
         if (prev <= 1) {
-          clearInterval(intervalRef.current as NodeJS.Timer);
+          clearInterval(intervalRef.current!);
           intervalRef.current = null;
           setTimerRunning(false);
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
@@ -258,7 +258,7 @@ export const TrackWorkoutScreen: React.FC<Props> = ({ workoutId, modeSport = fal
           ]}
         >
           <LinearGradient
-            colors={theme.dark ? ['#1e1b4b', '#312e81', '#1e1b4b'] : ['#6366f1', '#8b5cf6', '#a855f7']}
+            colors={mode === 'dark' ? ['#1e1b4b', '#312e81', '#1e1b4b'] : ['#6366f1', '#8b5cf6', '#a855f7']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.headerGradient}
@@ -646,22 +646,29 @@ const StepperModern: React.FC<StepperModernProps> = ({
     <>
       <View style={styles.stepperModern}>
         <View style={styles.stepperModernHeader}>
-          <View style={[styles.stepperIcon, { backgroundColor: color + '20' }]}>
-            <Ionicons name={icon} size={14} color={color} />
-          </View>
+          <Ionicons name={icon} size={13} color={color} />
           <Text style={[styles.stepperModernLabel, { color: theme.colors.textSecondary }]}>{label}</Text>
         </View>
-        <View style={[styles.stepperModernControls, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-          <TouchableOpacity onPress={onDecrement} style={[styles.stepperModernBtn, { backgroundColor: color + '15' }]} activeOpacity={0.6}>
-            <Ionicons name="remove" size={20} color={color} />
+        <Pressable onPress={openModal} style={styles.stepperModernValueWrap}>
+          <Text style={[styles.stepperModernValue, { color: theme.colors.textPrimary }]} numberOfLines={1}>
+            {displayValue}
+          </Text>
+          {suffix ? <Text style={[styles.stepperModernSuffix, { color: theme.colors.textSecondary }]}>{suffix}</Text> : null}
+        </Pressable>
+        <View style={styles.stepperModernControls}>
+          <TouchableOpacity
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); onDecrement(); }}
+            style={[styles.stepperModernBtn, { backgroundColor: color + '12', borderColor: color + '25' }]}
+            activeOpacity={0.6}
+          >
+            <Ionicons name="remove" size={16} color={color} />
           </TouchableOpacity>
-          <Pressable onPress={openModal} style={styles.stepperModernValueWrap}>
-            <Text style={[styles.stepperModernValue, { color: theme.colors.textPrimary }]} numberOfLines={1}>
-              {displayValue}{suffix ? ` ${suffix}` : ''}
-            </Text>
-          </Pressable>
-          <TouchableOpacity onPress={onIncrement} style={[styles.stepperModernBtn, { backgroundColor: color + '15' }]} activeOpacity={0.6}>
-            <Ionicons name="add" size={20} color={color} />
+          <TouchableOpacity
+            onPress={() => { Haptics.selectionAsync().catch(() => {}); onIncrement(); }}
+            style={[styles.stepperModernBtn, { backgroundColor: color + '12', borderColor: color + '25' }]}
+            activeOpacity={0.6}
+          >
+            <Ionicons name="add" size={16} color={color} />
           </TouchableOpacity>
         </View>
       </View>
@@ -1018,56 +1025,52 @@ const styles = StyleSheet.create({
   },
   steppersRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   stepperModern: {
     flex: 1,
-    gap: 6,
+    alignItems: 'center',
+    gap: 4,
   },
   stepperModernHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  stepperIcon: {
-    width: 22,
-    height: 22,
-    borderRadius: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 4,
   },
   stepperModernLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+  },
+  stepperModernValueWrap: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
+  stepperModernValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  stepperModernSuffix: {
     fontSize: 12,
     fontWeight: '600',
+    marginLeft: 2,
   },
   stepperModernControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: 6,
-    paddingHorizontal: 6,
+    gap: 8,
   },
   stepperModernBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  stepperModernValueWrap: {
-    flex: 1,
-    minWidth: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 2,
-    paddingVertical: 4,
-  },
-  stepperModernValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,

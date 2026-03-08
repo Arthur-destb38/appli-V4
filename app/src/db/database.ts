@@ -1,4 +1,7 @@
-import { openDatabaseSync, openDatabase, SQLiteDatabase } from 'expo-sqlite';
+import { openDatabaseSync, SQLiteDatabase } from 'expo-sqlite';
+
+// The legacy openDatabase API may still be available at runtime
+const openDatabase: any = (require('expo-sqlite') as any).openDatabase;
 
 const DB_NAME = 'gorillax.db';
 
@@ -60,6 +63,11 @@ type FallbackStore = {
     username: string;
     consent_to_public_share: number;
     created_at: number;
+    bio?: string;
+    objective?: string;
+    avatar_url?: string;
+    experience_level?: string;
+    training_frequency?: number;
   } | null;
   counters: {
     workout: number;
@@ -118,16 +126,16 @@ const createFallbackDatabase = (): DatabaseConnection => {
 
       callback(tx);
     },
-  } as DatabaseConnection;
+  } as unknown as DatabaseConnection;
 };
 
 export const runMigrations = (db: DatabaseConnection) => {
-  db.transaction((tx) => {
+  (db as any).transaction((tx: any) => {
     const ensureColumn = (table: string, column: string, definition: string) => {
       tx.executeSql(
         `PRAGMA table_info(${table})`,
         [],
-        (_innerTx, result) => {
+        (_innerTx: any, result: any) => {
           const rows = result?.rows?._array ?? [];
           const exists = rows.some((row: any) => row.name === column);
           if (!exists) {

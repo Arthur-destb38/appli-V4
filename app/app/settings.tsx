@@ -22,6 +22,7 @@ import * as Haptics from 'expo-haptics';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { useDemo } from '../src/contexts/DemoContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { usePreferences, accentColors, heroColors, translations, useTranslations } from '@/hooks/usePreferences';
 import { apiCall } from '@/utils/api';
@@ -83,6 +84,7 @@ const GENDER_OPTIONS = [
 export default function SettingsScreen() {
   const { theme, toggleMode } = useAppTheme();
   const { user, logout, updateProfile } = useAuth();
+  const { isPremium, tier, showPaywall, restorePurchases } = useSubscription();
   const { profile, refresh } = useUserProfile();
   const { preferences, updatePreference } = usePreferences();
   const { t } = useTranslations();
@@ -959,6 +961,51 @@ export default function SettingsScreen() {
                 <Ionicons name="videocam-outline" size={20} color="#10b981" />
                 <Text style={[styles.actionButtonText, { color: '#10b981' }]}>
                   {t('demoButton')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Abonnement */}
+          <View style={[styles.section, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionHeaderLeft}>
+                <View style={[styles.sectionIcon, { backgroundColor: theme.colors.primary + '20' }]}>
+                  <Ionicons name="diamond" size={20} color={theme.colors.primary} />
+                </View>
+                <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
+                  {t('subscriptionLabel')}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.sectionContent}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>{t('currentPlan')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  {isPremium && <Ionicons name="diamond" size={14} color={theme.colors.primary} />}
+                  <Text style={{ color: theme.colors.textPrimary, fontSize: 15, fontWeight: '600' }}>
+                    {isPremium ? t('premiumPlan') : t('freePlan')}
+                  </Text>
+                </View>
+              </View>
+              {!isPremium && (
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: theme.colors.primary + '15' }]}
+                  onPress={showPaywall}
+                >
+                  <Ionicons name="diamond-outline" size={20} color={theme.colors.primary} />
+                  <Text style={[styles.actionButtonText, { color: theme.colors.primary }]}>
+                    {t('upgradeToPremium')}
+                  </Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: theme.colors.textSecondary + '10', marginTop: 8 }]}
+                onPress={restorePurchases}
+              >
+                <Ionicons name="refresh-outline" size={20} color={theme.colors.textSecondary} />
+                <Text style={[styles.actionButtonText, { color: theme.colors.textSecondary }]}>
+                  {t('restorePurchases')}
                 </Text>
               </TouchableOpacity>
             </View>

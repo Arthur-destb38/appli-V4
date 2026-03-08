@@ -3,6 +3,7 @@
 All route files should import auth dependencies from here
 instead of defining their own copies.
 """
+from datetime import datetime, timezone
 from typing import Annotated, Optional
 from fastapi import Depends, HTTPException, status, Header, Query
 from sqlmodel import Session
@@ -56,6 +57,29 @@ def get_current_user_header_or_query(
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="missing_token")
     return _user_from_token(token, session)
+
+
+def require_premium(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Require premium subscription. Raises 403 if free tier."""
+    if current_user.subscription_tier not in ("premium",):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="premium_required")
+    if (current_user.subscription_expires_at
+            and current_user.subscription_expires_at < datetime.now(timezone.utc)):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="subscription_expired")
+    return current_user
+
+
+def check_ai_program_limit(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Allow 1 free AI program, then require premium."""
+    if current_user.subscription_tier in ("premium",):
+        return current_user
+    if current_user.ai_programs_generated >= 1:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ai_program_limit_reached")
+    return current_user
 
 
 def get_current_user_optional(

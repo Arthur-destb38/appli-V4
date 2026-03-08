@@ -59,7 +59,7 @@ describe('ExerciseProgressScreen', () => {
   });
 
   afterAll(() => {
-    (Date.now as jest.SpyInstance).mockRestore();
+    (Date.now as unknown as jest.SpyInstance).mockRestore();
   });
 
   beforeEach(() => {

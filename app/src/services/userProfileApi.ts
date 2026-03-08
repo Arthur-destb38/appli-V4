@@ -1,4 +1,4 @@
-import { buildApiUrl, getAuthHeaders, apiCall } from '@/utils/api';
+import { apiCall } from '@/utils/api';
 
 export type UserProfilePayload = {
   id: string;
@@ -9,9 +9,6 @@ export type UserProfilePayload = {
 export type UserProfileResponse = UserProfilePayload & {
   created_at: string;
 };
-
-const PROFILE_ENDPOINT = buildApiUrl('/users/profile');
-const USERS_BASE = buildApiUrl('/users');
 
 export type UserStatsResponse = {
   user_id: string;

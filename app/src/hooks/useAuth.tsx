@@ -26,6 +26,8 @@ interface User {
   bio?: string;
   objective?: string;
   avatar_url?: string;
+  subscription_tier?: string;
+  ai_programs_generated?: number;
 }
 
 interface AuthTokens {
@@ -75,7 +77,19 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
       ]);
 
       if (storedAccessToken && storedRefreshToken && storedUser) {
-        const userData = JSON.parse(storedUser);
+        let userData: User;
+        try {
+          userData = JSON.parse(storedUser);
+        } catch {
+          // Corrupted user data — clear and bail
+          await Promise.all([
+            AsyncStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN),
+            AsyncStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN),
+            AsyncStorage.removeItem(STORAGE_KEYS.USER),
+          ]);
+          setIsLoading(false);
+          return;
+        }
 
         // Charger les tokens en mémoire immédiatement (offline-first)
         setTokens({
@@ -188,13 +202,14 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     try {
       // Ne vider les données locales que si c'est un utilisateur différent
       const previousUser = await AsyncStorage.getItem(STORAGE_KEYS.USER);
-      const previousUsername = previousUser ? JSON.parse(previousUser).username : null;
+      let previousUsername: string | null = null;
+      try { previousUsername = previousUser ? JSON.parse(previousUser).username : null; } catch { /* ignore */ }
       if (previousUsername && previousUsername !== credentials.username) {
         await clearAllUserDataForLogout();
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       const response = await fetch(buildApiUrl('/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -230,13 +245,14 @@ export const AuthProvider: React.FC<PropsWithChildren> = ({ children }) => {
     setIsLoading(true);
     try {
       const previousUser = await AsyncStorage.getItem(STORAGE_KEYS.USER);
-      const previousUsername = previousUser ? JSON.parse(previousUser).username : null;
+      let previousUsername: string | null = null;
+      try { previousUsername = previousUser ? JSON.parse(previousUser).username : null; } catch { /* ignore */ }
       if (previousUsername && previousUsername !== 'demo') {
         await clearAllUserDataForLogout();
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       const response = await fetch(buildApiUrl('/auth/demo-login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

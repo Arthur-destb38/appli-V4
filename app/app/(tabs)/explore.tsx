@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useRef, memo } from 'react';
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
+  TouchableOpacity,
   View,
-  Dimensions,
   Animated,
   Easing,
 } from 'react-native';
@@ -19,88 +19,239 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
-import {
-  ExploreData,
-  TrendingPost,
-  SuggestedUser,
-  SearchResult,
-  getExplore,
-  search,
-} from '@/services/exploreApi';
-import { followUser, unfollowUser } from '@/services/profileApi';
-import { useUserProfile } from '@/hooks/useUserProfile';
 import { useTranslations } from '@/hooks/usePreferences';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import {
+  LeaderboardEntry,
+  LeaderboardResponse,
+  LeaderboardType,
+  LeaderboardPeriod,
+  getVolumeLeaderboard,
+  getSessionsLeaderboard,
+  getLikesLeaderboard,
+  getFollowersLeaderboard,
+} from '@/services/leaderboardApi';
+import { getAvatarGradient } from '@/utils/colors';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// ============ CONSTANTS ============
 
-const CATEGORIES = [
-  { id: 'all', labelKey: 'allCategory', icon: 'grid', gradient: ['#6366f1', '#8b5cf6'] },
-  { id: 'force', labelKey: 'forceCategory', icon: 'barbell', gradient: ['#ef4444', '#dc2626'] },
-  { id: 'cardio', labelKey: 'cardioCategory', icon: 'heart', gradient: ['#ec4899', '#db2777'] },
-  { id: 'hypertrophie', labelKey: 'massCategory', icon: 'fitness', gradient: ['#10b981', '#059669'] },
-  { id: 'perte', labelKey: 'lossCategory', icon: 'flame', gradient: ['#f59e0b', '#d97706'] },
+type PageTab = 'ranking' | 'challenges';
+
+const LEADERBOARD_TABS: { key: LeaderboardType; icon: string; gradient: [string, string] }[] = [
+  { key: 'volume', icon: 'barbell', gradient: ['#6366f1', '#8b5cf6'] },
+  { key: 'sessions', icon: 'calendar', gradient: ['#10b981', '#14b8a6'] },
+  { key: 'likes', icon: 'heart', gradient: ['#ec4899', '#f43f5e'] },
+  { key: 'followers', icon: 'people', gradient: ['#f59e0b', '#f97316'] },
+];
+
+const PERIODS: { key: LeaderboardPeriod }[] = [
+  { key: 'week' },
+  { key: 'month' },
+  { key: 'all' },
 ];
 
 const CHALLENGES = [
-  { id: '1', titleKey: 'challenge100Pushups', descKey: 'challenge100PushupsDesc', participants: 234, icon: '💪', gradient: ['#ef4444', '#dc2626'], category: 'force' },
-  { id: '2', titleKey: 'challenge7Days', descKey: 'challenge7DaysDesc', participants: 156, icon: '🔥', gradient: ['#6366f1', '#8b5cf6'], category: 'all' },
-  { id: '3', titleKey: 'challengePRSquad', descKey: 'challengePRSquatDesc', participants: 89, icon: '🏆', gradient: ['#f59e0b', '#d97706'], category: 'force' },
-  { id: '4', titleKey: 'challengeCardioMaster', descKey: 'challengeCardioMasterDesc', participants: 178, icon: '❤️', gradient: ['#ec4899', '#db2777'], category: 'cardio' },
+  { id: '1', titleKey: 'challenge100Pushups', descKey: 'challenge100PushupsDesc', participants: 234, icon: '💪', gradient: ['#ef4444', '#dc2626'] as [string, string], category: 'force' },
+  { id: '2', titleKey: 'challenge7Days', descKey: 'challenge7DaysDesc', participants: 156, icon: '🔥', gradient: ['#6366f1', '#8b5cf6'] as [string, string], category: 'all' },
+  { id: '3', titleKey: 'challengePRSquad', descKey: 'challengePRSquatDesc', participants: 89, icon: '🏆', gradient: ['#f59e0b', '#d97706'] as [string, string], category: 'force' },
+  { id: '4', titleKey: 'challengeCardioMaster', descKey: 'challengeCardioMasterDesc', participants: 178, icon: '❤️', gradient: ['#ec4899', '#db2777'] as [string, string], category: 'cardio' },
 ];
 
-// Avatar gradients
-const AVATAR_GRADIENTS = [
-  ['#6366f1', '#8b5cf6'],
-  ['#ec4899', '#db2777'],
-  ['#10b981', '#059669'],
-  ['#f59e0b', '#d97706'],
-  ['#ef4444', '#dc2626'],
-  ['#06b6d4', '#0891b2'],
-];
+// ============ PODIUM COMPONENT ============
 
-const POST_GRADIENTS = [
-  ['#6366f1', '#8b5cf6'],
-  ['#ec4899', '#db2777'],
-  ['#10b981', '#059669'],
-  ['#f59e0b', '#d97706'],
-  ['#ef4444', '#dc2626'],
-  ['#06b6d4', '#0891b2'],
-];
+const Podium: React.FC<{
+  entries: LeaderboardEntry[];
+  onPress: (entry: LeaderboardEntry) => void;
+  theme: any;
+  scoreLabel: string;
+}> = ({ entries, onPress, theme, scoreLabel }) => {
+  const podiumAnim = useRef(new Animated.Value(0)).current;
 
-const getAvatarGradient = (name: string): [string, string] => {
-  const index = name.charCodeAt(0) % AVATAR_GRADIENTS.length;
-  return AVATAR_GRADIENTS[index] as [string, string];
+  useEffect(() => {
+    Animated.timing(podiumAnim, {
+      toValue: 1,
+      duration: 800,
+      easing: Easing.out(Easing.back(1.1)),
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  const first = entries[0];
+  const second = entries[1];
+  const third = entries[2];
+
+  const renderPodiumPlace = (entry: LeaderboardEntry | undefined, rank: number, height: number) => {
+    if (!entry) return <View style={{ flex: 1 }} />;
+
+    const gradient = getAvatarGradient(entry.username);
+    const medalColors: Record<number, { bg: string; border: string; text: string }> = {
+      1: { bg: '#FFD700', border: '#FFC107', text: '#92400E' },
+      2: { bg: '#E5E7EB', border: '#9CA3AF', text: '#374151' },
+      3: { bg: '#F59E0B', border: '#D97706', text: '#78350F' },
+    };
+    const colors = medalColors[rank];
+
+    return (
+      <TouchableOpacity
+        style={[styles.podiumPlace, { flex: rank === 1 ? 1.2 : 1 }]}
+        onPress={() => onPress(entry)}
+        activeOpacity={0.8}
+      >
+        <Animated.View
+          style={[
+            styles.podiumAvatarContainer,
+            {
+              transform: [
+                { translateY: podiumAnim.interpolate({ inputRange: [0, 1], outputRange: [50, 0] }) },
+                { scale: podiumAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) },
+              ],
+              opacity: podiumAnim,
+            },
+          ]}
+        >
+          <View style={[styles.podiumAvatarRing, { borderColor: colors.bg }]}>
+            <LinearGradient colors={gradient} style={styles.podiumAvatar}>
+              <Text style={styles.podiumAvatarText}>
+                {entry.username.slice(0, 1).toUpperCase()}
+              </Text>
+            </LinearGradient>
+          </View>
+          <View style={[styles.medalBadge, { backgroundColor: colors.bg }]}>
+            <Text style={[styles.medalText, { color: colors.text }]}>{rank}</Text>
+          </View>
+        </Animated.View>
+
+        <Text style={[styles.podiumUsername, { color: theme.colors.textPrimary }]} numberOfLines={1}>
+          {entry.username}
+        </Text>
+        <Text style={[styles.podiumScore, { color: colors.bg }]}>
+          {entry.score.toLocaleString()}
+        </Text>
+        <Text style={[styles.podiumScoreLabel, { color: theme.colors.textSecondary }]}>
+          {scoreLabel}
+        </Text>
+
+        <Animated.View
+          style={[
+            styles.podiumBar,
+            {
+              height,
+              backgroundColor: colors.bg + '30',
+              borderColor: colors.bg,
+              transform: [{ scaleY: podiumAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }) }],
+            },
+          ]}
+        >
+          <LinearGradient colors={[colors.bg + '60', colors.bg + '20']} style={styles.podiumBarGradient} />
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={styles.podiumContainer}>
+      {renderPodiumPlace(second, 2, 70)}
+      {renderPodiumPlace(first, 1, 100)}
+      {renderPodiumPlace(third, 3, 50)}
+    </View>
+  );
 };
 
-// ============ HELPER FUNCTIONS ============
+// ============ ENTRY CARD COMPONENT ============
 
-const getChallengeTitle = (challenge: typeof CHALLENGES[0], t: (key: any) => string): string => {
-  return t(challenge.titleKey);
-};
+const EntryCard: React.FC<{
+  entry: LeaderboardEntry;
+  index: number;
+  onPress: () => void;
+  theme: any;
+  scoreLabel: string;
+  currentUserId: string;
+  t: (key: any, params?: Record<string, string | number>) => string;
+}> = memo(({ entry, index, onPress, theme, scoreLabel, currentUserId, t }) => {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
 
-const getChallengeDesc = (challenge: typeof CHALLENGES[0], t: (key: any) => string): string => {
-  return t(challenge.descKey);
-};
+  const isCurrentUser = entry.user_id === currentUserId;
+  const gradient = getAvatarGradient(entry.username);
 
-// ============ SEPARATE COMPONENTS FOR PROPER HOOK USAGE ============
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1, duration: 400, delay: index * 50,
+        easing: Easing.out(Easing.cubic), useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0, duration: 400, delay: index * 50,
+        easing: Easing.out(Easing.cubic), useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
 
-interface ChallengeCardProps {
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateX: slideAnim }] }}>
+      <TouchableOpacity
+        style={[
+          styles.entryCard,
+          {
+            backgroundColor: isCurrentUser ? '#6366f115' : theme.colors.surface,
+            borderColor: isCurrentUser ? '#6366f1' : theme.colors.border,
+          },
+        ]}
+        onPress={onPress}
+        activeOpacity={0.8}
+      >
+        <View style={[styles.rankBadge, { backgroundColor: theme.colors.surfaceMuted }]}>
+          <Text style={[styles.rankText, { color: theme.colors.textPrimary }]}>{entry.rank}</Text>
+        </View>
+
+        <LinearGradient colors={gradient} style={styles.entryAvatar}>
+          <Text style={styles.entryAvatarText}>{entry.username.slice(0, 1).toUpperCase()}</Text>
+        </LinearGradient>
+
+        <View style={styles.entryInfo}>
+          <Text style={[styles.entryUsername, { color: isCurrentUser ? '#6366f1' : theme.colors.textPrimary }]}>
+            {entry.username}
+            {isCurrentUser && ` (${t('youLabel')})`}
+          </Text>
+          {entry.change !== 0 && (
+            <View style={styles.changeContainer}>
+              <Ionicons
+                name={entry.change > 0 ? 'trending-up' : 'trending-down'}
+                size={14}
+                color={entry.change > 0 ? '#10b981' : '#ef4444'}
+              />
+              <Text style={[styles.changeText, { color: entry.change > 0 ? '#10b981' : '#ef4444' }]}>
+                {Math.abs(entry.change)} {Math.abs(entry.change) > 1 ? t('placesLabel') : t('placeLabel')}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.scoreContainer}>
+          <Text style={[styles.scoreValue, { color: theme.colors.textPrimary }]}>
+            {entry.score.toLocaleString()}
+          </Text>
+          <Text style={[styles.scoreLabelText, { color: theme.colors.textSecondary }]}>{scoreLabel}</Text>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
+
+// ============ CHALLENGE CARD COMPONENT ============
+
+const ChallengeCard = memo(({ challenge, index, onPress, t }: {
   challenge: typeof CHALLENGES[0];
   index: number;
   onPress: () => void;
   t: (key: any, params?: Record<string, string | number>) => string;
-}
-
-const ChallengeCard = memo(({ challenge, index, onPress, t }: ChallengeCardProps) => {
+}) => {
   const cardAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.spring(cardAnim, {
-      toValue: 1,
-      delay: index * 100,
-      useNativeDriver: true,
-      tension: 50,
-      friction: 8,
+      toValue: 1, delay: index * 100,
+      useNativeDriver: true, tension: 50, friction: 8,
     }).start();
   }, [index]);
 
@@ -115,284 +266,122 @@ const ChallengeCard = memo(({ challenge, index, onPress, t }: ChallengeCardProps
       }}
     >
       <Pressable
-        style={({ pressed }) => [styles.challengeCard, { transform: [{ scale: pressed ? 0.97 : 1 }] }]}
-        onPress={onPress}
-      >
-        <LinearGradient
-          colors={challenge.gradient as [string, string]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.challengeGradient}
-        >
-          <View style={styles.challengeDecor1} />
-          <View style={styles.challengeDecor2} />
-
-          <View style={styles.challengeHeader}>
-            <View style={styles.challengeIconBox}>
-              <Text style={styles.challengeIcon}>{challenge.icon}</Text>
-            </View>
-            <View style={styles.challengeParticipants}>
-              <Ionicons name="people" size={12} color="rgba(255,255,255,0.9)" />
-              <Text style={styles.challengeParticipantsText}>{challenge.participants}</Text>
-            </View>
-          </View>
-
-          <View style={styles.challengeContent}>
-            <Text style={styles.challengeTitle}>{getChallengeTitle(challenge, t)}</Text>
-            <Text style={styles.challengeDesc}>{getChallengeDesc(challenge, t)}</Text>
-          </View>
-
-          <View style={styles.challengeJoinBtn}>
-            <Text style={styles.challengeJoinText}>{t('participate')}</Text>
-            <Ionicons name="chevron-forward" size={14} color="#fff" />
-          </View>
-        </LinearGradient>
-      </Pressable>
-    </Animated.View>
-  );
-});
-
-interface UserCardProps {
-  user: SuggestedUser;
-  index: number;
-  isFollowing: boolean;
-  onPress: () => void;
-  onFollow: () => void;
-  theme: any;
-  t: (key: any, params?: Record<string, string | number>) => string;
-}
-
-const UserCard = memo(({ user, index, isFollowing, onPress, onFollow, theme, t }: UserCardProps) => {
-  const avatarGradient = getAvatarGradient(user.username);
-  const cardAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.spring(cardAnim, {
-      toValue: 1,
-      delay: index * 80,
-      useNativeDriver: true,
-      tension: 50,
-      friction: 8,
-    }).start();
-  }, [index]);
-
-  return (
-    <Animated.View
-      style={{
-        opacity: cardAnim,
-        transform: [
-          { translateX: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [30, 0] }) },
-        ],
-      }}
-    >
-      <Pressable
         style={({ pressed }) => [{ transform: [{ scale: pressed ? 0.97 : 1 }] }]}
         onPress={onPress}
       >
         <LinearGradient
-          colors={avatarGradient}
+          colors={challenge.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.userCard}
+          style={styles.challengeCard}
         >
-          {/* Decorative elements */}
-          <View style={styles.userCardDecor1} />
-          <View style={styles.userCardDecor2} />
-          
-          {/* Avatar */}
-          <View style={styles.userAvatarContainer}>
-            <View style={styles.userAvatarRing}>
-              <View style={styles.userAvatar}>
-                <Text style={styles.userAvatarText}>
-                  {user.username.slice(0, 2).toUpperCase()}
-                </Text>
-              </View>
+          <View style={styles.challengeDecor1} />
+          <View style={styles.challengeDecor2} />
+
+          <View style={styles.challengeRow}>
+            <View style={styles.challengeIconBox}>
+              <Text style={styles.challengeIcon}>{challenge.icon}</Text>
+            </View>
+            <View style={styles.challengeInfo}>
+              <Text style={styles.challengeTitle}>{t(challenge.titleKey)}</Text>
+              <Text style={styles.challengeDesc}>{t(challenge.descKey)}</Text>
             </View>
           </View>
 
-          {/* User info */}
-          <Text style={styles.userName} numberOfLines={1}>
-            {user.username}
-          </Text>
-          <Text style={styles.userStats}>
-            {user.followers_count} {user.followers_count > 1 ? t('subscribersCount') : t('subscriberCount')}
-          </Text>
-
-          {/* Follow button */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.followBtn,
-              isFollowing && styles.followBtnFollowing,
-              { opacity: pressed ? 0.8 : 1 }
-            ]}
-            onPress={(e) => {
-              e.stopPropagation();
-              onFollow();
-            }}
-          >
-            <Ionicons 
-              name={isFollowing ? 'checkmark' : 'person-add'} 
-              size={14} 
-              color={isFollowing ? 'rgba(255,255,255,0.8)' : '#fff'} 
-            />
-            <Text style={[styles.followBtnText, isFollowing && styles.followBtnTextFollowing]}>
-              {isFollowing ? t('following') : t('follow')}
-            </Text>
-          </Pressable>
+          <View style={styles.challengeFooter}>
+            <View style={styles.challengeParticipants}>
+              <Ionicons name="people" size={14} color="rgba(255,255,255,0.9)" />
+              <Text style={styles.challengeParticipantsText}>{challenge.participants}</Text>
+            </View>
+            <View style={styles.challengeJoinBtn}>
+              <Text style={styles.challengeJoinText}>{t('participate')}</Text>
+              <Ionicons name="chevron-forward" size={14} color="#fff" />
+            </View>
+          </View>
         </LinearGradient>
       </Pressable>
     </Animated.View>
   );
 });
 
-interface PostCardProps {
-  post: TrendingPost;
-  index: number;
-  onPress: () => void;
-  theme: { colors: { surface: string; textPrimary: string; textSecondary: string; border: string } };
-  t: (key: any, params?: Record<string, string | number>) => string;
-}
+// ============ MAIN SCREEN ============
 
-const PostCard = memo(({ post, index, onPress, theme, t }: PostCardProps) => {
-  const accentColors = POST_GRADIENTS[index % POST_GRADIENTS.length] as [string, string];
-  const cardAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.spring(cardAnim, {
-      toValue: 1,
-      delay: index * 60,
-      useNativeDriver: true,
-      tension: 50,
-      friction: 8,
-    }).start();
-  }, [index]);
-
-  return (
-    <Animated.View
-      style={[
-        styles.postCard,
-        {
-          opacity: cardAnim,
-          transform: [
-            { scale: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) },
-          ],
-        },
-      ]}
-    >
-      <Pressable
-        style={({ pressed }) => [
-          styles.postPressable,
-          { backgroundColor: theme.colors.surface, opacity: pressed ? 0.92 : 1 }
-        ]}
-        onPress={onPress}
-      >
-        {/* Accent bar (gradient) */}
-        <LinearGradient
-          colors={accentColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.postAccentBar}
-        />
-        <View style={styles.postInner}>
-          <View style={styles.postHeader}>
-            <View style={[styles.postExercises, { backgroundColor: accentColors[0] + '18' }]}>
-              <Ionicons name="barbell" size={12} color={accentColors[0]} />
-              <Text style={[styles.postExercisesText, { color: accentColors[0] }]}>
-                {post.exercise_count} {t('exosCount')}
-              </Text>
-            </View>
-            <View style={styles.postLikes}>
-              <Ionicons name="heart" size={14} color={theme.colors.textSecondary} />
-              <Text style={[styles.postLikesText, { color: theme.colors.textSecondary }]}>
-                {post.like_count}
-              </Text>
-            </View>
-          </View>
-          <Text style={[styles.postTitle, { color: theme.colors.textPrimary }]} numberOfLines={2}>
-            {post.workout_title}
-          </Text>
-          <View style={styles.postUser}>
-            <View style={[styles.postUserAvatar, { backgroundColor: accentColors[0] + '25' }]}>
-              <Text style={[styles.postUserAvatarText, { color: accentColors[0] }]}>
-                {post.owner_username.charAt(0).toUpperCase()}
-              </Text>
-            </View>
-            <Text style={[styles.postUserName, { color: theme.colors.textSecondary }]} numberOfLines={1}>
-              @{post.owner_username}
-            </Text>
-          </View>
-        </View>
-      </Pressable>
-    </Animated.View>
-  );
-});
-
-// ============ END SEPARATE COMPONENTS ============
-
-// Mapping catégories vers mots-clés dans les titres
-const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  force: ['force', 'squat', 'deadlift', 'bench', 'pr', 'heavy', 'powerlifting', 'chest', 'back', 'leg'],
-  cardio: ['cardio', 'hiit', 'run', 'course', 'endurance', 'interval', 'conditioning'],
-  hypertrophie: ['hypertrophie', 'masse', 'volume', 'pump', 'bro', 'split', 'arms', 'biceps'],
-  perte: ['perte', 'cut', 'lean', 'burn', 'fat', 'circuit', 'full body', 'express'],
-};
-
-export default function ExploreScreen() {
+export default function RankingsScreen() {
   const router = useRouter();
   const { theme, mode } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const { profile } = useUserProfile();
   const { t } = useTranslations();
+  const { profile } = useUserProfile();
   const isDark = mode === 'dark';
-
-  const getCategoryLabel = (id: string): string => {
-    const cat = CATEGORIES.find(c => c.id === id);
-    return cat ? t(cat.labelKey) : id;
-  };
 
   const currentUserId = profile?.id || 'guest-user';
 
-  const [data, setData] = useState<ExploreData | null>(null);
+  // Page-level tab
+  const [pageTab, setPageTab] = useState<PageTab>('ranking');
+
+  // Leaderboard state
+  const [activeTab, setActiveTab] = useState<LeaderboardType>('sessions');
+  const [activePeriod, setActivePeriod] = useState<LeaderboardPeriod>('week');
+  const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<SearchResult | null>(null);
-  const [searching, setSearching] = useState(false);
-  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchFocused, setSearchFocused] = useState(false);
 
-  // Animations
   const headerAnim = useRef(new Animated.Value(0)).current;
-  const searchFocusAnim = useRef(new Animated.Value(0)).current;
-
 
   useEffect(() => {
     Animated.timing(headerAnim, {
-      toValue: 1,
-      duration: 600,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
+      toValue: 1, duration: 500,
+      easing: Easing.out(Easing.cubic), useNativeDriver: true,
     }).start();
-
   }, []);
 
-  const handleSearchFocus = (focused: boolean) => {
-    setSearchFocused(focused);
-    Animated.spring(searchFocusAnim, {
-      toValue: focused ? 1 : 0,
-      useNativeDriver: false,
-      tension: 50,
-      friction: 8,
-    }).start();
+  // Leaderboard helpers
+  const getTabLabel = (key: LeaderboardType): string => {
+    switch (key) {
+      case 'volume': return t('leaderVolume');
+      case 'sessions': return t('leaderSessions');
+      case 'likes': return t('leaderLikes');
+      case 'followers': return t('leaderFollowers');
+    }
   };
 
-  const loadExplore = async () => {
+  const getPeriodLabel = (key: LeaderboardPeriod): string => {
+    switch (key) {
+      case 'week': return t('sevenDays');
+      case 'month': return t('thirtyDays');
+      case 'all': return t('allTime');
+    }
+  };
+
+  const getScoreLabel = (): string => {
+    switch (activeTab) {
+      case 'volume': return 'kg';
+      case 'sessions': return t('sessionsLabel').toLowerCase();
+      case 'likes': return 'likes';
+      case 'followers': return t('followersLabel').toLowerCase();
+    }
+  };
+
+  const loadLeaderboard = async () => {
     try {
-      const exploreData = await getExplore(currentUserId);
-      setData(exploreData);
+      let response: LeaderboardResponse;
+      switch (activeTab) {
+        case 'volume':
+          response = await getVolumeLeaderboard(activePeriod, currentUserId);
+          break;
+        case 'sessions':
+          response = await getSessionsLeaderboard(activePeriod, currentUserId);
+          break;
+        case 'likes':
+          response = await getLikesLeaderboard(currentUserId);
+          break;
+        case 'followers':
+          response = await getFollowersLeaderboard(currentUserId);
+          break;
+      }
+      setData(response);
     } catch (error) {
-      console.error('Failed to load explore:', error);
+      console.error('Failed to load leaderboard:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -400,1034 +389,555 @@ export default function ExploreScreen() {
   };
 
   useEffect(() => {
-    loadExplore();
-  }, [currentUserId]);
-
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (query.trim().length < 2) {
-      setSearchResults(null);
-      return;
+    if (pageTab === 'ranking') {
+      setLoading(true);
+      loadLeaderboard();
     }
+  }, [activeTab, activePeriod, pageTab]);
 
-    setSearching(true);
-    try {
-      const results = await search(query.trim());
-      setSearchResults(results);
-    } catch (error) {
-      console.error('Search failed:', error);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const handleFollow = async (userId: string) => {
+  const handleTabChange = (tab: LeaderboardType) => {
     Haptics.selectionAsync().catch(() => {});
-    try {
-      if (followingIds.has(userId)) {
-        await unfollowUser(userId, currentUserId);
-        setFollowingIds((prev) => {
-          const next = new Set(prev);
-          next.delete(userId);
-          return next;
-        });
-      } else {
-        await followUser(userId, currentUserId);
-        setFollowingIds((prev) => new Set(prev).add(userId));
-      }
-    } catch (error) {
-      console.error('Follow failed:', error);
-    }
+    setActiveTab(tab);
   };
 
-  const handleCategoryPress = (catId: string) => {
+  const handlePeriodChange = (period: LeaderboardPeriod) => {
     Haptics.selectionAsync().catch(() => {});
-    setSelectedCategory(catId);
+    setActivePeriod(period);
   };
 
-  const handleChallengePress = (challenge: typeof CHALLENGES[0]) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    router.push(`/challenge/${challenge.id}` as never);
+  const handlePageTabChange = (tab: PageTab) => {
+    Haptics.selectionAsync().catch(() => {});
+    setPageTab(tab);
   };
 
-  // Filtrer les posts par catégorie
-  const filteredPosts = React.useMemo(() => {
-    if (!data?.trending_posts) return [];
-    if (selectedCategory === 'all') return data.trending_posts;
-    
-    const keywords = CATEGORY_KEYWORDS[selectedCategory] || [];
-    return data.trending_posts.filter((post) => {
-      const title = post.workout_title.toLowerCase();
-      return keywords.some((kw) => title.includes(kw));
-    });
-  }, [data?.trending_posts, selectedCategory]);
+  const activeTabConfig = LEADERBOARD_TABS.find((tab) => tab.key === activeTab)!;
+  const topThree = data?.entries.slice(0, 3) || [];
+  const restOfList = data?.entries.slice(3) || [];
 
-  const renderCategoryChip = (cat: typeof CATEGORIES[0], index: number) => {
-    const isSelected = selectedCategory === cat.id;
-    return (
-      <Pressable
-        key={cat.id}
-        onPress={() => handleCategoryPress(cat.id)}
-        style={({ pressed }) => [styles.categoryChipWrapper, { opacity: pressed ? 0.8 : 1 }]}
-      >
-        <View style={[
-          styles.categoryChip,
-          isSelected && styles.categoryChipSelected,
-          { backgroundColor: isSelected ? 'transparent' : theme.colors.surface }
-        ]}>
-          {isSelected && (
-            <LinearGradient
-              colors={cat.gradient as [string, string]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFillObject}
-            />
-          )}
-          <View style={[
-            styles.categoryIconCircle,
-            { backgroundColor: isSelected ? 'rgba(255,255,255,0.25)' : cat.gradient[0] + '20' }
-          ]}>
-            <Ionicons
-              name={cat.icon as any}
-              size={14}
-              color={isSelected ? '#fff' : cat.gradient[0]}
-            />
-          </View>
-          <Text style={[
-            styles.categoryChipText,
-            { color: isSelected ? '#fff' : theme.colors.textPrimary }
-          ]}>
-            {getCategoryLabel(cat.id)}
-          </Text>
-        </View>
-      </Pressable>
-    );
-  };
+  const headerGradient: [string, string] = pageTab === 'ranking'
+    ? activeTabConfig.gradient
+    : ['#6366f1', '#8b5cf6'];
 
-  const gradientColors: [string, string, string] = isDark
-    ? ['#1a1625', '#151020', '#0f1218']
-    : ['#f0f0ff', '#e8e8ff', '#F7F8FA'];
-
-  if (loading) {
-    return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <LinearGradient
-          colors={['#6366f1', '#8b5cf6']}
-          style={styles.loadingGradient}
-        >
-          <ActivityIndicator size="large" color="#fff" />
-        </LinearGradient>
-        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
-          {t('loadingText')}
-        </Text>
-      </View>
-    );
-  }
+  // ============ RENDER ============
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Modern Header */}
-      <LinearGradient
-        colors={gradientColors}
-        style={[styles.headerGradient, { paddingTop: insets.top }]}
+      {/* Header */}
+      <Animated.View
+        style={{
+          opacity: headerAnim,
+          transform: [{ translateY: headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-30, 0] }) }],
+        }}
       >
-        {/* Decorative circles */}
-        <View style={[styles.headerDecor1, { backgroundColor: '#6366f110' }]} />
-        <View style={[styles.headerDecor2, { backgroundColor: '#8b5cf608' }]} />
-
-        <Animated.View
-          style={[
-            styles.header,
-            {
-              opacity: headerAnim,
-              transform: [
-                { translateY: headerAnim.interpolate({ inputRange: [0, 1], outputRange: [-20, 0] }) },
-              ],
-            },
-          ]}
+        <LinearGradient
+          colors={headerGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.headerGradient, { paddingTop: insets.top + 8 }]}
         >
-          <View style={styles.headerTop}>
-            <View>
-              <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
-                {t('exploreTitle')}
-              </Text>
-              <Text style={[styles.headerSubtitle, { color: theme.colors.textSecondary }]}>
-                {t('discoverWorkouts')}
-              </Text>
-            </View>
-            <View style={styles.headerActions}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.headerBtn,
-                  { backgroundColor: theme.colors.surface, opacity: pressed ? 0.7 : 1 }
-                ]}
-                onPress={() => {
-                  Haptics.selectionAsync().catch(() => {});
-                  router.push('/notifications');
-                }}
-              >
-                <Ionicons name="notifications-outline" size={20} color={theme.colors.textPrimary} />
-              </Pressable>
-            </View>
+          <View style={styles.decorCircle1} pointerEvents="none" />
+          <View style={styles.decorCircle2} pointerEvents="none" />
+
+          {/* Title */}
+          <View style={styles.headerTitleRow}>
+            <Ionicons name="trophy" size={24} color="#FFD700" />
+            <Text style={styles.headerTitle}>{t('rankings')}</Text>
           </View>
 
-          {/* Search bar with animation */}
-          <Animated.View
-            style={[
-              styles.searchContainer,
-              {
-                backgroundColor: theme.colors.surface,
-                borderColor: searchFocusAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [theme.colors.border, '#6366f1'],
-                }),
-                shadowColor: '#6366f1',
-                shadowOpacity: searchFocusAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0, 0.15],
-                }),
-              },
-            ]}
-          >
-            <Ionicons name="search" size={18} color={theme.colors.textSecondary} />
-            <TextInput
-              style={[styles.searchInput, { color: theme.colors.textPrimary }]}
-              placeholder={t('searchWorkoutsUsers')}
-              placeholderTextColor={theme.colors.textSecondary}
-              value={searchQuery}
-              onChangeText={handleSearch}
-              onFocus={() => handleSearchFocus(true)}
-              onBlur={() => handleSearchFocus(false)}
-            />
-            {searchQuery.length > 0 && (
-              <Pressable onPress={() => handleSearch('')}>
-                <Ionicons name="close-circle" size={18} color={theme.colors.textSecondary} />
-              </Pressable>
-            )}
-          </Animated.View>
-        </Animated.View>
-      </LinearGradient>
-
-      {/* Categories - horizontal scroll */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoriesContainer}
-        contentContainerStyle={styles.categoriesContent}
-      >
-        {CATEGORIES.map((cat, index) => renderCategoryChip(cat, index))}
-      </ScrollView>
-
-      {/* Search results */}
-      {searchQuery.length >= 2 ? (
-        <ScrollView style={styles.searchResults} contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
-          {searching ? (
-            <View style={styles.searchingContainer}>
-              <ActivityIndicator size="large" color="#6366f1" />
-              <Text style={[styles.searchingText, { color: theme.colors.textSecondary }]}>
-                {t('searchInProgress')}
+          {/* Page tabs: Classement | Defis */}
+          <View style={styles.pageTabsRow}>
+            <Pressable
+              style={[styles.pageTab, pageTab === 'ranking' && styles.pageTabActive]}
+              onPress={() => handlePageTabChange('ranking')}
+            >
+              <Ionicons name="podium" size={16} color={pageTab === 'ranking' ? '#fff' : 'rgba(255,255,255,0.6)'} />
+              <Text style={[styles.pageTabText, { color: pageTab === 'ranking' ? '#fff' : 'rgba(255,255,255,0.6)' }]}>
+                {t('rankingSection')}
               </Text>
-            </View>
-          ) : searchResults ? (
+            </Pressable>
+            <Pressable
+              style={[styles.pageTab, pageTab === 'challenges' && styles.pageTabActive]}
+              onPress={() => handlePageTabChange('challenges')}
+            >
+              <Ionicons name="flame" size={16} color={pageTab === 'challenges' ? '#fff' : 'rgba(255,255,255,0.6)'} />
+              <Text style={[styles.pageTabText, { color: pageTab === 'challenges' ? '#fff' : 'rgba(255,255,255,0.6)' }]}>
+                {t('challengesTab')}
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Leaderboard sub-filters (only on ranking tab) */}
+          {pageTab === 'ranking' && (
             <>
-              {searchResults.users.length > 0 && (
-                <View style={styles.section}>
-                  <View style={styles.sectionHeader}>
-                    <View style={styles.sectionTitleRow}>
-                      <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.sectionIcon}>
-                        <Ionicons name="people" size={14} color="#fff" />
-                      </LinearGradient>
-                      <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                        {t('usersSection')}
+              <View style={styles.leaderTabsRow}>
+                {LEADERBOARD_TABS.map((tab) => (
+                  <TouchableOpacity
+                    key={tab.key}
+                    style={[styles.leaderTab, activeTab === tab.key && styles.leaderTabActive]}
+                    onPress={() => handleTabChange(tab.key)}
+                  >
+                    <Ionicons
+                      name={tab.icon as any}
+                      size={16}
+                      color={activeTab === tab.key ? '#fff' : 'rgba(255,255,255,0.5)'}
+                    />
+                    <Text style={[styles.leaderTabText, { color: activeTab === tab.key ? '#fff' : 'rgba(255,255,255,0.5)' }]}>
+                      {getTabLabel(tab.key)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {(activeTab === 'volume' || activeTab === 'sessions') && (
+                <View style={styles.periodRow}>
+                  {PERIODS.map((period) => (
+                    <TouchableOpacity
+                      key={period.key}
+                      style={[styles.periodChip, activePeriod === period.key && styles.periodChipActive]}
+                      onPress={() => handlePeriodChange(period.key)}
+                    >
+                      <Text style={[styles.periodText, { opacity: activePeriod === period.key ? 1 : 0.7 }]}>
+                        {getPeriodLabel(period.key)}
                       </Text>
-                    </View>
-                    <View style={[styles.sectionBadge, { backgroundColor: '#6366f120' }]}>
-                      <Text style={[styles.sectionBadgeText, { color: '#6366f1' }]}>
-                        {searchResults.users.length}
-                      </Text>
-                    </View>
-                  </View>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.usersScrollContent}>
-                    {searchResults.users.map((user, i) => (
-                      <UserCard
-                        key={user.id}
-                        user={user}
-                        index={i}
-                        isFollowing={followingIds.has(user.id)}
-                        onPress={() => router.push(`/profile/${user.id}`)}
-                        onFollow={() => handleFollow(user.id)}
-                        theme={theme}
-                        t={t}
-                      />
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-              {searchResults.posts.length > 0 && (
-                <View style={styles.section}>
-                  <View style={styles.sectionHeader}>
-                    <View style={styles.sectionTitleRow}>
-                      <LinearGradient colors={['#10b981', '#059669']} style={styles.sectionIcon}>
-                        <Ionicons name="barbell" size={14} color="#fff" />
-                      </LinearGradient>
-                      <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                        {t('workoutsSection')}
-                      </Text>
-                    </View>
-                    <View style={[styles.sectionBadge, { backgroundColor: '#10b98120' }]}>
-                      <Text style={[styles.sectionBadgeText, { color: '#10b981' }]}>
-                        {searchResults.posts.length}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.postsGrid}>
-                    {searchResults.posts.map((post, i) => (
-                      <PostCard
-                        key={post.share_id}
-                        post={post}
-                        index={i}
-                        onPress={() => router.push(`/profile/${post.owner_id}`)}
-                        theme={theme}
-                        t={t}
-                      />
-                    ))}
-                  </View>
-                </View>
-              )}
-              {searchResults.users.length === 0 && searchResults.posts.length === 0 && (
-                <View style={styles.noResults}>
-                  <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.noResultsIcon}>
-                    <Ionicons name="search" size={32} color="#fff" />
-                  </LinearGradient>
-                  <Text style={[styles.noResultsTitle, { color: theme.colors.textPrimary }]}>
-                    {t('noResults')}
-                  </Text>
-                  <Text style={[styles.noResultsText, { color: theme.colors.textSecondary }]}>
-                    {t('noResultsFor')} &quot;{searchQuery}&quot;
-                  </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               )}
             </>
-          ) : null}
-        </ScrollView>
-      ) : (
-        /* Main Explore content */
-        <ScrollView
-          style={styles.content}
-          contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={() => {
-                setRefreshing(true);
-                loadExplore();
-              }}
-              tintColor="#6366f1"
-            />
-          }
-        >
-          {/* Challenges section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleRow}>
-                <LinearGradient colors={['#f59e0b', '#d97706']} style={styles.sectionIcon}>
-                  <Ionicons name="trophy" size={14} color="#fff" />
-                </LinearGradient>
-                <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                  {t('challengesOfMoment')}
-                </Text>
-              </View>
+          )}
+        </LinearGradient>
+      </Animated.View>
+
+      {/* Content */}
+      {pageTab === 'ranking' ? (
+        loading ? (
+          <View style={styles.loadingContainer}>
+            <View style={[styles.loadingCard, { backgroundColor: theme.colors.surface }]}>
+              <ActivityIndicator size="large" color={activeTabConfig.gradient[0]} />
+              <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{t('loading')}</Text>
             </View>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.challengesScrollContent}
-            >
-              {CHALLENGES.map((challenge, i) => (
-                <ChallengeCard
-                  key={challenge.id}
-                  challenge={challenge}
-                  index={i}
-                  onPress={() => handleChallengePress(challenge)}
-                  t={t}
-                />
-              ))}
-            </ScrollView>
+          </View>
+        ) : (
+          <FlatList
+            data={restOfList}
+            keyExtractor={(item) => item.user_id}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={() => { setRefreshing(true); loadLeaderboard(); }}
+                tintColor={activeTabConfig.gradient[0]}
+              />
+            }
+            ListHeaderComponent={
+              <>
+                {topThree.length > 0 && (
+                  <Podium
+                    entries={topThree}
+                    onPress={(entry) => router.push(`/profile/${entry.user_id}`)}
+                    theme={theme}
+                    scoreLabel={getScoreLabel()}
+                  />
+                )}
+
+                {data?.my_rank && (
+                  <View style={[styles.myRankCard, { backgroundColor: theme.colors.surfaceMuted }]}>
+                    <LinearGradient colors={activeTabConfig.gradient} style={styles.myRankIcon}>
+                      <Ionicons name="medal" size={18} color="#fff" />
+                    </LinearGradient>
+                    <Text style={[styles.myRankText, { color: theme.colors.textPrimary }]}>
+                      {t('yourRankIs', { rank: String(data.my_rank) }).split(`#${data.my_rank}`)[0]}
+                      <Text style={{ fontWeight: '800', color: activeTabConfig.gradient[0] }}>#{data.my_rank}</Text>
+                      {t('yourRankIs', { rank: String(data.my_rank) }).split(`#${data.my_rank}`)[1]}
+                    </Text>
+                  </View>
+                )}
+
+                {restOfList.length > 0 && (
+                  <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>
+                    {t('rankingSection')}
+                  </Text>
+                )}
+              </>
+            }
+            renderItem={({ item, index }) => (
+              <EntryCard
+                entry={item}
+                index={index}
+                onPress={() => router.push(`/profile/${item.user_id}`)}
+                theme={theme}
+                scoreLabel={getScoreLabel()}
+                currentUserId={currentUserId}
+                t={t}
+              />
+            )}
+            ListEmptyComponent={
+              topThree.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <View style={[styles.emptyIconCircle, { backgroundColor: theme.colors.surfaceMuted }]}>
+                    <LinearGradient colors={activeTabConfig.gradient} style={styles.emptyIconGradient}>
+                      <Ionicons name="trophy" size={32} color="#fff" />
+                    </LinearGradient>
+                  </View>
+                  <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>{t('noRankingYet')}</Text>
+                  <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>{t('shareToAppear')}</Text>
+                </View>
+              ) : null
+            }
+          />
+        )
+      ) : (
+        /* Challenges tab */
+        <ScrollView
+          contentContainerStyle={styles.challengesContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Active challenges */}
+          <View style={styles.challengeSection}>
+            <View style={styles.challengeSectionHeader}>
+              <Ionicons name="flame" size={20} color="#ef4444" />
+              <Text style={[styles.challengeSectionTitle, { color: theme.colors.textPrimary }]}>
+                {t('activeChallenges')}
+              </Text>
+            </View>
+            {CHALLENGES.map((challenge, index) => (
+              <ChallengeCard
+                key={challenge.id}
+                challenge={challenge}
+                index={index}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+                  router.push(`/challenge/${challenge.id}` as never);
+                }}
+                t={t}
+              />
+            ))}
           </View>
 
-          {/* Suggested users section */}
-          {data?.suggested_users && data.suggested_users.length > 0 && (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionTitleRow}>
-                  <LinearGradient colors={['#ec4899', '#db2777']} style={styles.sectionIcon}>
-                    <Ionicons name="sparkles" size={14} color="#fff" />
-                  </LinearGradient>
-                  <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                    {t('toDiscover')}
-                  </Text>
-                </View>
-                <Pressable
-                  style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1 }]}
-                >
-                  <Text style={[styles.seeAll, { color: '#6366f1' }]}>
-                    {t('seeAllLabel')}
-                  </Text>
-                </Pressable>
-              </View>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.usersScrollContent}
-              >
-                {data.suggested_users.map((user, i) => (
-                  <UserCard
-                    key={user.id}
-                    user={user}
-                    index={i}
-                    isFollowing={followingIds.has(user.id)}
-                    onPress={() => router.push(`/profile/${user.id}`)}
-                    onFollow={() => handleFollow(user.id)}
-                    theme={theme}
-                    t={t}
-                  />
-                ))}
-              </ScrollView>
+          {/* Coming soon */}
+          <View style={[styles.comingSoonCard, { backgroundColor: theme.colors.surfaceMuted }]}>
+            <View style={styles.comingSoonIcon}>
+              <Ionicons name="rocket" size={28} color="#6366f1" />
             </View>
-          )}
-
-          {/* Trending posts section */}
-          {filteredPosts.length > 0 ? (
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionTitleRow}>
-                  <LinearGradient colors={['#ef4444', '#dc2626']} style={styles.sectionIcon}>
-                    <Ionicons name="flame" size={14} color="#fff" />
-                  </LinearGradient>
-                  <Text style={[styles.sectionTitle, { color: theme.colors.textPrimary }]}>
-                    {selectedCategory === 'all' ? t('trendingSection') : getCategoryLabel(selectedCategory)}
-                  </Text>
-                </View>
-                <View style={[styles.sectionBadge, { backgroundColor: '#ef444420' }]}>
-                  <Text style={[styles.sectionBadgeText, { color: '#ef4444' }]}>
-                    {filteredPosts.length}
-                  </Text>
-                </View>
-              </View>
-              <View style={styles.postsGrid}>
-                {filteredPosts.map((post, i) => (
-                  <PostCard
-                    key={post.share_id}
-                    post={post}
-                    index={i}
-                    onPress={() => router.push(`/profile/${post.owner_id}`)}
-                    theme={theme}
-                    t={t}
-                  />
-                ))}
-              </View>
-            </View>
-          ) : selectedCategory !== 'all' && (
-            <View style={styles.noResultsCategory}>
-              <LinearGradient
-                colors={CATEGORIES.find(c => c.id === selectedCategory)?.gradient as [string, string] || ['#6366f1', '#8b5cf6']}
-                style={styles.noResultsCategoryIcon}
-              >
-                <Ionicons name="search" size={32} color="#fff" />
-              </LinearGradient>
-              <Text style={[styles.noResultsCategoryTitle, { color: theme.colors.textPrimary }]}>
-                {t('noSessionFound')}
-              </Text>
-              <Text style={[styles.noResultsCategoryText, { color: theme.colors.textSecondary }]}>
-                {t('noSessionForCategory')} &quot;{getCategoryLabel(selectedCategory)}&quot; {t('forTheMoment')}
-              </Text>
-              <Pressable
-                style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-                onPress={() => setSelectedCategory('all')}
-              >
-                <LinearGradient
-                  colors={['#6366f1', '#8b5cf6']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.resetFilterBtn}
-                >
-                  <Text style={styles.resetFilterBtnText}>{t('seeEverything')}</Text>
-                </LinearGradient>
-              </Pressable>
-            </View>
-          )}
-
-          {/* Empty state */}
-          {(!data?.trending_posts || data.trending_posts.length === 0) &&
-           (!data?.suggested_users || data.suggested_users.length === 0) && (
-            <View style={styles.emptyState}>
-              <LinearGradient
-                colors={['#6366f1', '#8b5cf6']}
-                style={styles.emptyIconBg}
-              >
-                <Ionicons name="compass" size={48} color="#fff" />
-              </LinearGradient>
-              <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                {t('nothingToExplore')}
-              </Text>
-              <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                {t('communityWorkoutsWillAppear')}
-              </Text>
-              <Pressable
-                style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
-                onPress={() => router.push('/create')}
-              >
-                <LinearGradient
-                  colors={['#6366f1', '#8b5cf6']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.emptyBtn}
-                >
-                  <Ionicons name="add" size={20} color="#fff" />
-                  <Text style={styles.emptyBtnText}>{t('createSession')}</Text>
-                </LinearGradient>
-              </Pressable>
-            </View>
-          )}
+            <Text style={[styles.comingSoonTitle, { color: theme.colors.textPrimary }]}>
+              {t('moreChallengesSoon')}
+            </Text>
+            <Text style={[styles.comingSoonDesc, { color: theme.colors.textSecondary }]}>
+              {t('moreChallengesSoonDesc')}
+            </Text>
+          </View>
         </ScrollView>
       )}
-
     </View>
   );
 }
+
+// ============ STYLES ============
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+
+  // Header
+  headerGradient: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  decorCircle1: {
+    position: 'absolute',
+    top: -30,
+    right: -20,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  decorCircle2: {
+    position: 'absolute',
+    bottom: 20,
+    left: -30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#fff',
+  },
+
+  // Page tabs (Classement / Defis)
+  pageTabsRow: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 14,
+    padding: 3,
+    marginBottom: 14,
+  },
+  pageTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 11,
+  },
+  pageTabActive: {
+    backgroundColor: 'rgba(255,255,255,0.22)',
+  },
+  pageTabText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  // Leaderboard sub-tabs
+  leaderTabsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginBottom: 10,
+  },
+  leaderTab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  leaderTabActive: {
+    backgroundColor: 'rgba(255,255,255,0.22)',
+  },
+  leaderTabText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  periodRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  periodChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  periodChipActive: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+  },
+  periodText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // Loading
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 20,
   },
-  loadingGradient: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  loadingCard: {
+    padding: 32,
+    borderRadius: 20,
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 16,
   },
   loadingText: {
-    fontSize: 15,
-    fontWeight: '500',
-  },
-  headerGradient: {
-    paddingBottom: 16,
-    overflow: 'hidden',
-  },
-  headerDecor1: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-  },
-  headerDecor2: {
-    position: 'absolute',
-    bottom: -30,
-    left: -30,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-  },
-  header: {
-    paddingHorizontal: 16,
-    gap: 14,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingTop: 8,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  headerSubtitle: {
     fontSize: 14,
-    fontWeight: '500',
-    marginTop: 2,
   },
-  headerActions: {
+
+  // List
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 100,
+  },
+
+  // Podium
+  podiumContainer: {
     flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    paddingTop: 30,
+    paddingBottom: 20,
     gap: 8,
   },
-  headerBtn: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
+  podiumPlace: {
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 16,
-    gap: 10,
-    borderWidth: 1.5,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 12,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '500',
-    padding: 0,
-  },
-  categoriesContainer: {
-    maxHeight: 56,
+  podiumAvatarContainer: {
     marginBottom: 8,
   },
-  categoriesContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    gap: 8,
-  },
-  categoryChipWrapper: {
-    marginRight: 8,
-  },
-  categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 14,
-    gap: 8,
-    overflow: 'hidden',
-  },
-  categoryChipSelected: {
-    shadowColor: '#6366f1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  categoryIconCircle: {
-    width: 26,
-    height: 26,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryChipText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  searchResults: {
-    flex: 1,
-  },
-  searchingContainer: {
-    alignItems: 'center',
-    paddingVertical: 48,
-    gap: 16,
-  },
-  searchingText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  content: {
-    flex: 1,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginBottom: 14,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  sectionIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    letterSpacing: -0.3,
-  },
-  sectionBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  sectionBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  seeAll: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  challengesScrollContent: {
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  challengeCard: {
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  challengeGradient: {
-    width: 180,
-    height: 130,
-    padding: 14,
-    overflow: 'hidden',
-  },
-  challengeDecor1: {
-    position: 'absolute',
-    top: -20,
-    right: -20,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  challengeDecor2: {
-    position: 'absolute',
-    bottom: -15,
-    left: -15,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  challengeHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  challengeIconBox: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  challengeIcon: {
-    fontSize: 20,
-  },
-  challengeParticipants: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  challengeParticipantsText: {
-    fontSize: 11,
-    color: '#fff',
-    fontWeight: '700',
-  },
-  challengeContent: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    gap: 2,
-  },
-  challengeTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#fff',
-    letterSpacing: -0.3,
-  },
-  challengeDesc: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '500',
-  },
-  challengeJoinBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    gap: 4,
-    marginTop: 8,
-  },
-  challengeJoinText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  usersScrollContent: {
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  userCard: {
-    width: 130,
-    height: 160,
-    padding: 14,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-  userCardDecor1: {
-    position: 'absolute',
-    top: -25,
-    right: -25,
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-  },
-  userCardDecor2: {
-    position: 'absolute',
-    bottom: -20,
-    left: -20,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  userAvatarContainer: {
-    alignItems: 'center',
-  },
-  userAvatarRing: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  podiumAvatarRing: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    borderWidth: 3,
     padding: 3,
   },
-  userAvatar: {
+  podiumAvatar: {
     width: '100%',
     height: '100%',
-    borderRadius: 23,
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  userAvatarText: {
-    fontSize: 16,
+  podiumAvatarText: {
+    color: '#fff',
+    fontSize: 20,
     fontWeight: '800',
-    color: '#1f2937',
   },
-  userName: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#fff',
-    textAlign: 'center',
-  },
-  userStats: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: 'rgba(255,255,255,0.8)',
-  },
-  followBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-    width: '100%',
-  },
-  followBtnFollowing: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
-  },
-  followBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  followBtnTextFollowing: {
-    color: 'rgba(255,255,255,0.8)',
-  },
-  postsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 12,
-    gap: 10,
-  },
-  postCard: {
-    width: (SCREEN_WIDTH - 44) / 2,
-    borderRadius: 14,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  postPressable: {
-    flex: 1,
-    borderRadius: 14,
-    overflow: 'hidden',
-    flexDirection: 'row',
-    minHeight: 120,
-  },
-  postAccentBar: {
+  medalBadge: {
     position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 4,
-  },
-  postInner: {
-    flex: 1,
-    paddingLeft: 12,
-    paddingRight: 12,
-    paddingVertical: 12,
-    justifyContent: 'space-between',
-  },
-  postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  postExercises: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
-  },
-  postExercisesText: {
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  postLikes: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  postLikesText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  postTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: -0.2,
-    lineHeight: 18,
-  },
-  postUser: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  postUserAvatar: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
+    bottom: -4,
+    right: -4,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  postUserAvatarText: {
-    fontSize: 10,
+  medalText: {
+    fontSize: 12,
     fontWeight: '800',
   },
-  postUserName: {
+  podiumUsername: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 2,
+    maxWidth: 80,
+  },
+  podiumScore: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  podiumScoreLabel: {
     fontSize: 11,
-    fontWeight: '500',
-    flex: 1,
-  },
-  noResults: {
-    alignItems: 'center',
-    paddingVertical: 48,
-    paddingHorizontal: 32,
-    gap: 16,
-  },
-  noResultsIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 8,
   },
-  noResultsTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+  podiumBar: {
+    width: '100%',
+    borderRadius: 12,
+    borderWidth: 2,
+    overflow: 'hidden',
   },
-  noResultsText: {
-    fontSize: 14,
-    textAlign: 'center',
+  podiumBarGradient: {
+    flex: 1,
   },
-  noResultsCategory: {
+
+  // My rank
+  myRankCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 48,
-    paddingHorizontal: 32,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 20,
     gap: 12,
   },
-  noResultsCategoryIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  myRankIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
   },
-  noResultsCategoryTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+  myRankText: {
+    fontSize: 15,
+    flex: 1,
   },
-  noResultsCategoryText: {
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
+
+  // Section title
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: 12,
   },
-  resetFilterBtn: {
+
+  // Entry card
+  entryCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 8,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 10,
+    gap: 12,
   },
-  resetFilterBtnText: {
-    color: '#fff',
-    fontSize: 14,
+  rankBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rankText: {
+    fontSize: 15,
     fontWeight: '700',
   },
+  entryAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  entryAvatarText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  entryInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  entryUsername: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  changeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  changeText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  scoreContainer: {
+    alignItems: 'flex-end',
+  },
+  scoreValue: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  scoreLabelText: {
+    fontSize: 11,
+  },
+
+  // Empty state
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 64,
-    paddingHorizontal: 32,
+    paddingVertical: 60,
     gap: 16,
   },
-  emptyIconBg: {
+  emptyIconCircle: {
     width: 100,
     height: 100,
     borderRadius: 50,
@@ -1435,29 +945,155 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 8,
   },
+  emptyIconGradient: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '800',
-    textAlign: 'center',
-    letterSpacing: -0.3,
+    fontWeight: '700',
   },
   emptySubtitle: {
-    fontSize: 15,
+    fontSize: 14,
     textAlign: 'center',
-    lineHeight: 22,
   },
-  emptyBtn: {
+
+  // Challenges content
+  challengesContent: {
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 100,
+  },
+  challengeSection: {
+    gap: 12,
+    marginBottom: 24,
+  },
+  challengeSectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 14,
-    marginTop: 8,
+    marginBottom: 4,
   },
-  emptyBtnText: {
-    color: '#fff',
-    fontSize: 15,
+  challengeSectionTitle: {
+    fontSize: 18,
     fontWeight: '700',
+  },
+
+  // Challenge card
+  challengeCard: {
+    borderRadius: 20,
+    padding: 20,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  challengeDecor1: {
+    position: 'absolute',
+    top: -15,
+    right: -15,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  challengeDecor2: {
+    position: 'absolute',
+    bottom: -20,
+    left: -10,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  challengeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 16,
+  },
+  challengeIconBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  challengeIcon: {
+    fontSize: 26,
+  },
+  challengeInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  challengeTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  challengeDesc: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '500',
+  },
+  challengeFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  challengeParticipants: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  challengeParticipantsText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  challengeJoinBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  challengeJoinText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
+  // Coming soon
+  comingSoonCard: {
+    alignItems: 'center',
+    padding: 32,
+    borderRadius: 20,
+    gap: 12,
+  },
+  comingSoonIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#6366f115',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  comingSoonTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  comingSoonDesc: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

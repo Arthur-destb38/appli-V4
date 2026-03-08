@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Animated,
   FlatList,
-  Linking,
   Modal,
   RefreshControl,
   StyleSheet,
@@ -31,6 +30,9 @@ import { getComments, addComment, Comment, toggleCommentLike } from '@/services/
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useTranslations } from '@/hooks/usePreferences';
+import { useNotificationCount } from '@/hooks/useNotificationCount';
+import { getAvatarGradient } from '@/utils/colors';
+import { formatRelativeDate } from '@/utils/formatTime';
 
 // Composant pour afficher un commentaire avec like
 const CommentItem: React.FC<{
@@ -75,15 +77,7 @@ const CommentItem: React.FC<{
     }
   };
 
-  // Couleurs aléatoires pour avatars
-  const avatarColors = [
-    ['#6366f1', '#8b5cf6'],
-    ['#ec4899', '#f43f5e'],
-    ['#10b981', '#14b8a6'],
-    ['#f59e0b', '#f97316'],
-  ];
-  const colorIndex = comment.username.charCodeAt(0) % avatarColors.length;
-  const gradient = avatarColors[colorIndex] as [string, string];
+  const gradient = getAvatarGradient(comment.username);
 
   return (
     <Animated.View style={[styles.commentItem, { opacity: fadeAnim }]}>
@@ -105,12 +99,7 @@ const CommentItem: React.FC<{
         </View>
         <View style={styles.commentMeta}>
           <Text style={[styles.commentDate, { color: theme.colors.textSecondary }]}>
-            {new Date(comment.created_at).toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', {
-              day: 'numeric',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+            {formatRelativeDate(comment.created_at, language)}
           </Text>
           <TouchableOpacity style={styles.commentLikeBtn} onPress={handleLike} disabled={isLoading}>
             <Ionicons
@@ -138,6 +127,7 @@ const FeedScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { profile } = useUserProfile();
+  const { unreadCount: notifCount } = useNotificationCount();
   const [refreshing, setRefreshing] = useState(false);
   const headerAnim = useRef(new Animated.Value(0)).current;
 
@@ -305,10 +295,12 @@ const FeedScreen: React.FC = () => {
             }}
           >
             <View style={styles.notificationWrapper}>
-              <Ionicons name="heart" size={20} color="#ec4899" />
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>3</Text>
-              </View>
+              <Ionicons name="notifications" size={20} color="#8b5cf6" />
+              {notifCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>{notifCount > 99 ? '99+' : notifCount}</Text>
+                </View>
+              )}
             </View>
           </Pressable>
           <Pressable
@@ -641,17 +633,20 @@ const styles = StyleSheet.create({
   notificationBadge: {
     position: 'absolute',
     top: -6,
-    right: -6,
+    right: -8,
     backgroundColor: '#ef4444',
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   notificationBadgeText: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '700',
   },
   listContent: {

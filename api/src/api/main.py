@@ -30,6 +30,8 @@ from .routes import messaging
 from .routes import admin
 from .routes import wallet
 from .routes import salle
+from .routes import subscriptions
+from .routes import marketplace
 
 _IS_PRODUCTION = os.getenv("ENVIRONMENT", "").lower() == "production"
 from .seeds import seed_exercises
@@ -148,6 +150,8 @@ app.include_router(leaderboard.router)
 app.include_router(messaging.router)
 app.include_router(wallet.router)
 app.include_router(salle.router)
+app.include_router(subscriptions.router)
+app.include_router(marketplace.router)
 
 if not _IS_PRODUCTION:
     app.include_router(seed.router)

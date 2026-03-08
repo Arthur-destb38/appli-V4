@@ -34,15 +34,23 @@ describe('CreateWorkoutScreen', () => {
       deleteWorkout: jest.fn(),
       completeWorkout: jest.fn(),
       findWorkout: () => baseWorkout,
-    });
+      pullFromServer: jest.fn(),
+      pendingMutations: [],
+      updateExercisePlan: jest.fn(),
+      addSet: jest.fn(),
+      updateSet: jest.fn(),
+      removeSet: jest.fn(),
+      reorderExercises: jest.fn(),
+      removeWorkoutExercise: jest.fn(),
+    } as any);
   });
 
-  it('affiche les informations de la séance', () => {
+  it('affiche les informations de la seance', () => {
     const { getByDisplayValue } = render(<CreateWorkoutScreen workoutId={1} />);
     expect(getByDisplayValue('Séance test')).toBeTruthy();
   });
 
-  it('permet d’ajouter un exercice depuis le catalogue', () => {
+  it("permet d'ajouter un exercice depuis le catalogue", () => {
     const addExerciseSpy = jest.fn();
     mockUseWorkouts.mockReturnValue({
       workouts: [baseWorkout],
@@ -55,7 +63,15 @@ describe('CreateWorkoutScreen', () => {
       deleteWorkout: jest.fn(),
       completeWorkout: jest.fn(),
       findWorkout: () => baseWorkout,
-    });
+      pullFromServer: jest.fn(),
+      pendingMutations: [],
+      updateExercisePlan: jest.fn(),
+      addSet: jest.fn(),
+      updateSet: jest.fn(),
+      removeSet: jest.fn(),
+      reorderExercises: jest.fn(),
+      removeWorkoutExercise: jest.fn(),
+    } as any);
 
     const { getByText } = render(<CreateWorkoutScreen workoutId={1} />);
     fireEvent.press(getByText(EXERCISE_CATALOG[0].name));

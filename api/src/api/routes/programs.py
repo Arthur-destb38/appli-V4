@@ -9,7 +9,7 @@ from collections import defaultdict
 from ..db import get_session
 from ..models import Program, ProgramSession, ProgramSet, Exercise, Workout, WorkoutExercise, Set, User
 from ..schemas import ProgramCreate, ProgramRead
-from ..utils.dependencies import get_current_user as _get_current_user_required
+from ..utils.dependencies import get_current_user as _get_current_user_required, check_ai_program_limit
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/programs", tags=["programs"])
@@ -271,9 +271,9 @@ def get_program(
 
 @router.post("/generate", response_model=ProgramRead, summary="Générer un programme intelligent basé sur le profil utilisateur")
 def generate_program(
-    payload: GenerateProgramRequest, 
+    payload: GenerateProgramRequest,
     session: Session = Depends(get_session),
-    current_user: User = Depends(_get_current_user_required)
+    current_user: User = Depends(check_ai_program_limit)
 ) -> ProgramRead:
     from ..services.program_generator import generate_program as generate_program_logic
     
@@ -293,7 +293,8 @@ def generate_program(
         # 🎯 Utiliser le niveau du profil si non spécifié
         'niveau': payload.niveau or user_profile.get('experience_level') or 'Intermédiaire',
         # 🎯 Utiliser la fréquence du profil si disponible
-        'duree_seance': payload.duree_seance or str(user_profile.get('training_frequency', 3) * 15) or '45',
+        'duree_seance': payload.duree_seance or '45',
+        'exercises_per_session': payload.exercises_per_session,
         'priorite': payload.priorite,
         'priorite_first': payload.priorite_first,
         'priorite_second': payload.priorite_second,
@@ -319,6 +320,11 @@ def generate_program(
     # Créer le programme en base
     program_create = ProgramCreate(**program_data)
     program = _upsert_program(session, program_create)
+
+    # Incrémenter le compteur de programmes AI générés
+    current_user.ai_programs_generated += 1
+    session.add(current_user)
+
     session.commit()
     session.refresh(program)
 

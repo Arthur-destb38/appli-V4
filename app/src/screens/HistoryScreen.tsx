@@ -249,7 +249,7 @@ export const HistoryScreen: React.FC = () => {
           style={[styles.card, { backgroundColor: theme.colors.surface }]}
           onPress={() => {
             Haptics.selectionAsync().catch(() => {});
-            navigation.navigate('history/[id]' as never, { id: item.id } as never);
+            (navigation as any).navigate('history/[id]', { id: item.id });
           }}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}

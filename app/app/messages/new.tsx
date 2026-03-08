@@ -26,7 +26,7 @@ type UserResult = {
   id: string;
   username: string;
   avatar_url: string | null;
-  bio?: string;
+  bio?: string | null;
 };
 
 export default function NewConversationScreen() {

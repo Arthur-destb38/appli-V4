@@ -31,7 +31,7 @@ interface ExerciseChargesChartProps {
     exercises: Array<{ id: number; exercise_id: string }>;
     sets: Array<{
       workout_exercise_id: number;
-      weight?: number;
+      weight?: number | null;
       reps: number;
     }>;
   }>;
@@ -169,10 +169,10 @@ export const ExerciseChargesChart: React.FC<ExerciseChargesChartProps> = ({
           ]}
           onPress={() => {
             Haptics.selectionAsync().catch(() => {});
-            navigation.navigate('history/progression' as never, {
+            (navigation as any).navigate('history/progression', {
               exerciseId: exercise.exerciseId,
               exerciseName: exercise.exerciseName,
-            } as never);
+            });
           }}
         >
           <View style={styles.exerciseHeader}>

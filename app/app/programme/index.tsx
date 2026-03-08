@@ -33,13 +33,13 @@ const OBJECTIVE_COLORS: Record<string, { gradient: [string, string]; accent: str
   general: { gradient: ['#6366f1', '#8b5cf6'], accent: '#6366f1' },
 };
 
-const getObjectiveColors = (objective?: string) => {
+const getObjectiveColors = (objective?: string | null) => {
   const key = objective?.toLowerCase().replace(/\s/g, '_') || 'general';
   return OBJECTIVE_COLORS[key] || OBJECTIVE_COLORS.general;
 };
 
 const ProgramsScreen: React.FC = () => {
-  const { theme } = useAppTheme();
+  const { theme, mode } = useAppTheme();
   const { t } = useTranslations();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -214,7 +214,7 @@ const ProgramsScreen: React.FC = () => {
           ]}
         >
           <LinearGradient
-            colors={theme.dark ? ['#1e1b4b', '#312e81', '#1e1b4b'] : ['#6366f1', '#8b5cf6', '#a855f7']}
+            colors={mode === 'dark' ? ['#1e1b4b', '#312e81', '#1e1b4b'] : ['#6366f1', '#8b5cf6', '#a855f7']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.headerGradient, { paddingTop: insets.top + 12 }]}

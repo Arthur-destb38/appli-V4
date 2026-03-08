@@ -22,7 +22,8 @@ import { useAppTheme } from '@/theme/ThemeProvider';
 import { useTranslations } from '@/hooks/usePreferences';
 import { LikeButton, DoubleTapHeart } from './LikeButton';
 import { toggleLike } from '@/services/likesApi';
-import { buildApiUrl, getAuthHeaders } from '@/utils/api';
+import { apiCall } from '@/utils/api';
+import { AVATAR_COLORS, getAvatarGradient, getWorkoutGradient } from '@/utils/colors';
 
 interface CommentPreview {
   id: string;
@@ -54,36 +55,6 @@ interface FeedCardProps {
   onWorkoutPress?: (shareId: string) => void;
   index?: number;
 }
-
-// Couleurs aléatoires pour les avatars et les workout previews
-const AVATAR_COLORS = [
-  ['#6366f1', '#8b5cf6'],
-  ['#ec4899', '#f43f5e'],
-  ['#10b981', '#14b8a6'],
-  ['#f59e0b', '#f97316'],
-  ['#3b82f6', '#6366f1'],
-  ['#8b5cf6', '#a855f7'],
-  ['#06b6d4', '#0891b2'],
-];
-
-const WORKOUT_GRADIENTS = [
-  { colors: ['#6366f1', '#8b5cf6', '#a855f7'], dark: ['#1e1b4b', '#312e81', '#3730a3'] },
-  { colors: ['#ec4899', '#f43f5e', '#fb7185'], dark: ['#500724', '#831843', '#9d174d'] },
-  { colors: ['#10b981', '#14b8a6', '#2dd4bf'], dark: ['#042f2e', '#134e4a', '#115e59'] },
-  { colors: ['#f59e0b', '#f97316', '#fb923c'], dark: ['#451a03', '#7c2d12', '#9a3412'] },
-  { colors: ['#3b82f6', '#6366f1', '#818cf8'], dark: ['#172554', '#1e3a8a', '#1e40af'] },
-];
-
-const getAvatarGradient = (username: string): [string, string] => {
-  const index = username.charCodeAt(0) % AVATAR_COLORS.length;
-  return AVATAR_COLORS[index] as [string, string];
-};
-
-const getWorkoutGradient = (title: string, isDark: boolean): [string, string, string] => {
-  const index = (title.charCodeAt(0) + title.length) % WORKOUT_GRADIENTS.length;
-  const gradient = WORKOUT_GRADIENTS[index];
-  return (isDark ? gradient.dark : gradient.colors) as [string, string, string];
-};
 
 const FeedCardInner: React.FC<FeedCardProps> = ({
   shareId,
@@ -259,11 +230,10 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
     setShareLoading(true);
     setShareSent(null);
     try {
-      const headers = await getAuthHeaders();
       const allUsers: {id: string; username: string}[] = [];
       const seen = new Set<string>();
 
-      const followingRes = await fetch(buildApiUrl(`/profile/${currentUserId}/following`), { headers });
+      const followingRes = await apiCall(`/profile/${currentUserId}/following`);
       if (followingRes.ok) {
         const data = await followingRes.json();
         for (const u of data.following || []) {
@@ -271,7 +241,7 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
         }
       }
 
-      const suggestedRes = await fetch(buildApiUrl('/explore/suggested-users?limit=20'), { headers });
+      const suggestedRes = await apiCall('/explore/suggested-users?limit=20');
       if (suggestedRes.ok) {
         const data = await suggestedRes.json();
         for (const u of data) {
@@ -284,15 +254,13 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
     setShareLoading(false);
   };
 
-  const sendShareMessage = async (recipientId: string, recipientUsername: string) => {
+  const sendShareMessage = async (recipientId: string, _recipientUsername: string) => {
     setShareSent(recipientId);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     try {
-      const headers = await getAuthHeaders();
-
       let detail = '';
       try {
-        const res = await fetch(buildApiUrl(`/workouts/shared/${shareId}`), { headers });
+        const res = await apiCall(`/workouts/shared/${shareId}`);
         if (res.ok) {
           const data = await res.json();
           const lines: string[] = [];
@@ -308,9 +276,8 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
 
       const message = `💪 Séance partagée : "${workoutTitle}" par ${ownerUsername}${detail}\n[share:${shareId}]`;
 
-      await fetch(buildApiUrl('/messaging/send'), {
+      await apiCall('/messaging/send', {
         method: 'POST',
-        headers,
         body: JSON.stringify({
           recipient_id: recipientId,
           content: message,

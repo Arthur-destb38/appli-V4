@@ -1,5 +1,3 @@
-import { SQLTransaction } from 'expo-sqlite';
-
 import {
   Workout,
   WorkoutExercise,
@@ -15,6 +13,8 @@ import {
   isUsingFallbackDatabase,
 } from './database';
 import { execute, runSql, withTransaction } from './sqlite';
+
+type SQLTransaction = Parameters<Parameters<typeof withTransaction>[0]>[0];
 
 const generateClientId = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -69,7 +69,7 @@ const mapFallbackData = (): WorkoutWithRelations[] => {
   const workouts = [...store.workouts]
     .filter((workout) => workout.deleted_at == null)
     .sort((a, b) => b.updated_at - a.updated_at)
-    .map((workout) => ({ ...workout }));
+    .map((workout) => ({ ...workout, status: workout.status as WorkoutStatus }));
 
   return workouts.map((workout) => {
     const exercises = store.workoutExercises
@@ -558,6 +558,7 @@ export const clearAll = async (): Promise<void> => {
       workout: 0,
       workoutExercise: 0,
       workoutSet: 0,
+      mutation: 0,
     };
     return;
   }

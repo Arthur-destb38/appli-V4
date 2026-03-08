@@ -9,6 +9,8 @@ export type UserProfile = {
   bio?: string;
   objective?: string;
   avatar_url?: string;
+  experience_level?: string;
+  training_frequency?: number;
 };
 
 const mapRow = (row: any): UserProfile => ({

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import {
   ActivityIndicator,
   RefreshControl,
@@ -10,12 +10,16 @@ import {
   Easing,
   SectionList,
   Pressable,
+  Alert,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { Swipeable } from 'react-native-gesture-handler';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { useTranslations } from '@/hooks/usePreferences';
@@ -25,61 +29,29 @@ import {
   getNotifications,
   markAllRead,
   markRead,
+  deleteNotification,
 } from '@/services/notificationsApi';
+import { formatTimeAgo } from '@/utils/formatTime';
+import { getNotificationStyle } from '@/utils/colors';
 
-function formatTimeAgo(dateString: string, t: (key: string, params?: Record<string, string | number>) => string, language: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+type FilterType = 'all' | 'like' | 'comment' | 'follow';
+type TFunc = (key: any, params?: Record<string, string | number>) => string;
 
-  if (seconds < 60) return t('justNow');
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} min`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} h`;
-  if (seconds < 604800) return `${Math.floor(seconds / 86400)}${language === 'fr' ? 'j' : 'd'}`;
-  return date.toLocaleDateString(language === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'short' });
+const LABEL_KEYS: Record<string, string> = {
+  like: 'Like',
+  comment: 'commentLabel',
+  follow: 'subscriptionLabel',
+  mention: 'mentionLabel',
+};
+
+function getNotificationConfig(type: string, t: TFunc) {
+  const style = getNotificationStyle(type);
+  const labelKey = LABEL_KEYS[type];
+  const label = labelKey === 'Like' ? 'Like' : labelKey ? t(labelKey) : t('notificationLabel');
+  return { ...style, label };
 }
 
-function getNotificationConfig(type: string, t: (key: string) => string) {
-  switch (type) {
-    case 'like':
-      return {
-        icon: 'heart',
-        gradient: ['#ec4899', '#f43f5e'] as [string, string],
-        color: '#ec4899',
-        label: 'Like',
-      };
-    case 'comment':
-      return {
-        icon: 'chatbubble',
-        gradient: ['#6366f1', '#8b5cf6'] as [string, string],
-        color: '#6366f1',
-        label: t('commentLabel'),
-      };
-    case 'follow':
-      return {
-        icon: 'person-add',
-        gradient: ['#10b981', '#14b8a6'] as [string, string],
-        color: '#10b981',
-        label: t('subscriptionLabel'),
-      };
-    case 'mention':
-      return {
-        icon: 'at',
-        gradient: ['#f59e0b', '#f97316'] as [string, string],
-        color: '#f59e0b',
-        label: t('mentionLabel'),
-      };
-    default:
-      return {
-        icon: 'notifications',
-        gradient: ['#64748b', '#94a3b8'] as [string, string],
-        color: '#64748b',
-        label: t('notificationLabel'),
-      };
-  }
-}
-
-function groupNotificationsByTime(notifications: Notification[], t: (key: string) => string) {
+function groupNotificationsByTime(notifications: Notification[], t: TFunc) {
   const now = new Date();
   const today: Notification[] = [];
   const thisWeek: Notification[] = [];
@@ -110,34 +82,63 @@ interface NotificationItemProps {
   item: Notification;
   index: number;
   onPress: (item: Notification) => void;
+  onDelete: (item: Notification) => void;
+  onLongPress: (item: Notification) => void;
   theme: any;
-  t: (key: string, params?: Record<string, string | number>) => string;
+  isDark: boolean;
+  t: TFunc;
   language: string;
 }
 
-const NotificationItem: React.FC<NotificationItemProps> = ({ item, index, onPress, theme, t, language }) => {
+const NotificationItemInner: React.FC<NotificationItemProps> = ({ item, index, onPress, onDelete, onLongPress, theme, isDark, t, language }) => {
   const config = getNotificationConfig(item.type, t);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
+  const swipeableRef = useRef<Swipeable>(null);
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 400,
-        delay: index * 50,
+        delay: Math.min(index * 40, 400),
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 400,
-        delay: index * 50,
+        delay: Math.min(index * 40, 400),
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
     ]).start();
   }, []);
+
+  const renderRightActions = (_progress: Animated.AnimatedInterpolation<number>, dragX: Animated.AnimatedInterpolation<number>) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, -50, 0],
+      outputRange: [1, 0.9, 0.5],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <View style={styles.swipeActionsContainer}>
+        <Animated.View style={[styles.swipeDeleteAction, { transform: [{ scale }] }]}>
+          <Pressable
+            style={styles.swipeDeleteButton}
+            onPress={() => {
+              swipeableRef.current?.close();
+              onDelete(item);
+            }}
+          >
+            <Ionicons name="trash-outline" size={22} color="#fff" />
+            <Text style={styles.swipeDeleteText}>{t('deleteAction')}</Text>
+          </Pressable>
+        </Animated.View>
+      </View>
+    );
+  };
 
   return (
     <Animated.View
@@ -146,49 +147,71 @@ const NotificationItem: React.FC<NotificationItemProps> = ({ item, index, onPres
         transform: [{ translateX: slideAnim }],
       }}
     >
-      <Pressable
-        style={({ pressed }) => [
-          styles.notificationCard,
-          {
-            backgroundColor: item.read ? theme.colors.surface : theme.colors.surfaceMuted,
-            borderColor: item.read ? theme.colors.border : config.color + '40',
-            opacity: pressed ? 0.92 : 1,
-          },
-        ]}
-        onPress={() => onPress(item)}
+      <Swipeable
+        ref={swipeableRef}
+        renderRightActions={renderRightActions}
+        overshootRight={false}
+        friction={2}
       >
-        <LinearGradient colors={config.gradient} style={styles.iconGradient}>
-          <Ionicons name={config.icon as any} size={22} color="#fff" />
-        </LinearGradient>
+        <Pressable
+          style={({ pressed }) => [
+            styles.notificationCard,
+            {
+              backgroundColor: item.read
+                ? (isDark ? '#16161e' : '#ffffff')
+                : (isDark ? '#1a1a2e' : '#f0f0ff'),
+              borderColor: item.read
+                ? (isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)')
+                : config.color + '30',
+              opacity: pressed ? 0.92 : 1,
+            },
+          ]}
+          onPress={() => onPress(item)}
+          onLongPress={() => onLongPress(item)}
+        >
+          {/* Left accent bar */}
+          {!item.read && (
+            <View style={[styles.accentBar, { backgroundColor: config.color }]} />
+          )}
 
-        <View style={styles.contentContainer}>
-          <View style={styles.contentHeader}>
-            <Text style={[styles.actorName, { color: theme.colors.textPrimary }]} numberOfLines={1}>
-              {item.actor_username || t('someone')}
+          <LinearGradient colors={config.gradient} style={styles.iconGradient}>
+            <Ionicons name={config.icon as any} size={20} color="#fff" />
+          </LinearGradient>
+
+          <View style={styles.contentContainer}>
+            <View style={styles.contentHeader}>
+              <View style={styles.actorRow}>
+                <Text style={[styles.actorName, { color: theme.colors.textPrimary }]} numberOfLines={1}>
+                  {item.actor_username || t('someone')}
+                </Text>
+                <View style={[styles.typeBadge, { backgroundColor: config.color + '18' }]}>
+                  <Text style={[styles.typeBadgeText, { color: config.color }]}>{config.label}</Text>
+                </View>
+              </View>
+              <Text style={[styles.time, { color: theme.colors.textSecondary }]}>
+                {formatTimeAgo(item.created_at, t, language)}
+              </Text>
+            </View>
+            <Text style={[styles.message, { color: theme.colors.textSecondary }]} numberOfLines={2}>
+              {item.message}
             </Text>
-            <Text style={[styles.time, { color: theme.colors.textSecondary }]}>
-              {formatTimeAgo(item.created_at, t, language)}
-            </Text>
           </View>
-          <View style={[styles.typeBadge, { backgroundColor: config.color + '18', alignSelf: 'flex-start' }]}>
-            <Text style={[styles.typeBadgeText, { color: config.color }]}>{config.label}</Text>
-          </View>
-          <Text style={[styles.message, { color: theme.colors.textPrimary }]} numberOfLines={2}>
-            {item.message}
-          </Text>
-        </View>
 
-        {!item.read && (
-          <View style={styles.unreadIndicator}>
-            <View style={[styles.unreadDot, { backgroundColor: config.color }]} />
-          </View>
-        )}
-
-        <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
-      </Pressable>
+          <Ionicons name="chevron-forward" size={16} color={theme.colors.textSecondary + '80'} />
+        </Pressable>
+      </Swipeable>
     </Animated.View>
   );
 };
+
+const NotificationItem = React.memo(NotificationItemInner);
+
+const FILTERS: { key: FilterType; icon: string; color: string }[] = [
+  { key: 'all', icon: 'apps', color: '#6366f1' },
+  { key: 'like', icon: 'heart', color: '#ec4899' },
+  { key: 'comment', icon: 'chatbubble', color: '#6366f1' },
+  { key: 'follow', icon: 'person-add', color: '#10b981' },
+];
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -202,6 +225,7 @@ export default function NotificationsScreen() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const headerAnim = useRef(new Animated.Value(0)).current;
   const isDark = mode === 'dark';
@@ -215,7 +239,7 @@ export default function NotificationsScreen() {
     }).start();
   }, []);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     if (!userId) {
       setLoading(false);
       setRefreshing(false);
@@ -231,11 +255,37 @@ export default function NotificationsScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     loadNotifications();
-  }, [userId]);
+  }, [loadNotifications]);
+
+  // Auto-refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (!loading) {
+        loadNotifications();
+      }
+    }, [loadNotifications])
+  );
+
+  const filteredNotifications = useMemo(() => {
+    if (activeFilter === 'all') return notifications;
+    return notifications.filter((n) => n.type === activeFilter);
+  }, [notifications, activeFilter]);
+
+  const filterCounts = useMemo(() => ({
+    all: notifications.length,
+    like: notifications.filter((n) => n.type === 'like').length,
+    comment: notifications.filter((n) => n.type === 'comment').length,
+    follow: notifications.filter((n) => n.type === 'follow').length,
+  }), [notifications]);
+
+  const sections = useMemo(
+    () => groupNotificationsByTime(filteredNotifications, t),
+    [filteredNotifications, t]
+  );
 
   const handleMarkAllRead = async () => {
     if (!userId) return;
@@ -247,6 +297,78 @@ export default function NotificationsScreen() {
     } catch (error) {
       console.error('Failed to mark all read:', error);
     }
+  };
+
+  const handleDelete = async (notification: Notification) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    try {
+      await deleteNotification(notification.id);
+      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+      if (!notification.read) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+    }
+  };
+
+  const handleLongPress = (notification: Notification) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+
+    const options: { text: string; onPress?: () => void; style?: 'cancel' | 'destructive' }[] = [];
+
+    if (!notification.read) {
+      options.push({
+        text: t('markAsRead'),
+        onPress: async () => {
+          try {
+            await markRead(notification.id);
+            setNotifications((prev) =>
+              prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
+            );
+            setUnreadCount((prev) => Math.max(0, prev - 1));
+          } catch (error) {
+            console.error('Failed to mark read:', error);
+          }
+        },
+      });
+    }
+
+    options.push({
+      text: t('deleteAction'),
+      style: 'destructive',
+      onPress: () => handleDelete(notification),
+    });
+
+    options.push({ text: t('cancel'), style: 'cancel' });
+
+    Alert.alert(t('notificationActions'), undefined, options);
+  };
+
+  const handleClearAll = () => {
+    if (notifications.length === 0) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+
+    Alert.alert(
+      t('clearAllNotifications'),
+      t('clearAllNotificationsDesc'),
+      [
+        { text: t('cancel'), style: 'cancel' },
+        {
+          text: t('clearAll'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await Promise.all(notifications.map((n) => deleteNotification(n.id)));
+              setNotifications([]);
+              setUnreadCount(0);
+            } catch (error) {
+              console.error('Failed to clear notifications:', error);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleNotificationPress = async (notification: Notification) => {
@@ -277,7 +399,15 @@ export default function NotificationsScreen() {
     }
   };
 
-  const sections = groupNotificationsByTime(notifications, t);
+  const getFilterLabel = (key: FilterType): string => {
+    switch (key) {
+      case 'all': return t('allFilter');
+      case 'like': return t('likesLabel');
+      case 'comment': return t('commentsLabel');
+      case 'follow': return t('followsFilter');
+      default: return key;
+    }
+  };
 
   if (loading) {
     return (
@@ -301,7 +431,7 @@ export default function NotificationsScreen() {
         style={[
           styles.header,
           {
-            paddingTop: insets.top + 10,
+            paddingTop: insets.top + 8,
             backgroundColor: isDark ? '#111118' : '#ffffff',
             borderBottomColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
             opacity: headerAnim,
@@ -316,41 +446,113 @@ export default function NotificationsScreen() {
           },
         ]}
       >
-        <Pressable
-          style={({ pressed }) => [styles.backButton, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 }]}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
-        </Pressable>
+        {/* Top row */}
+        <View style={styles.headerTopRow}>
+          <Pressable
+            style={({ pressed }) => [styles.backButton, { backgroundColor: isDark ? '#1e1e2e' : '#f0f0f5', opacity: pressed ? 0.7 : 1 }]}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="chevron-back" size={22} color={theme.colors.primary} />
+          </Pressable>
 
-        <View style={styles.headerCenter}>
-          <LinearGradient colors={['#ec4899', '#f43f5e']} style={styles.headerIcon}>
-            <Ionicons name="notifications" size={20} color="#fff" />
-          </LinearGradient>
-          <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
-            {t('notifications')}
-          </Text>
-          {unreadCount > 0 && (
-            <View style={styles.unreadBadge}>
-              <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
-            </View>
-          )}
+          <View style={styles.headerCenter}>
+            <Text style={[styles.headerTitle, { color: theme.colors.textPrimary }]}>
+              {t('notifications')}
+            </Text>
+            {unreadCount > 0 && (
+              <View style={styles.unreadBadge}>
+                <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.headerActions}>
+            {unreadCount > 0 && (
+              <Pressable
+                style={({ pressed }) => [styles.headerActionBtn, { backgroundColor: isDark ? '#1e1e2e' : '#f0f0f5', opacity: pressed ? 0.7 : 1 }]}
+                onPress={handleMarkAllRead}
+              >
+                <Ionicons name="checkmark-done" size={20} color="#6366f1" />
+              </Pressable>
+            )}
+            {notifications.length > 0 && (
+              <Pressable
+                style={({ pressed }) => [styles.headerActionBtn, { backgroundColor: isDark ? '#1e1e2e' : '#f0f0f5', opacity: pressed ? 0.7 : 1 }]}
+                onPress={handleClearAll}
+              >
+                <Ionicons name="trash-outline" size={20} color="#ef4444" />
+              </Pressable>
+            )}
+            {notifications.length === 0 && unreadCount === 0 && (
+              <View style={{ width: 40 }} />
+            )}
+          </View>
         </View>
 
-        {unreadCount > 0 ? (
-          <Pressable
-            style={({ pressed }) => [styles.markAllButton, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 }]}
-            onPress={handleMarkAllRead}
+        {/* Filter tabs */}
+        {notifications.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterRow}
+            style={styles.filterScroll}
           >
-            <Ionicons name="checkmark-done" size={22} color="#6366f1" />
-          </Pressable>
-        ) : (
-          <View style={styles.placeholderHeaderRight} />
+            {FILTERS.map((filter) => {
+              const isActive = activeFilter === filter.key;
+              const count = filterCounts[filter.key];
+              if (filter.key !== 'all' && count === 0) return null;
+
+              return (
+                <Pressable
+                  key={filter.key}
+                  style={[
+                    styles.filterChip,
+                    isActive
+                      ? { backgroundColor: filter.color + '20', borderColor: filter.color + '50' }
+                      : { backgroundColor: isDark ? '#1a1a24' : '#f0f0f5', borderColor: 'transparent' },
+                  ]}
+                  onPress={() => {
+                    Haptics.selectionAsync().catch(() => {});
+                    setActiveFilter(filter.key);
+                  }}
+                >
+                  <Ionicons
+                    name={filter.icon as any}
+                    size={14}
+                    color={isActive ? filter.color : theme.colors.textSecondary}
+                  />
+                  <Text
+                    style={[
+                      styles.filterLabel,
+                      { color: isActive ? filter.color : theme.colors.textSecondary },
+                    ]}
+                  >
+                    {getFilterLabel(filter.key)}
+                  </Text>
+                  <View
+                    style={[
+                      styles.filterCount,
+                      { backgroundColor: isActive ? filter.color + '30' : (isDark ? '#2a2a34' : '#e0e0e8') },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.filterCountText,
+                        { color: isActive ? filter.color : theme.colors.textSecondary },
+                      ]}
+                    >
+                      {count}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         )}
       </Animated.View>
 
-      {/* Stats rapides */}
-      {notifications.length > 0 && (
+      {/* Stats row */}
+      {notifications.length > 0 && activeFilter === 'all' && (
         <Animated.View
           style={[
             styles.statsRow,
@@ -367,31 +569,41 @@ export default function NotificationsScreen() {
             },
           ]}
         >
-          <View style={[styles.statCard, { backgroundColor: isDark ? '#ec489918' : '#ec489912' }]}>
-            <Ionicons name="heart" size={18} color="#ec4899" />
-            <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
-              {notifications.filter((n) => n.type === 'like').length}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>{t('likesLabel')}</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: isDark ? '#6366f118' : '#6366f112' }]}>
-            <Ionicons name="chatbubble" size={18} color="#6366f1" />
-            <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
-              {notifications.filter((n) => n.type === 'comment').length}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>{t('commentsLabel')}</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: isDark ? '#10b98118' : '#10b98112' }]}>
-            <Ionicons name="person-add" size={18} color="#10b981" />
-            <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
-              {notifications.filter((n) => n.type === 'follow').length}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>{t('followersLabel')}</Text>
-          </View>
+          {[
+            { type: 'like', icon: 'heart', color: '#ec4899', label: t('likesLabel') },
+            { type: 'comment', icon: 'chatbubble', color: '#6366f1', label: t('commentsLabel') },
+            { type: 'follow', icon: 'person-add', color: '#10b981', label: t('followersLabel') },
+          ].map((stat) => {
+            const count = notifications.filter((n) => n.type === stat.type).length;
+            const unread = notifications.filter((n) => n.type === stat.type && !n.read).length;
+            return (
+              <Pressable
+                key={stat.type}
+                style={[styles.statCard, { backgroundColor: isDark ? stat.color + '12' : stat.color + '0a' }]}
+                onPress={() => {
+                  Haptics.selectionAsync().catch(() => {});
+                  setActiveFilter(stat.type as FilterType);
+                }}
+              >
+                <View style={styles.statIconRow}>
+                  <Ionicons name={stat.icon as any} size={18} color={stat.color} />
+                  {unread > 0 && (
+                    <View style={[styles.statUnreadDot, { backgroundColor: stat.color }]}>
+                      <Text style={styles.statUnreadText}>{unread}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.statValue, { color: theme.colors.textPrimary }]}>
+                  {count}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>{stat.label}</Text>
+              </Pressable>
+            );
+          })}
         </Animated.View>
       )}
 
-      {/* Liste par sections */}
+      {/* Section list */}
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -400,17 +612,23 @@ export default function NotificationsScreen() {
             item={item}
             index={index}
             onPress={handleNotificationPress}
+            onDelete={handleDelete}
+            onLongPress={handleLongPress}
             theme={theme}
+            isDark={isDark}
             t={t}
             language={language}
           />
         )}
-        renderSectionHeader={({ section: { title } }) => (
+        renderSectionHeader={({ section: { title, data } }) => (
           <View style={[styles.sectionHeader, { backgroundColor: bgColor }]}>
             <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>{title}</Text>
+            <View style={[styles.sectionCount, { backgroundColor: isDark ? '#1e1e2e' : '#e8e8f0' }]}>
+              <Text style={[styles.sectionCountText, { color: theme.colors.textSecondary }]}>{data.length}</Text>
+            </View>
           </View>
         )}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 40 }]}
         stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl
@@ -424,26 +642,40 @@ export default function NotificationsScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <View style={[styles.emptyIconCircle, { backgroundColor: theme.colors.surfaceMuted }]}>
-              <LinearGradient colors={['#ec4899', '#f43f5e']} style={styles.emptyIconGradient}>
-                <Ionicons name="notifications-off" size={32} color="#fff" />
+            <View style={[styles.emptyIconCircle, { backgroundColor: isDark ? '#1a1a2e' : '#f0f0ff' }]}>
+              <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.emptyIconGradient}>
+                <Ionicons name={activeFilter === 'all' ? 'notifications-off' : getNotificationConfig(activeFilter, t).icon as any} size={30} color="#fff" />
               </LinearGradient>
             </View>
             <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-              {t('noNotifications')}
+              {activeFilter === 'all' ? t('noNotifications') : t('noNotificationsForFilter')}
             </Text>
             <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-              {t('notificationEmptyDesc')}
+              {activeFilter === 'all'
+                ? t('notificationEmptyDesc')
+                : t('notificationFilterEmptyDesc')}
             </Text>
-            <TouchableOpacity
-              style={styles.emptyButton}
-              onPress={() => router.push('/(tabs)/feed')}
-            >
-              <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.emptyButtonGradient}>
-                <Ionicons name="compass" size={18} color="#fff" />
-                <Text style={styles.emptyButtonText}>{t('exploreFeed')}</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            {activeFilter !== 'all' ? (
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={() => setActiveFilter('all')}
+              >
+                <View style={[styles.emptyButtonOutline, { borderColor: '#6366f1' }]}>
+                  <Ionicons name="apps" size={16} color="#6366f1" />
+                  <Text style={[styles.emptyButtonOutlineText, { color: '#6366f1' }]}>{t('showAllNotifications')}</Text>
+                </View>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={() => router.push('/(tabs)/feed')}
+              >
+                <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.emptyButtonGradient}>
+                  <Ionicons name="compass" size={18} color="#fff" />
+                  <Text style={styles.emptyButtonText}>{t('exploreFeed')}</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
           </View>
         }
       />
@@ -470,31 +702,27 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   header: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+  },
+  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-    borderBottomWidth: 1,
+    marginBottom: 4,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerCenter: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-  },
-  headerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
   },
   headerTitle: {
     fontSize: 18,
@@ -502,7 +730,7 @@ const styles = StyleSheet.create({
   },
   unreadBadge: {
     backgroundColor: '#ef4444',
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 10,
     minWidth: 22,
@@ -510,24 +738,59 @@ const styles = StyleSheet.create({
   },
   unreadBadgeText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
-  markAllButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  headerActionBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  placeholderHeaderRight: {
-    width: 44,
+  filterScroll: {
+    marginTop: 10,
+  },
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    paddingRight: 16,
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+  },
+  filterLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  filterCount: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 8,
+    minWidth: 20,
+    alignItems: 'center',
+  },
+  filterCountText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   statsRow: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    gap: 12,
-    marginBottom: 20,
+    paddingTop: 16,
+    gap: 10,
+    marginBottom: 8,
   },
   statCard: {
     flex: 1,
@@ -538,6 +801,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 16,
     gap: 4,
+  },
+  statIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statUnreadDot: {
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 8,
+    minWidth: 16,
+    alignItems: 'center',
+  },
+  statUnreadText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '700',
   },
   statValue: {
     fontSize: 18,
@@ -550,11 +830,13 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
   },
   sectionHeader: {
-    paddingVertical: 12,
-    paddingTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingTop: 18,
   },
   sectionTitle: {
     fontSize: 13,
@@ -562,85 +844,131 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  sectionCount: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  sectionCountText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
   notificationCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    marginBottom: 10,
-    gap: 14,
+    marginBottom: 8,
+    gap: 12,
+    overflow: 'hidden',
+  },
+  accentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 8,
+    bottom: 8,
+    width: 3,
+    borderRadius: 2,
   },
   iconGradient: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
   contentContainer: {
     flex: 1,
-    gap: 6,
+    gap: 4,
   },
   contentHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    gap: 8,
+  },
+  actorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
   },
   actorName: {
     fontSize: 14,
     fontWeight: '700',
-    flex: 1,
-    marginRight: 8,
+    flexShrink: 1,
   },
   typeBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
     borderRadius: 6,
   },
   typeBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   message: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
   time: {
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: '500',
+    flexShrink: 0,
   },
-  unreadIndicator: {
-    marginRight: 6,
+  swipeActionsContainer: {
+    width: 80,
+    marginBottom: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  swipeDeleteAction: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  swipeDeleteButton: {
+    flex: 1,
+    backgroundColor: '#ef4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 14,
+    width: '100%',
+    marginLeft: 8,
+    gap: 4,
+  },
+  swipeDeleteText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
   },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 80,
     paddingHorizontal: 32,
-    gap: 16,
+    gap: 14,
   },
   emptyIconCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8,
   },
   emptyIconGradient: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
   },
   emptySubtitle: {
@@ -664,5 +992,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 15,
     fontWeight: '700',
+  },
+  emptyButtonOutline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderWidth: 1.5,
+    borderRadius: 14,
+  },
+  emptyButtonOutlineText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

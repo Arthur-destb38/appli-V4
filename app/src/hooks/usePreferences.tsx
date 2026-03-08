@@ -396,6 +396,10 @@ export const translations = {
     rankingSection: 'CLASSEMENT',
     noRankingYet: 'Pas encore de classement',
     shareToAppear: 'Partage tes séances pour apparaître ici !',
+    challengesTab: 'Défis',
+    activeChallenges: 'Défis actifs',
+    moreChallengesSoon: 'Plus de défis bientôt',
+    moreChallengesSoonDesc: 'De nouveaux défis seront ajoutés régulièrement. Reste connecté !',
     leaderVolume: 'Volume',
     leaderSessions: 'Séances',
     leaderLikes: 'Likes',
@@ -414,6 +418,17 @@ export const translations = {
     exploreFeed: 'Explorer le feed',
     likesLabel: 'Likes',
     commentsLabel: 'Commentaires',
+    deleteAction: 'Supprimer',
+    markAsRead: 'Marquer comme lu',
+    notificationActions: 'Actions',
+    clearAllNotifications: 'Tout supprimer',
+    clearAllNotificationsDesc: 'Supprimer toutes les notifications ? Cette action est irréversible.',
+    clearAll: 'Tout supprimer',
+    allFilter: 'Tout',
+    followsFilter: 'Abonnements',
+    noNotificationsForFilter: 'Aucune notification de ce type',
+    notificationFilterEmptyDesc: "Tu n'as pas encore reçu ce type de notification.",
+    showAllNotifications: 'Voir toutes les notifications',
 
     // Library
     thisMonth: 'Ce mois-ci',
@@ -602,6 +617,21 @@ export const translations = {
     kettlebellLabel: 'Kettlebell',
     constraintsSection: 'Contraintes',
     constraintsPlaceholder: 'Ex: Genou fragile, dos sensible...',
+    howItWorksTitle: 'Comment ça marche ?',
+    howItWorksSubtitle: 'Notre algorithme crée ton programme selon la science du sport',
+    howItWorks1Title: 'Volume adapté',
+    howItWorks1Desc: 'Le nombre de séries par muscle est calculé selon ton niveau, en suivant les recommandations scientifiques (10-20 séries/semaine par muscle).',
+    howItWorks2Title: 'Composés en priorité',
+    howItWorks2Desc: 'Chaque séance commence par les exercices polyarticulaires (squat, développé, rowing...) puis les isolations. C\'est la méthode la plus efficace.',
+    howItWorks3Title: 'Progression intégrée',
+    howItWorks3Desc: 'Le volume et l\'intensité augmentent semaine après semaine. Si ton programme fait 5+ semaines, une semaine de deload est ajoutée automatiquement.',
+    howItWorks4Title: 'Reps intelligentes',
+    howItWorks4Desc: 'Les composés utilisent des plages de reps lourdes (6-8), les accessoires modérées (8-12), et les isolations légères (12-15). Adapté à ton objectif.',
+    frequencyHelper: 'Chaque muscle doit être travaillé au moins 2x/semaine. 3-4x est idéal pour la plupart.',
+    durationHelper: '4 semaines = 1 mésocycle. 5+ semaines = deload automatique.',
+    sessionDurationHelper: '45-60 min est optimal. Au-delà de 75 min, la performance baisse.',
+    levelHelper: 'Ton niveau détermine le volume de séries et la complexité des exercices.',
+    methodHelper: 'Le mode Auto choisit le split optimal selon ta fréquence.',
     generationInProgress: 'Génération en cours...',
     generateMyProgram: 'Générer mon programme',
     generationImpossible: 'Génération impossible',
@@ -620,6 +650,10 @@ export const translations = {
     startSession: 'Démarrer',
     exerciseMore: 'exercice',
     exercisesMore: 'exercices',
+    repsLabel: 'reps',
+    rpeLabel: 'RPE',
+    seeDetails: 'Voir le détail',
+    hideDetails: 'Masquer',
     savingInProgress: 'Enregistrement...',
     saveAllSessions: 'Enregistrer toutes les séances',
     savedBadge: 'Sauvé',
@@ -1036,6 +1070,38 @@ export const translations = {
     syncInProgress: 'Synchronisation en cours',
     retryInFewSeconds: 'Réessaie dans quelques secondes.',
     repCount: '{count} répétition(s)',
+
+    // Premium / Paywall
+    premiumActivated: 'Premium activé !',
+    premiumActivatedDesc: 'Tu as maintenant accès à toutes les fonctionnalités.',
+    error: 'Erreur',
+    purchaseError: 'Impossible de finaliser l\'achat.',
+    restored: 'Achat restauré',
+    restoredDesc: 'Ton abonnement a été restauré avec succès.',
+    restoreError: 'Impossible de restaurer. Vérifie ton compte App Store / Play Store.',
+    featureUnlimitedPrograms: 'Programmes IA illimités',
+    featureAdvancedStats: 'Statistiques avancées & progression',
+    featureFullHistory: 'Historique complet sans limite',
+    featureUnlimitedObjectives: 'Objectifs personnalisés illimités',
+    featurePriority: 'Accès prioritaire aux nouvelles fonctionnalités',
+    paywallSubtitle: 'Débloque tout le potentiel de Gorillax pour atteindre tes objectifs plus vite.',
+    bestValue: 'Meilleur prix',
+    yearlyPlan: 'Annuel',
+    monthlyPlan: 'Mensuel',
+    perYear: '€/an',
+    perMonth: '€/mois',
+    save33: '-33%',
+    subscribe: 'S\'abonner',
+    restorePurchases: 'Restaurer les achats',
+    subscriptionLegal: 'L\'abonnement se renouvelle automatiquement. Tu peux annuler à tout moment depuis les réglages de ton store.',
+    premiumFeature: 'Fonctionnalité Premium',
+    upgradeToPremium: 'Passer à Premium',
+    subscriptionLabel: 'Abonnement',
+    currentPlan: 'Plan actuel',
+    freePlan: 'Gratuit',
+    premiumPlan: 'Premium',
+    manageSubscription: 'Gérer mon abonnement',
+    expiresOn: 'Expire le',
   },
   en: {
     // Navigation
@@ -1329,6 +1395,10 @@ export const translations = {
     rankingSection: 'RANKING',
     noRankingYet: 'No rankings yet',
     shareToAppear: 'Share your workouts to appear here!',
+    challengesTab: 'Challenges',
+    activeChallenges: 'Active challenges',
+    moreChallengesSoon: 'More challenges soon',
+    moreChallengesSoonDesc: 'New challenges will be added regularly. Stay tuned!',
     leaderVolume: 'Volume',
     leaderSessions: 'Sessions',
     leaderLikes: 'Likes',
@@ -1347,6 +1417,17 @@ export const translations = {
     exploreFeed: 'Explore the feed',
     likesLabel: 'Likes',
     commentsLabel: 'Comments',
+    deleteAction: 'Delete',
+    markAsRead: 'Mark as read',
+    notificationActions: 'Actions',
+    clearAllNotifications: 'Clear all',
+    clearAllNotificationsDesc: 'Delete all notifications? This action cannot be undone.',
+    clearAll: 'Clear all',
+    allFilter: 'All',
+    followsFilter: 'Follows',
+    noNotificationsForFilter: 'No notifications of this type',
+    notificationFilterEmptyDesc: "You haven't received this type of notification yet.",
+    showAllNotifications: 'Show all notifications',
 
     // Library
     thisMonth: 'This month',
@@ -1535,6 +1616,21 @@ export const translations = {
     kettlebellLabel: 'Kettlebell',
     constraintsSection: 'Constraints',
     constraintsPlaceholder: 'E.g.: Fragile knee, sensitive back...',
+    howItWorksTitle: 'How does it work?',
+    howItWorksSubtitle: 'Our algorithm builds your program based on sports science',
+    howItWorks1Title: 'Adapted volume',
+    howItWorks1Desc: 'Sets per muscle are calculated based on your level, following scientific recommendations (10-20 sets/week per muscle).',
+    howItWorks2Title: 'Compounds first',
+    howItWorks2Desc: 'Each session starts with compound exercises (squat, bench, rows...) then isolations. This is the most effective method.',
+    howItWorks3Title: 'Built-in progression',
+    howItWorks3Desc: 'Volume and intensity increase week over week. Programs of 5+ weeks automatically include a deload week.',
+    howItWorks4Title: 'Smart rep ranges',
+    howItWorks4Desc: 'Compounds use heavier rep ranges (6-8), accessories moderate (8-12), and isolations lighter (12-15). Adapted to your goal.',
+    frequencyHelper: 'Each muscle should be trained at least 2x/week. 3-4x is ideal for most people.',
+    durationHelper: '4 weeks = 1 mesocycle. 5+ weeks = automatic deload.',
+    sessionDurationHelper: '45-60 min is optimal. Beyond 75 min, performance drops.',
+    levelHelper: 'Your level determines set volume and exercise complexity.',
+    methodHelper: 'Auto mode picks the optimal split based on your frequency.',
     generationInProgress: 'Generating...',
     generateMyProgram: 'Generate my program',
     generationImpossible: 'Generation impossible',
@@ -1553,6 +1649,10 @@ export const translations = {
     startSession: 'Start',
     exerciseMore: 'exercise',
     exercisesMore: 'exercises',
+    repsLabel: 'reps',
+    rpeLabel: 'RPE',
+    seeDetails: 'See details',
+    hideDetails: 'Hide',
     savingInProgress: 'Saving...',
     saveAllSessions: 'Save all sessions',
     savedBadge: 'Saved',
@@ -1969,6 +2069,38 @@ export const translations = {
     syncInProgress: 'Sync in progress',
     retryInFewSeconds: 'Try again in a few seconds.',
     repCount: '{count} rep(s)',
+
+    // Premium / Paywall
+    premiumActivated: 'Premium activated!',
+    premiumActivatedDesc: 'You now have access to all features.',
+    error: 'Error',
+    purchaseError: 'Unable to complete the purchase.',
+    restored: 'Purchase restored',
+    restoredDesc: 'Your subscription has been successfully restored.',
+    restoreError: 'Unable to restore. Check your App Store / Play Store account.',
+    featureUnlimitedPrograms: 'Unlimited AI programs',
+    featureAdvancedStats: 'Advanced stats & progression',
+    featureFullHistory: 'Full workout history',
+    featureUnlimitedObjectives: 'Unlimited custom objectives',
+    featurePriority: 'Priority access to new features',
+    paywallSubtitle: 'Unlock the full potential of Gorillax to reach your goals faster.',
+    bestValue: 'Best value',
+    yearlyPlan: 'Yearly',
+    monthlyPlan: 'Monthly',
+    perYear: '/year',
+    perMonth: '/month',
+    save33: '-33%',
+    subscribe: 'Subscribe',
+    restorePurchases: 'Restore purchases',
+    subscriptionLegal: 'Subscription renews automatically. You can cancel anytime from your store settings.',
+    premiumFeature: 'Premium Feature',
+    upgradeToPremium: 'Upgrade to Premium',
+    subscriptionLabel: 'Subscription',
+    currentPlan: 'Current plan',
+    freePlan: 'Free',
+    premiumPlan: 'Premium',
+    manageSubscription: 'Manage subscription',
+    expiresOn: 'Expires on',
   },
 };
 
@@ -1983,7 +2115,7 @@ export const useTranslations = () => {
     }
   }, [context]);
   
-  const t = (key: keyof typeof translations.fr, params?: Record<string, string | number>) => {
+  const t = (key: keyof typeof translations.fr | (string & {}), params?: Record<string, string | number>) => {
     // Si le contexte n'est pas prêt, retourner la clé
     if (!context || !isReady) {
       return key as string;
@@ -1991,7 +2123,7 @@ export const useTranslations = () => {
     
     try {
       const { preferences } = context;
-      let text = translations[preferences.language]?.[key] || key as string;
+      let text = (translations[preferences.language] as Record<string, string>)?.[key as string] || key as string;
       
       // Remplacer les paramètres dans le texte (ex: {days} -> 3)
       if (params) {
@@ -2007,8 +2139,11 @@ export const useTranslations = () => {
     }
   };
   
-  return { 
-    t, 
-    isLoading: !isReady 
+  const language = context?.preferences?.language ?? 'fr';
+
+  return {
+    t,
+    language,
+    isLoading: !isReady
   };
 };

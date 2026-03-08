@@ -19,7 +19,7 @@ export const useFeed = () => {
   const { profile } = useUserProfile();
   const { createDraft, addExercise, addSet } = useWorkouts();
   const { t } = useTranslations();
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<any[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

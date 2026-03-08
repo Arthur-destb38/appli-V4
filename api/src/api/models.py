@@ -55,6 +55,12 @@ class User(SQLModel, table=True):
     last_login: Optional[datetime] = Field(default=None)
     login_count: int = Field(default=0)
 
+    # Abonnement
+    subscription_tier: str = Field(default="free")  # "free" | "premium"
+    subscription_expires_at: Optional[datetime] = Field(default=None)
+    revenuecat_app_user_id: Optional[str] = Field(default=None, index=True)
+    ai_programs_generated: int = Field(default=0)
+
 
 class Workout(SQLModel, table=True):
     id: str = Field(default_factory=generate_uuid, primary_key=True)
@@ -296,4 +302,75 @@ class Message(SQLModel, table=True):
     sender_id: str = Field(index=True)
     content: str
     read_at: Optional[datetime] = Field(default=None)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ABONNEMENT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class SubscriptionEvent(SQLModel, table=True):
+    """Audit log des événements d'abonnement RevenueCat."""
+    id: str = Field(default_factory=generate_uuid, primary_key=True)
+    user_id: str = Field(index=True)
+    event_type: str  # INITIAL_PURCHASE, RENEWAL, CANCELLATION, EXPIRATION
+    product_id: str  # gorillax_premium_monthly / gorillax_premium_yearly
+    store: Optional[str] = Field(default=None)  # APP_STORE | PLAY_STORE
+    expires_at: Optional[datetime] = Field(default=None)
+    revenuecat_event_id: Optional[str] = Field(default=None, unique=True)
+    raw_payload: Optional[str] = Field(default=None)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MARKETPLACE COACHS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class CoachProfile(SQLModel, table=True):
+    """Profil coach étendu."""
+    id: str = Field(default_factory=generate_uuid, primary_key=True)
+    user_id: str = Field(unique=True, index=True)
+    display_name: str
+    bio: Optional[str] = Field(default=None)
+    specialties: Optional[str] = Field(default=None)  # JSON array
+    certifications: Optional[str] = Field(default=None)  # JSON array
+    hourly_rate: Optional[float] = Field(default=None)
+    rating: float = Field(default=0.0)
+    rating_count: int = Field(default=0)
+    verified: bool = Field(default=False)
+    active: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class ProgramTemplate(SQLModel, table=True):
+    """Template de programme créé par un coach pour vente."""
+    id: str = Field(default_factory=generate_uuid, primary_key=True)
+    coach_id: str = Field(index=True)
+    title: str
+    description: Optional[str] = Field(default=None)
+    objective: Optional[str] = Field(default=None)
+    difficulty_level: Optional[str] = Field(default=None)  # beginner | intermediate | advanced
+    duration_weeks: int = Field(default=4)
+    price_cents: int = Field(default=0)  # Prix en centimes EUR (0 = gratuit)
+    currency: str = Field(default="EUR")
+    preview_data: Optional[str] = Field(default=None)  # JSON : aperçu 1ère session
+    full_program_data: Optional[str] = Field(default=None)  # JSON : programme complet
+    purchase_count: int = Field(default=0)
+    active: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
+
+
+class ProgramPurchase(SQLModel, table=True):
+    """Achat d'un template de programme par un utilisateur."""
+    __table_args__ = (
+        Index("ix_purchase_user_template", "user_id", "template_id", unique=True),
+    )
+    id: str = Field(default_factory=generate_uuid, primary_key=True)
+    user_id: str = Field(index=True)
+    template_id: str = Field(index=True)
+    coach_id: str = Field(index=True)
+    price_cents: int = Field(default=0)
+    commission_cents: int = Field(default=0)  # Commission plateforme (20%)
+    payment_status: str = Field(default="completed")  # pending | completed | refunded
     created_at: datetime = Field(default_factory=utcnow)

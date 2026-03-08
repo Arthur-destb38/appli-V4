@@ -180,6 +180,8 @@ class MeResponse(BaseModel):
     birth_date: Optional[datetime] = None
     gender: Optional[str] = None
     profile_completed: bool = False
+    subscription_tier: str = "free"
+    ai_programs_generated: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -552,3 +554,93 @@ class ProfileSetupResponse(BaseModel):
     profile_completed: bool
     message: str
     user: MeResponse
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ABONNEMENT
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class SubscriptionStatusResponse(BaseModel):
+    tier: str  # "free" | "premium"
+    is_premium: bool
+    expires_at: Optional[datetime] = None
+    ai_programs_remaining: int  # -1 = illimité, 0 ou 1 pour free
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MARKETPLACE COACHS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+class CoachApplyRequest(BaseModel):
+    display_name: str = Field(min_length=2, max_length=100)
+    bio: Optional[str] = Field(None, max_length=500)
+    specialties: Optional[list[str]] = None
+    certifications: Optional[list[str]] = None
+    hourly_rate: Optional[float] = Field(None, ge=0)
+
+
+class CoachProfileRead(BaseModel):
+    id: str
+    user_id: str
+    display_name: str
+    bio: Optional[str] = None
+    specialties: Optional[list[str]] = None
+    certifications: Optional[list[str]] = None
+    hourly_rate: Optional[float] = None
+    rating: float = 0.0
+    rating_count: int = 0
+    verified: bool = False
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ProgramTemplateCreate(BaseModel):
+    title: str = Field(min_length=2, max_length=200)
+    description: Optional[str] = Field(None, max_length=2000)
+    objective: Optional[str] = None
+    difficulty_level: Optional[str] = Field(None, pattern="^(beginner|intermediate|advanced)$")
+    duration_weeks: int = Field(default=4, ge=1, le=52)
+    price_cents: int = Field(default=0, ge=0)
+    preview_data: Optional[str] = None
+    full_program_data: Optional[str] = None
+
+
+class ProgramTemplateRead(BaseModel):
+    id: str
+    coach_id: str
+    title: str
+    description: Optional[str] = None
+    objective: Optional[str] = None
+    difficulty_level: Optional[str] = None
+    duration_weeks: int = 4
+    price_cents: int = 0
+    currency: str = "EUR"
+    purchase_count: int = 0
+    preview_data: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ProgramTemplateDetail(ProgramTemplateRead):
+    """Inclut full_program_data si l'utilisateur a acheté ou est le coach."""
+    full_program_data: Optional[str] = None
+
+
+class ProgramPurchaseRead(BaseModel):
+    id: str
+    template_id: str
+    coach_id: str
+    price_cents: int
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CoachDashboard(BaseModel):
+    total_sales: int
+    total_revenue_cents: int
+    total_commission_cents: int
+    templates_count: int
+    average_rating: float

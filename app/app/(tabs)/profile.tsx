@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -28,11 +28,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { apiCall } from '@/utils/api';
 import { useTranslations } from '@/hooks/usePreferences';
+import { useNotificationCount } from '@/hooks/useNotificationCount';
 
 export default function ProfileScreen() {
   const { theme } = useAppTheme();
   const { t } = useTranslations();
   const { user, logout, updateProfile } = useAuth();
+  const { unreadCount: notifCount } = useNotificationCount();
   const { workouts } = useWorkouts();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -63,24 +65,24 @@ export default function ProfileScreen() {
     ]).start();
   }, []);
 
-  // Calculer les stats
-  const completedWorkouts = workouts.filter(w => w.workout.status === 'completed').length;
-  const totalExercises = workouts.reduce((acc, w) => acc + w.exercises.length, 0);
+  // Calculer les stats (memoized pour éviter recalculs inutiles)
+  const completedWorkouts = useMemo(() => workouts.filter(w => w.workout.status === 'completed').length, [workouts]);
+  const totalExercises = useMemo(() => workouts.reduce((acc, w) => acc + w.exercises.length, 0), [workouts]);
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     ...(user?.id ? [{ label: t('myPublicProfile'), route: `/profile/${user.id}`, icon: 'person' as const, color: '#6366f1' as const }] : []),
     { label: t('memberCard'), route: '/pass-salle', icon: 'wallet' as const, color: '#0ea5e9' as const },
     { label: t('progressionNav'), route: '/history', icon: 'trending-up' as const, color: '#10b981' },
     { label: t('myProgram'), route: '/programme', icon: 'calendar' as const, color: '#f59e0b' },
     { label: t('myObjectives'), route: '/objectives', icon: 'flag' as const, color: '#ec4899' },
     { label: t('notifications'), route: '/notifications', icon: 'notifications' as const, color: '#8b5cf6' },
-  ];
+  ], [user?.id, t]);
 
-  const settingsItems = [
+  const settingsItems = useMemo(() => [
     { label: t('settings'), route: '/settings', icon: 'settings' as const },
     { label: t('termsOfUse'), route: '/legal/terms', icon: 'document-text' as const },
     { label: t('privacyLabel'), route: '/legal/privacy', icon: 'shield-checkmark' as const },
-  ];
+  ], [t]);
 
   const openEditModal = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
@@ -296,12 +298,24 @@ export default function ProfileScreen() {
                 <View style={styles.menuItemLeft}>
                   <View style={[styles.menuIconContainer, { backgroundColor: item.color + '20' }]}>
                     <Ionicons name={item.icon} size={20} color={item.color} />
+                    {item.icon === 'notifications' && notifCount > 0 && (
+                      <View style={styles.menuNotifBadge}>
+                        <Text style={styles.menuNotifBadgeText}>{notifCount > 99 ? '99+' : notifCount}</Text>
+                      </View>
+                    )}
                   </View>
                   <Text style={[styles.menuItemText, { color: theme.colors.textPrimary }]}>
                     {item.label}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  {item.icon === 'notifications' && notifCount > 0 && (
+                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#8b5cf6' }}>
+                      {notifCount} {t('unreadLabel')}
+                    </Text>
+                  )}
+                  <Ionicons name="chevron-forward" size={18} color={theme.colors.textSecondary} />
+                </View>
               </Pressable>
             ))}
           </View>
@@ -679,6 +693,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  menuNotifBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#ef4444',
+    borderRadius: 8,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  menuNotifBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
   },
   menuItemText: {
     fontSize: 15,

@@ -147,16 +147,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   const motivationalMessage = (() => {
     if (typeof motivationalMessageData === 'object') {
       if (motivationalMessageData.key === 'goalReached') {
-        return `${motivationalMessageData.params.completed}/${motivationalMessageData.params.goal} ${safeT('sessions', 'séances')} 🎯`;
+        return `${motivationalMessageData.params?.completed}/${motivationalMessageData.params?.goal} ${safeT('sessions', 'séances')} 🎯`;
       }
       if (motivationalMessageData.key === 'consecutiveDaysStreak') {
-        return `${motivationalMessageData.params.days} ${safeT('consecutiveDays', 'jours consécutifs')} 💪`;
+        return `${motivationalMessageData.params?.days} ${safeT('consecutiveDays', 'jours consécutifs')} 💪`;
       }
       if (motivationalMessageData.key === 'daysInARowStreak') {
-        return `${motivationalMessageData.params.days} ${safeT('daysInARow', 'jours de suite')} 🔥`;
+        return `${motivationalMessageData.params?.days} ${safeT('daysInARow', 'jours de suite')} 🔥`;
       }
       if (motivationalMessageData.key === 'weekProgress') {
-        return `${motivationalMessageData.params.completed}/${motivationalMessageData.params.goal} ${safeT('thisWeek', 'cette semaine')}`;
+        return `${motivationalMessageData.params?.completed}/${motivationalMessageData.params?.goal} ${safeT('thisWeek', 'cette semaine')}`;
       }
       return safeT(motivationalMessageData.key, 'C\'est parti !');
     }
@@ -186,7 +186,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
       ]}
     >
       <LinearGradient
-        colors={theme.colors.heroGradient}
+        colors={theme.colors.heroGradient as [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}

@@ -1,4 +1,4 @@
-import { buildApiUrl, getAuthHeaders } from '@/utils/api';
+import { apiCall } from '@/utils/api';
 
 export type MessageRead = {
   id: string;
@@ -44,8 +44,6 @@ export type CreateConversationResponse = {
   created: boolean;
 };
 
-const MESSAGING_BASE = buildApiUrl('/messaging');
-
 export const listConversations = async (
   _userId: string,
   limit = 20,
@@ -55,10 +53,7 @@ export const listConversations = async (
   if (cursor) {
     params.append('cursor', cursor);
   }
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${MESSAGING_BASE}/conversations?${params.toString()}`, {
-    headers,
-  });
+  const response = await apiCall(`/messaging/conversations?${params.toString()}`);
   if (!response.ok) {
     throw new Error('Impossible de charger les conversations');
   }
@@ -69,10 +64,8 @@ export const createOrGetConversation = async (
   _userId: string,
   participantId: string
 ): Promise<CreateConversationResponse> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${MESSAGING_BASE}/conversations`, {
+  const response = await apiCall('/messaging/conversations', {
     method: 'POST',
-    headers,
     body: JSON.stringify({ participant_id: participantId }),
   });
   if (!response.ok) {
@@ -92,10 +85,8 @@ export const listMessages = async (
   if (cursor) {
     params.append('cursor', cursor);
   }
-  const headers = await getAuthHeaders();
-  const response = await fetch(
-    `${MESSAGING_BASE}/conversations/${conversationId}/messages?${params.toString()}`,
-    { headers }
+  const response = await apiCall(
+    `/messaging/conversations/${conversationId}/messages?${params.toString()}`
   );
   if (!response.ok) {
     throw new Error('Impossible de charger les messages');
@@ -108,12 +99,10 @@ export const sendMessage = async (
   _userId: string,
   content: string
 ): Promise<SendMessageResponse> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(
-    `${MESSAGING_BASE}/conversations/${conversationId}/messages`,
+  const response = await apiCall(
+    `/messaging/conversations/${conversationId}/messages`,
     {
       method: 'POST',
-      headers,
       body: JSON.stringify({ content }),
     }
   );
@@ -128,10 +117,9 @@ export const markConversationAsRead = async (
   conversationId: string,
   _userId: string
 ): Promise<void> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(
-    `${MESSAGING_BASE}/conversations/${conversationId}/read`,
-    { method: 'POST', headers }
+  const response = await apiCall(
+    `/messaging/conversations/${conversationId}/read`,
+    { method: 'POST' }
   );
   if (!response.ok) {
     throw new Error('Impossible de marquer comme lu');
@@ -139,10 +127,7 @@ export const markConversationAsRead = async (
 };
 
 export const getUnreadCount = async (_userId: string): Promise<number> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(`${MESSAGING_BASE}/unread-count`, {
-    headers,
-  });
+  const response = await apiCall('/messaging/unread-count');
   if (!response.ok) {
     return 0;
   }
@@ -154,10 +139,9 @@ export const deleteConversation = async (
   conversationId: string,
   _userId: string
 ): Promise<void> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(
-    `${MESSAGING_BASE}/conversations/${conversationId}`,
-    { method: 'DELETE', headers }
+  const response = await apiCall(
+    `/messaging/conversations/${conversationId}`,
+    { method: 'DELETE' }
   );
   if (!response.ok) {
     throw new Error('Impossible de supprimer la conversation');

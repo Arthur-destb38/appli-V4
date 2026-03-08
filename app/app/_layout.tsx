@@ -8,6 +8,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { WorkoutsProvider } from '@/hooks/useWorkouts';
 import { UserProfileProvider } from '@/hooks/useUserProfile';
 import { AuthProvider } from '@/hooks/useAuth';
+import { SubscriptionProvider } from '@/hooks/useSubscription';
 import { PreferencesProvider } from '@/hooks/usePreferences';
 import { AppThemeProvider } from '@/theme/ThemeProvider';
 import { DemoProvider } from '../src/contexts/DemoContext';
@@ -23,6 +24,7 @@ export default function RootLayout() {
         <AppThemeProvider>
           <ErrorBoundary>
           <AuthProvider>
+            <SubscriptionProvider>
             <UserProfileProvider>
               <WorkoutsProvider>
                 <DemoProvider>
@@ -52,6 +54,7 @@ export default function RootLayout() {
                 <Stack.Screen name="messages/new" />
                 <Stack.Screen name="shared-workout/[id]" />
                 <Stack.Screen name="share-post" />
+                <Stack.Screen name="paywall" options={{ presentation: 'modal', headerShown: false }} />
                 <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
                 <Stack.Screen name="login" />
                 <Stack.Screen name="register" />
@@ -63,6 +66,7 @@ export default function RootLayout() {
                 </DemoProvider>
             </WorkoutsProvider>
           </UserProfileProvider>
+            </SubscriptionProvider>
         </AuthProvider>
           </ErrorBoundary>
       </AppThemeProvider>

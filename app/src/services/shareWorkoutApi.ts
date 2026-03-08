@@ -1,4 +1,4 @@
-import { buildApiUrl, getAuthHeaders } from '@/utils/api';
+import { apiCall } from '@/utils/api';
 
 export type ShareWorkoutResponse = {
   share_id: string;
@@ -20,33 +20,21 @@ export type ShareWorkoutPayload = {
   image_base64?: string | null;
 };
 
-const shareWorkoutUrl = (workoutId: string) => buildApiUrl(`/share/workouts/${workoutId}`);
-
 export const shareWorkoutRemote = async (
   workoutId: string,
   payload: ShareWorkoutPayload
 ): Promise<ShareWorkoutResponse> => {
-  const headers = await getAuthHeaders();
-  const response = await fetch(shareWorkoutUrl(workoutId), {
+  const response = await apiCall(`/share/workouts/${workoutId}`, {
     method: 'POST',
-    headers,
     body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
-    const detail = await safeReadJson(response);
+    const detail = await response.json().catch(() => null);
     const error = new Error('Erreur lors du partage');
     (error as any).code = detail?.detail ?? response.status;
     throw error;
   }
 
   return (await response.json()) as ShareWorkoutResponse;
-};
-
-const safeReadJson = async (response: Response) => {
-  try {
-    return await response.json();
-  } catch (error) {
-    return null;
-  }
 };

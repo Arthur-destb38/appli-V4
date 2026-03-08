@@ -1,4 +1,4 @@
-import { getApiBaseUrl, getAuthHeaders } from '@/utils/api';
+import { apiCall } from '@/utils/api';
 
 export interface TrendingPost {
   share_id: string;
@@ -31,94 +31,44 @@ export interface SearchResult {
   posts: TrendingPost[];
 }
 
-/**
- * Récupérer la page Explore (trending + suggestions)
- */
 export async function getExplore(currentUserId?: string): Promise<ExploreData> {
-  const baseUrl = getApiBaseUrl();
-  const headers = await getAuthHeaders();
-  
-  let url = `${baseUrl}/explore`;
-  if (currentUserId) {
-    url += `?current_user_id=${currentUserId}`;
-  }
-
-  const response = await fetch(url, { method: 'GET', headers });
-
+  const params = currentUserId ? `?current_user_id=${currentUserId}` : '';
+  const response = await apiCall(`/explore${params}`);
   if (!response.ok) {
     throw new Error(`Failed to get explore: ${response.status}`);
   }
-
   return response.json();
 }
 
-/**
- * Récupérer les posts trending
- */
 export async function getTrendingPosts(limit = 20): Promise<TrendingPost[]> {
-  const baseUrl = getApiBaseUrl();
-  const headers = await getAuthHeaders();
-
-  const response = await fetch(`${baseUrl}/explore/trending?limit=${limit}`, {
-    method: 'GET',
-    headers,
-  });
-
+  const response = await apiCall(`/explore/trending?limit=${limit}`);
   if (!response.ok) {
     throw new Error(`Failed to get trending posts: ${response.status}`);
   }
-
   return response.json();
 }
 
-/**
- * Récupérer les suggestions d'utilisateurs
- */
 export async function getSuggestedUsers(currentUserId?: string, limit = 10): Promise<SuggestedUser[]> {
-  const baseUrl = getApiBaseUrl();
-  const headers = await getAuthHeaders();
-
-  let url = `${baseUrl}/explore/suggested-users?limit=${limit}`;
+  let url = `/explore/suggested-users?limit=${limit}`;
   if (currentUserId) {
     url += `&current_user_id=${currentUserId}`;
   }
-
-  const response = await fetch(url, { method: 'GET', headers });
-
+  const response = await apiCall(url);
   if (!response.ok) {
     throw new Error(`Failed to get suggested users: ${response.status}`);
   }
-
   return response.json();
 }
 
-/**
- * Rechercher utilisateurs et posts
- */
 export async function search(query: string, limit = 20): Promise<SearchResult> {
-  const baseUrl = getApiBaseUrl();
-  const headers = await getAuthHeaders();
-
-  const response = await fetch(
-    `${baseUrl}/explore/search?q=${encodeURIComponent(query)}&limit=${limit}`,
-    { method: 'GET', headers }
-  );
-
+  const response = await apiCall(`/explore/search?q=${encodeURIComponent(query)}&limit=${limit}`);
   if (!response.ok) {
     throw new Error(`Failed to search: ${response.status}`);
   }
-
   return response.json();
 }
 
-/**
- * Rechercher uniquement des utilisateurs (pour la messagerie)
- */
 export async function searchUsers(query: string, limit = 20): Promise<SuggestedUser[]> {
   const result = await search(query, limit);
   return result.users;
 }
-
-
-
-

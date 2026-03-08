@@ -21,6 +21,7 @@ export interface WorkoutExercise {
   order_index: number;
   planned_sets?: number | null;
   deleted_at?: number | null;
+  sets?: WorkoutSet[];
 }
 
 export interface WorkoutSet {

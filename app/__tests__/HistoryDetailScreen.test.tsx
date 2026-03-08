@@ -26,7 +26,7 @@ const baseWorkout: WorkoutWithRelations = {
     status: 'completed',
     created_at: Date.now(),
     updated_at: Date.now(),
-    server_id: 99,
+    server_id: '99',
   },
   exercises: [
     { id: 10, workout_id: 1, exercise_id: 'bench-press', order_index: 0 },

@@ -22,6 +22,7 @@ import { generateProgram, saveProgram } from '@/services/programsApi';
 import { Program } from '@/types/program';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useRouter } from 'expo-router';
 
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -32,6 +33,7 @@ const CreateProgramScreen: React.FC = () => {
   const router = useRouter();
   const { createDraft, addExercise, addSet, refresh, pullFromServer } = useWorkouts();
   const { isAuthenticated } = useAuth();
+  const { isPremium, aiProgramsRemaining, showPaywall, refreshStatus } = useSubscription();
   const { profile } = useUserProfile();
   const { t } = useTranslations();
 
@@ -47,6 +49,7 @@ const CreateProgramScreen: React.FC = () => {
   const [savingSessions, setSavingSessions] = useState(false);
   const [programSaved, setProgramSaved] = useState(false);
   const [showProfileSuggestions, setShowProfileSuggestions] = useState(true);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   // États avancés
   const [niveau, setNiveau] = useState('Intermédiaire');
@@ -100,7 +103,7 @@ const CreateProgramScreen: React.FC = () => {
       suggestions.push({
         type: 'frequency',
         message: `${t('suggestedFrequency')}: ${profile.training_frequency}x/${t('weeks')}`,
-        action: () => setFrequency(profile.training_frequency),
+        action: () => setFrequency(profile.training_frequency!),
         icon: 'calendar-outline'
       });
     }
@@ -183,6 +186,12 @@ const CreateProgramScreen: React.FC = () => {
   };
 
   const handleGenerate = async () => {
+    // Vérifier la limite de programmes AI pour les utilisateurs gratuits
+    if (!isPremium && aiProgramsRemaining <= 0) {
+      showPaywall();
+      return;
+    }
+
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     setLoading(true);
     setError(null);
@@ -204,10 +213,18 @@ const CreateProgramScreen: React.FC = () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : t('generationImpossible');
+      // Si le backend retourne une limite atteinte, afficher le paywall
+      if (errorMessage.includes('ai_program_limit_reached') || errorMessage.includes('403')) {
+        showPaywall();
+        setLoading(false);
+        return;
+      }
       setError(errorMessage);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
     } finally {
       setLoading(false);
+      // Rafraîchir le statut après génération
+      refreshStatus();
     }
   };
 
@@ -367,6 +384,7 @@ const CreateProgramScreen: React.FC = () => {
     index,
   }) => {
     const cardAnim = useRef(new Animated.Value(0)).current;
+    const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
       Animated.spring(cardAnim, {
@@ -377,6 +395,8 @@ const CreateProgramScreen: React.FC = () => {
         friction: 8,
       }).start();
     }, [cardAnim, index]);
+
+    const displayedSets = expanded ? session.sets : session.sets.slice(0, 4);
 
     return (
       <Animated.View
@@ -402,34 +422,84 @@ const CreateProgramScreen: React.FC = () => {
                 <Text style={[styles.sessionFocus, { color: theme.colors.textSecondary }]}>
                   {session.focus}
                 </Text>
+                {(session.estimated_minutes ?? 0) > 0 && (
+                  <>
+                    <Ionicons name="time-outline" size={12} color={theme.colors.textSecondary} style={{ marginLeft: 8 }} />
+                    <Text style={[styles.sessionFocus, { color: theme.colors.textSecondary }]}>
+                      ~{session.estimated_minutes} min
+                    </Text>
+                  </>
+                )}
               </View>
             </View>
           </View>
 
-          <View style={styles.exerciseList}>
-            {session.sets.slice(0, 4).map((s, idx) => (
-              <View
-                key={`${session.day_index}-${s.order_index}-${idx}`}
-                style={[styles.exerciseRow, { borderBottomColor: theme.colors.border }]}
-              >
-                <View style={[styles.exerciseDot, { backgroundColor: theme.colors.accent }]} />
-                <Text
-                  style={[styles.exerciseName, { color: theme.colors.textPrimary }]}
-                  numberOfLines={1}
+          <Pressable
+            onPress={() => {
+              Haptics.selectionAsync().catch(() => {});
+              setExpanded((v) => !v);
+            }}
+          >
+            <View style={styles.exerciseList}>
+              {displayedSets.map((s, idx) => (
+                <View
+                  key={`${session.day_index}-${s.order_index}-${idx}`}
+                  style={[styles.exerciseRow, { borderBottomColor: theme.colors.border }]}
                 >
-                  {s.exercise_slug.replace(/-/g, ' ')}
+                  <View style={[styles.exerciseDot, { backgroundColor: theme.colors.accent }]} />
+                  <Text
+                    style={[styles.exerciseName, { color: theme.colors.textPrimary }]}
+                    numberOfLines={1}
+                  >
+                    {s.exercise_slug.replace(/-/g, ' ')}
+                  </Text>
+                  {expanded ? (
+                    <View style={styles.exerciseDetails}>
+                      {s.notes ? (
+                        <View style={[styles.detailBadge, { backgroundColor: theme.colors.surfaceMuted }]}>
+                          <Text style={[styles.detailBadgeText, { color: theme.colors.textPrimary }]}>
+                            {s.notes}
+                          </Text>
+                        </View>
+                      ) : null}
+                      <View style={[styles.detailBadge, { backgroundColor: theme.colors.surfaceMuted }]}>
+                        <Text style={[styles.detailBadgeText, { color: theme.colors.textPrimary }]}>
+                          {typeof s.reps === 'number' ? `${s.reps}` : s.reps} reps
+                        </Text>
+                      </View>
+                      {s.rpe != null && (
+                        <View style={[styles.detailBadge, { backgroundColor: theme.colors.accent + '20' }]}>
+                          <Text style={[styles.detailBadgeText, { color: theme.colors.accent }]}>
+                            RPE {s.rpe}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  ) : (
+                    <Text style={[styles.exerciseReps, { color: theme.colors.textSecondary }]}>
+                      {typeof s.reps === 'number' ? `${s.reps}` : s.reps}
+                    </Text>
+                  )}
+                </View>
+              ))}
+              {!expanded && session.sets.length > 4 && (
+                <Text style={[styles.moreText, { color: theme.colors.textSecondary }]}>
+                  +{session.sets.length - 4} {session.sets.length - 4 > 1 ? t('exercisesMore') : t('exerciseMore')}
                 </Text>
-                <Text style={[styles.exerciseReps, { color: theme.colors.textSecondary }]}>
-                  {typeof s.reps === 'number' ? `${s.reps}` : s.reps}
-                </Text>
-              </View>
-            ))}
-            {session.sets.length > 4 && (
-              <Text style={[styles.moreText, { color: theme.colors.textSecondary }]}>
-                +{session.sets.length - 4} {session.sets.length - 4 > 1 ? t('exercisesMore') : t('exerciseMore')}
+              )}
+            </View>
+
+            <View style={styles.expandToggle}>
+              <Ionicons
+                name={expanded ? 'chevron-up' : 'chevron-down'}
+                size={16}
+                color={theme.colors.accent}
+              />
+              <Text style={[styles.expandToggleText, { color: theme.colors.accent }]}>
+                {expanded ? t('hideDetails') : t('seeDetails')}
               </Text>
-            )}
-          </View>
+            </View>
+          </Pressable>
 
           <View style={styles.sessionActions}>
             <Pressable
@@ -499,6 +569,55 @@ const CreateProgramScreen: React.FC = () => {
         </LinearGradient>
 
         <View style={styles.content}>
+          {/* Section Comment ça marche */}
+          <Pressable
+            style={[styles.howItWorksToggle, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+            onPress={() => {
+              Haptics.selectionAsync().catch(() => {});
+              setShowHowItWorks((v) => !v);
+            }}
+          >
+            <View style={styles.howItWorksToggleLeft}>
+              <Ionicons name="school-outline" size={20} color={theme.colors.accent} />
+              <Text style={[styles.howItWorksToggleText, { color: theme.colors.textPrimary }]}>
+                {t('howItWorksTitle')}
+              </Text>
+            </View>
+            <Ionicons
+              name={showHowItWorks ? 'chevron-up' : 'chevron-down'}
+              size={18}
+              color={theme.colors.textSecondary}
+            />
+          </Pressable>
+
+          {showHowItWorks && (
+            <View style={[styles.howItWorksCard, { backgroundColor: theme.colors.accent + '08', borderColor: theme.colors.accent + '25' }]}>
+              <Text style={[styles.howItWorksIntro, { color: theme.colors.textSecondary }]}>
+                {t('howItWorksSubtitle')}
+              </Text>
+              {[
+                { icon: 'analytics-outline' as const, title: t('howItWorks1Title'), desc: t('howItWorks1Desc') },
+                { icon: 'barbell-outline' as const, title: t('howItWorks2Title'), desc: t('howItWorks2Desc') },
+                { icon: 'trending-up-outline' as const, title: t('howItWorks3Title'), desc: t('howItWorks3Desc') },
+                { icon: 'options-outline' as const, title: t('howItWorks4Title'), desc: t('howItWorks4Desc') },
+              ].map((item, idx) => (
+                <View key={idx} style={styles.howItWorksItem}>
+                  <View style={[styles.howItWorksIconBg, { backgroundColor: theme.colors.accent + '15' }]}>
+                    <Ionicons name={item.icon} size={18} color={theme.colors.accent} />
+                  </View>
+                  <View style={styles.howItWorksItemText}>
+                    <Text style={[styles.howItWorksItemTitle, { color: theme.colors.textPrimary }]}>
+                      {item.title}
+                    </Text>
+                    <Text style={[styles.howItWorksItemDesc, { color: theme.colors.textSecondary }]}>
+                      {item.desc}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
           {/* Section Objectif */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -649,6 +768,9 @@ const CreateProgramScreen: React.FC = () => {
                 }}
               />
             </View>
+            <Text style={[styles.helperText, { color: theme.colors.textSecondary }]}>
+              {t('frequencyHelper')} {durationWeeks >= 5 ? t('durationHelper') : ''}
+            </Text>
           </View>
 
           {/* Section Niveau */}
@@ -690,6 +812,9 @@ const CreateProgramScreen: React.FC = () => {
                 );
               })}
             </View>
+            <Text style={[styles.helperText, { color: theme.colors.textSecondary }]}>
+              {t('levelHelper')}
+            </Text>
           </View>
 
           {/* Section Méthode */}
@@ -737,6 +862,9 @@ const CreateProgramScreen: React.FC = () => {
                 );
               })}
             </View>
+            <Text style={[styles.helperText, { color: theme.colors.textSecondary }]}>
+              {t('methodHelper')}
+            </Text>
           </View>
 
           {/* Section Équipement */}
@@ -935,6 +1063,68 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 8,
+  },
+  howItWorksToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 12,
+  },
+  howItWorksToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  howItWorksToggleText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  howItWorksCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 16,
+    gap: 14,
+    marginBottom: 24,
+  },
+  howItWorksIntro: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontStyle: 'italic',
+  },
+  howItWorksItem: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  howItWorksIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  howItWorksItemText: {
+    flex: 1,
+    gap: 3,
+  },
+  howItWorksItemTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  howItWorksItemDesc: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  helperText: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 8,
+    paddingHorizontal: 4,
+    fontStyle: 'italic',
   },
   section: {
     marginBottom: 24,
@@ -1309,6 +1499,31 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 4,
     marginLeft: 16,
+  },
+  exerciseDetails: {
+    flexDirection: 'row',
+    gap: 6,
+    flexShrink: 0,
+  },
+  detailBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  detailBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  expandToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingTop: 8,
+  },
+  expandToggleText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   sessionActions: {
     flexDirection: 'row',

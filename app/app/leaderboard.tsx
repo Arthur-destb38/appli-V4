@@ -28,6 +28,7 @@ import {
   getLikesLeaderboard,
   getFollowersLeaderboard,
 } from '@/services/leaderboardApi';
+import { getAvatarGradient } from '@/utils/colors';
 
 const CURRENT_USER_ID = 'guest-user';
 
@@ -43,19 +44,6 @@ const PERIODS: { key: LeaderboardPeriod }[] = [
   { key: 'month' },
   { key: 'all' },
 ];
-
-const AVATAR_COLORS: [string, string][] = [
-  ['#6366f1', '#8b5cf6'],
-  ['#ec4899', '#f43f5e'],
-  ['#10b981', '#14b8a6'],
-  ['#f59e0b', '#f97316'],
-  ['#3b82f6', '#6366f1'],
-];
-
-const getAvatarGradient = (username: string): [string, string] => {
-  const index = username.charCodeAt(0) % AVATAR_COLORS.length;
-  return AVATAR_COLORS[index];
-};
 
 // Composant Podium
 const Podium: React.FC<{
