@@ -1074,7 +1074,6 @@ export const translations = {
     // Premium / Paywall
     premiumActivated: 'Premium activé !',
     premiumActivatedDesc: 'Tu as maintenant accès à toutes les fonctionnalités.',
-    error: 'Erreur',
     purchaseError: 'Impossible de finaliser l\'achat.',
     restored: 'Achat restauré',
     restoredDesc: 'Ton abonnement a été restauré avec succès.',
@@ -1096,7 +1095,6 @@ export const translations = {
     subscriptionLegal: 'L\'abonnement se renouvelle automatiquement. Tu peux annuler à tout moment depuis les réglages de ton store.',
     premiumFeature: 'Fonctionnalité Premium',
     upgradeToPremium: 'Passer à Premium',
-    subscriptionLabel: 'Abonnement',
     currentPlan: 'Plan actuel',
     freePlan: 'Gratuit',
     premiumPlan: 'Premium',
@@ -2073,7 +2071,6 @@ export const translations = {
     // Premium / Paywall
     premiumActivated: 'Premium activated!',
     premiumActivatedDesc: 'You now have access to all features.',
-    error: 'Error',
     purchaseError: 'Unable to complete the purchase.',
     restored: 'Purchase restored',
     restoredDesc: 'Your subscription has been successfully restored.',
@@ -2095,7 +2092,6 @@ export const translations = {
     subscriptionLegal: 'Subscription renews automatically. You can cancel anytime from your store settings.',
     premiumFeature: 'Premium Feature',
     upgradeToPremium: 'Upgrade to Premium',
-    subscriptionLabel: 'Subscription',
     currentPlan: 'Current plan',
     freePlan: 'Free',
     premiumPlan: 'Premium',
