@@ -204,7 +204,11 @@ def create_program(
     # Set the user_id to the authenticated user
     payload.user_id = current_user.id
     program = _upsert_program(session, payload)
-    session.commit()
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="create_program_failed")
     session.refresh(program)
 
     sessions = session.exec(select(ProgramSession).where(ProgramSession.program_id == program.id)).all()
@@ -325,7 +329,11 @@ def generate_program(
     current_user.ai_programs_generated += 1
     session.add(current_user)
 
-    session.commit()
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="generate_program_failed")
     session.refresh(program)
 
     # Retourner le programme créé

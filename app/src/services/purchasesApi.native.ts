@@ -1,8 +1,8 @@
 import { Platform } from 'react-native';
 import Purchases from 'react-native-purchases';
 
-const REVENUECAT_IOS_KEY = 'appl_REPLACE_WITH_YOUR_IOS_KEY';
-const REVENUECAT_ANDROID_KEY = 'goog_REPLACE_WITH_YOUR_ANDROID_KEY';
+const REVENUECAT_IOS_KEY = 'appl_RsTmVWKIvJFrCMSBhtdlVuoFbOL';
+const REVENUECAT_ANDROID_KEY = 'test_OQGCIamnOStYOysxXgRotpuduKY';
 
 let initialized = false;
 

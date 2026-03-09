@@ -47,7 +47,11 @@ def apply_as_coach(
         hourly_rate=body.hourly_rate,
     )
     session.add(coach)
-    session.commit()
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="apply_coach_failed")
     session.refresh(coach)
 
     return _coach_to_read(coach)
@@ -141,7 +145,11 @@ def create_template(
         full_program_data=body.full_program_data,
     )
     session.add(template)
-    session.commit()
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="create_template_failed")
     session.refresh(template)
     return template
 
@@ -233,7 +241,11 @@ def update_template(
             setattr(template, field, value)
 
     session.add(template)
-    session.commit()
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="update_template_failed")
     session.refresh(template)
     return template
 
@@ -277,7 +289,11 @@ def purchase_template(
     template.purchase_count += 1
     session.add(template)
 
-    session.commit()
+    try:
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise HTTPException(status_code=500, detail="purchase_failed")
     session.refresh(purchase)
     return purchase
 
