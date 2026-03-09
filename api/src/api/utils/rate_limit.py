@@ -13,7 +13,7 @@ def is_rate_limited(session: Session, username: str, ip_address: str) -> bool:
         return False
     
     max_attempts = int(os.getenv("MAX_LOGIN_ATTEMPTS", "5"))
-    cooldown_minutes = int(os.getenv("LOGIN_COOLDOWN_MINUTES", "15"))
+    cooldown_minutes = int(os.getenv("LOGIN_COOLDOWN_MINUTES", "2"))
     
     # Check attempts in the last cooldown period
     cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=cooldown_minutes)
@@ -58,9 +58,9 @@ def get_remaining_cooldown(session: Session, username: str, ip_address: str) -> 
     if not _is_rate_limiting_enabled():
         return None
     
-    cooldown_minutes = int(os.getenv("LOGIN_COOLDOWN_MINUTES", "15"))
+    cooldown_minutes = int(os.getenv("LOGIN_COOLDOWN_MINUTES", "2"))
     cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=cooldown_minutes)
-    
+
     # Get the most recent failed attempt
     recent_attempt = session.exec(
         select(LoginAttempt)
