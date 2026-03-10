@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 // Ce fichier n'importe JAMAIS react-native-purchases directement.
 // Sur iOS/Android, on passe par purchasesApi.native.ts via le hook.
 // Sur web, tout est stub (no-op).
