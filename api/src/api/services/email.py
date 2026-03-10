@@ -1,11 +1,10 @@
 """Email service for sending verification and reset emails."""
 import os
-import smtplib
 import threading
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from typing import Optional
 import secrets
+
+import httpx
 
 
 def generate_verification_token() -> str:
@@ -15,30 +14,38 @@ def generate_verification_token() -> str:
 
 def is_email_enabled() -> bool:
     """Check if email service is configured."""
+    return bool(os.getenv("RESEND_API_KEY") or os.getenv("SMTP_PASSWORD"))
+
+
+def _get_api_key() -> str:
+    return os.getenv("RESEND_API_KEY") or os.getenv("SMTP_PASSWORD", "")
+
+
+def _send_email_sync(to_email: str, subject: str, html_content: str, text_content: Optional[str]) -> None:
+    """Send email via Resend HTTP API (runs in a background thread)."""
     try:
-        return all([
-            os.getenv("SMTP_HOST"),
-            os.getenv("SMTP_USER"),
-            os.getenv("SMTP_PASSWORD"),
-        ])
-    except:
-        return False
+        api_key = _get_api_key()
+        from_email = os.getenv("FROM_EMAIL", "onboarding@resend.dev")
 
+        payload: dict = {
+            "from": from_email,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_content,
+        }
+        if text_content:
+            payload["text"] = text_content
 
-def _send_email_sync(to_email: str, subject: str, msg: MIMEMultipart) -> None:
-    """Actually send the email (runs in a background thread)."""
-    try:
-        smtp_host = os.getenv("SMTP_HOST")
-        smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        smtp_user = os.getenv("SMTP_USER")
-        smtp_password = os.getenv("SMTP_PASSWORD")
-
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.send_message(msg)
-
-        print(f"✅ Email sent to {to_email}: {subject}")
+        response = httpx.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json=payload,
+            timeout=15,
+        )
+        if response.status_code in (200, 201):
+            print(f"✅ Email sent to {to_email}: {subject}")
+        else:
+            print(f"❌ Resend error {response.status_code}: {response.text}")
     except Exception as e:
         print(f"❌ Failed to send email to {to_email}: {e}")
 
@@ -49,29 +56,13 @@ def send_email(to_email: str, subject: str, html_content: str, text_content: Opt
         print(f"📧 Email disabled - Would send to {to_email}: {subject}")
         return True
 
-    try:
-        smtp_user = os.getenv("SMTP_USER")
-        from_email = os.getenv("FROM_EMAIL", smtp_user)
+    threading.Thread(
+        target=_send_email_sync,
+        args=(to_email, subject, html_content, text_content),
+        daemon=True,
+    ).start()
 
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = from_email
-        msg["To"] = to_email
-
-        if text_content:
-            msg.attach(MIMEText(text_content, "plain"))
-        msg.attach(MIMEText(html_content, "html"))
-
-        threading.Thread(
-            target=_send_email_sync,
-            args=(to_email, subject, msg),
-            daemon=True,
-        ).start()
-
-        return True
-    except Exception as e:
-        print(f"❌ Failed to prepare email to {to_email}: {e}")
-        return True
+    return True
 
 
 def send_verification_email(email: str, username: str, token: str) -> bool:
