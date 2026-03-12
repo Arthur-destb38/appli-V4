@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Animated,
   Easing,
-  FlatList,
+  SectionList,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -22,7 +22,6 @@ import { fetchWorkouts, WorkoutWithRelations } from '@/db/workouts-repository';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { useTranslations } from '@/hooks/usePreferences';
 import { LoadingState, ErrorState, EmptyState } from '@/components/StateView';
-import { HistoryProgressChart } from '@/components/HistoryProgressChart';
 import { ExerciseChargesChart } from '@/components/ExerciseChargesChart';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -392,11 +391,9 @@ export const HistoryScreen: React.FC = () => {
     </View>
   );
 
-  const renderItem = useCallback(
-    ({ item, index }: { item: HistoryItem; index: number }) => (
-      <HistoryCard item={item} index={index} />
-    ),
-    [navigation, theme]
+  // Not memoized: avoids stale closure where HistoryCard captures an old `t` before translations are ready
+  const renderItem = ({ item, index }: { item: HistoryItem; index: number }) => (
+    <HistoryCard item={item} index={index} />
   );
 
   // Calculer les données hebdomadaires pour le graphique
@@ -438,6 +435,31 @@ export const HistoryScreen: React.FC = () => {
       label: week.label,
     }));
   }, [data]);
+
+  // Last 14 days activity grid (replaces bar chart)
+  const lastDays = useMemo(() => {
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      const dayStart = d.getTime();
+      const dayEnd = dayStart + 86400000;
+      const hasWorkout = data.some(item => item.date >= dayStart && item.date < dayEnd);
+      days.push({
+        hasWorkout,
+        dayLabel: d.toLocaleDateString('fr-FR', { weekday: 'narrow' }),
+        isToday: i === 0,
+      });
+    }
+    return days;
+  }, [data]);
+
+  // Sections for SectionList (grouped by period)
+  const sections = useMemo(
+    () => Object.entries(groupedData).map(([title, data]) => ({ title, data })),
+    [groupedData]
+  );
 
   useEffect(() => {
     const now = Date.now();
@@ -518,60 +540,82 @@ export const HistoryScreen: React.FC = () => {
     }
 
     return (
-      <FlatList
-        data={filtered}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => `${item.id}-${item.client_id ?? 'local'}`}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#10b981"
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#10b981" />
         }
-        renderItem={renderItem}
+        renderItem={({ item, index }) => (
+          <>
+            <HistoryCard item={item} index={index} />
+            <View style={{ height: 12 }} />
+          </>
+        )}
+        renderSectionHeader={({ section }) => (
+          <SectionHeader title={section.title} count={section.data.length} />
+        )}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.listContent, { paddingBottom: insets.bottom + 24 }]}
-        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <>
-            {showCharts && weeklyData.length > 0 && (
-              <Pressable 
-                style={[styles.chartCard, { backgroundColor: theme.colors.surface }]}
-                onPress={() => setShowCharts(!showCharts)}
-              >
-                <View style={styles.chartHeader}>
-                  <View style={styles.chartTitleRow}>
-                    <LinearGradient
-                      colors={['#10b981', '#059669']}
-                      style={styles.chartIcon}
-                    >
-                      <Ionicons name="trending-up" size={16} color="#FFFFFF" />
-                    </LinearGradient>
-                    <Text style={[styles.chartTitle, { color: theme.colors.textPrimary }]}>
-                      {t('weeklyProgress')}
-                    </Text>
-                  </View>
-                  <View style={[styles.chartBadge, { backgroundColor: '#10b98120' }]}>
-                    <Ionicons name="stats-chart" size={12} color="#10b981" />
-                    <Text style={[styles.chartBadgeText, { color: '#10b981' }]}>{t('stableLabel')}</Text>
-                  </View>
-                </View>
-                <HistoryProgressChart
-                  data={weeklyData}
-                  title=""
-                  unit="kg"
-                  type="volume"
-                />
-              </Pressable>
-            )}
-            {showCharts && rawWorkouts.length > 0 && (
+            {/* Activity grid — last 14 days */}
+            {showCharts && (
               <View style={[styles.chartCard, { backgroundColor: theme.colors.surface }]}>
                 <View style={styles.chartHeader}>
                   <View style={styles.chartTitleRow}>
-                    <LinearGradient
-                      colors={['#8b5cf6', '#7c3aed']}
-                      style={styles.chartIcon}
-                    >
+                    <LinearGradient colors={['#10b981', '#059669']} style={styles.chartIcon}>
+                      <Ionicons name="calendar" size={16} color="#FFFFFF" />
+                    </LinearGradient>
+                    <Text style={[styles.chartTitle, { color: theme.colors.textPrimary }]}>
+                      Activité — 14 derniers jours
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.activityGrid}>
+                  {lastDays.map((day, i) => (
+                    <View key={i} style={styles.activityDay}>
+                      <View
+                        style={[
+                          styles.activityDot,
+                          {
+                            backgroundColor: day.hasWorkout
+                              ? '#10b981'
+                              : theme.colors.surfaceMuted,
+                            borderColor: day.isToday ? '#10b981' : 'transparent',
+                            borderWidth: day.isToday ? 2 : 0,
+                          },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.activityDayLabel,
+                          { color: day.isToday ? '#10b981' : theme.colors.textSecondary },
+                        ]}
+                      >
+                        {day.dayLabel}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+                {/* Streak */}
+                {data.length > 0 && (
+                  <View style={styles.streakRow}>
+                    <Text style={[styles.streakText, { color: theme.colors.textSecondary }]}>
+                      {lastDays.filter(d => d.hasWorkout).length} séance{lastDays.filter(d => d.hasWorkout).length > 1 ? 's' : ''} sur 14 jours
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* Charges par exercice */}
+            {showCharts && rawWorkouts.length > 1 && (
+              <View style={[styles.chartCard, { backgroundColor: theme.colors.surface }]}>
+                <View style={styles.chartHeader}>
+                  <View style={styles.chartTitleRow}>
+                    <LinearGradient colors={['#8b5cf6', '#7c3aed']} style={styles.chartIcon}>
                       <Ionicons name="barbell" size={16} color="#FFFFFF" />
                     </LinearGradient>
                     <Text style={[styles.chartTitle, { color: theme.colors.textPrimary }]}>
@@ -579,24 +623,21 @@ export const HistoryScreen: React.FC = () => {
                     </Text>
                   </View>
                 </View>
-                <ExerciseChargesChart
-                  workouts={rawWorkouts}
-                  title=""
-                />
+                <ExerciseChargesChart workouts={rawWorkouts} title="" />
               </View>
             )}
 
-            {/* Section headers with grouped data */}
-            {Object.entries(groupedData).length > 0 && (
+            {/* Results count */}
+            {sections.length > 0 && (
               <Text style={[styles.resultsCount, { color: theme.colors.textSecondary }]}>
-                {t('workoutsFoundCount', { count: filtered.length, plural: filtered.length > 1 ? 's' : '' })}
+                {filtered.length} séance{filtered.length > 1 ? 's' : ''} trouvée{filtered.length > 1 ? 's' : ''}
               </Text>
             )}
           </>
         }
       />
     );
-  }, [error, filtered, isLoading, onRefresh, renderItem, refreshing, load, weeklyData, rawWorkouts, showCharts, theme, searchQuery, insets.bottom, groupedData, router]);
+  }, [error, filtered, sections, isLoading, onRefresh, refreshing, load, lastDays, rawWorkouts, showCharts, theme, searchQuery, insets.bottom, router, t]);
 
   const gradientColors: [string, string, string] = isDark 
     ? ['#0d1a14', '#0d1510', '#0f1218'] 
@@ -1194,5 +1235,35 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
+  },
+
+  // Activity grid
+  activityGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 4,
+  },
+  activityDay: {
+    alignItems: 'center',
+    gap: 5,
+    flex: 1,
+  },
+  activityDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+  },
+  activityDayLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+  },
+  streakRow: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  streakText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
