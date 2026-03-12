@@ -1,5 +1,6 @@
 """API endpoints pour la découverte (Explore)."""
-from fastapi import APIRouter, Depends, Query
+import os
+from fastapi import APIRouter, Depends, Query, Header, HTTPException
 from pydantic import BaseModel
 from sqlmodel import Session, select, func
 from typing import Optional
@@ -254,6 +255,25 @@ def search(
         users=matching_users[:limit],
         posts=matching_posts[:limit],
     )
+
+
+@router.delete("/cleanup-demo-users", status_code=200)
+def cleanup_demo_users(
+    x_api_key: str = Header(...),
+    session: Session = Depends(get_session),
+):
+    """Supprime les comptes démo sauf 'demo'. Protégé par SALLE_API_KEY."""
+    if x_api_key != os.environ.get("SALLE_API_KEY", ""):
+        raise HTTPException(status_code=403, detail="forbidden")
+    demo_ids = [f"demo-user-{i}" for i in range(1, 8)]
+    deleted = []
+    for uid in demo_ids:
+        user = session.get(User, uid)
+        if user:
+            session.delete(user)
+            deleted.append(uid)
+    session.commit()
+    return {"deleted": deleted}
 
 
 @router.get("", response_model=ExploreResponse)
