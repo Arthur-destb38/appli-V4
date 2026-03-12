@@ -8,7 +8,7 @@ from typing import Optional
 
 from ..db import get_session
 from ..models import User, Share, Follower, Like, Notification
-from ..utils.dependencies import get_current_user as _get_current_user
+from ..utils.dependencies import get_current_user as _get_current_user, get_current_user_optional as _get_current_user_optional
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -44,30 +44,30 @@ class UserPostsResponse(BaseModel):
 @router.get("/{user_id}", response_model=ProfileResponse)
 def get_profile(
     user_id: str,
-    current_user_id: Optional[str] = None,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: Optional[User] = Depends(_get_current_user_optional),
 ) -> ProfileResponse:
     """Récupérer le profil complet d'un utilisateur."""
-    
+
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="user_not_found")
-    
+
     # Compter les posts (shares)
     posts_count = session.exec(
         select(func.count()).select_from(Share).where(Share.owner_id == user_id)
     ).one()
-    
+
     # Compter les followers
     followers_count = session.exec(
         select(func.count()).select_from(Follower).where(Follower.followed_id == user_id)
     ).one()
-    
+
     # Compter les following
     following_count = session.exec(
         select(func.count()).select_from(Follower).where(Follower.follower_id == user_id)
     ).one()
-    
+
     # Compter les likes reçus sur tous ses posts
     user_shares = session.exec(select(Share.share_id).where(Share.owner_id == user_id)).all()
     total_likes = 0
@@ -75,8 +75,9 @@ def get_profile(
         total_likes = session.exec(
             select(func.count()).select_from(Like).where(Like.share_id.in_(user_shares))
         ).one()
-    
-    # Vérifier si l'utilisateur courant suit ce profil
+
+    # Vérifier si l'utilisateur courant suit ce profil (via auth token)
+    current_user_id = current_user.id if current_user else None
     is_following = False
     if current_user_id and current_user_id != user_id:
         follow = session.exec(
@@ -85,7 +86,7 @@ def get_profile(
             .where(Follower.followed_id == user_id)
         ).first()
         is_following = follow is not None
-    
+
     return ProfileResponse(
         id=user.id,
         username=user.username,
@@ -131,7 +132,7 @@ def update_profile(
     session.refresh(user)
     
     # Retourner le profil mis à jour
-    return get_profile(user_id, user_id, session)
+    return get_profile(user_id, session, current_user)
 
 
 @router.get("/{user_id}/posts", response_model=UserPostsResponse)

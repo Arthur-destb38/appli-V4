@@ -8,6 +8,8 @@ import {
   TextInput,
   Alert,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -608,173 +610,132 @@ export default function ObjectivesScreen() {
       <Modal
         visible={addModal}
         transparent
-        animationType="fade"
+        animationType="slide"
         onRequestClose={() => setAddModal(false)}
       >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setAddModal(false)}
+        <Pressable style={styles.sheetOverlay} onPress={() => setAddModal(false)} />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.sheetWrapper}
         >
-          <ScrollView contentContainerStyle={styles.addModalContainer}>
-            <Pressable
-              style={[styles.addModalCard, {
-                backgroundColor: theme.colors.surface,
-                borderColor: theme.colors.border
+          <View style={[styles.sheetCard, { backgroundColor: theme.colors.surface }]}>
+            <View style={[styles.sheetHandle, { backgroundColor: theme.colors.border }]} />
+
+            {/* En-tête avec couleur sélectionnée */}
+            <View style={styles.sheetHeader}>
+              <View style={[styles.sheetIconBadge, { backgroundColor: newObjective.color + '22' }]}>
+                <Ionicons name="trophy-outline" size={22} color={newObjective.color} />
+              </View>
+              <Text style={[styles.sheetTitle, { color: theme.colors.textPrimary }]}>
+                {t('newObjectiveTitle')}
+              </Text>
+            </View>
+
+            {/* Titre de l'objectif */}
+            <TextInput
+              style={[styles.sheetTitleInput, {
+                backgroundColor: theme.colors.surfaceMuted,
+                borderColor: theme.colors.border,
+                color: theme.colors.textPrimary,
               }]}
-              onPress={(e) => e.stopPropagation()}
-            >
-              <View style={styles.modalHeader}>
-                <Text style={[styles.modalTitle, { color: theme.colors.textPrimary }]}>
-                  {t('newObjectiveTitle')}
-                </Text>
-                <Pressable
-                  onPress={() => setAddModal(false)}
-                  style={styles.closeButton}
-                >
-                  <Ionicons name="close" size={24} color={theme.colors.textSecondary} />
-                </Pressable>
-              </View>
+              value={newObjective.title}
+              onChangeText={(text) => setNewObjective(prev => ({ ...prev, title: text }))}
+              placeholder={t('titlePlaceholder')}
+              placeholderTextColor={theme.colors.textSecondary}
+              autoFocus
+            />
 
-              <View style={styles.formSection}>
-                <Text style={[styles.formLabel, { color: theme.colors.textPrimary }]}>
-                  {t('titleRequired')}
-                </Text>
-                <TextInput
-                  style={[styles.formInput, {
-                    backgroundColor: theme.colors.surfaceMuted,
-                    borderColor: theme.colors.border,
-                    color: theme.colors.textPrimary,
-                  }]}
-                  value={newObjective.title}
-                  onChangeText={(text) => setNewObjective(prev => ({ ...prev, title: text }))}
-                  placeholder={t('titlePlaceholder')}
-                  placeholderTextColor={theme.colors.textSecondary}
-                />
-              </View>
-
-              <View style={styles.formSection}>
-                <Text style={[styles.formLabel, { color: theme.colors.textPrimary }]}>
-                  {t('descriptionLabel')}
-                </Text>
-                <TextInput
-                  style={[styles.formInput, {
-                    backgroundColor: theme.colors.surfaceMuted,
-                    borderColor: theme.colors.border,
-                    color: theme.colors.textPrimary,
-                  }]}
-                  value={newObjective.description}
-                  onChangeText={(text) => setNewObjective(prev => ({ ...prev, description: text }))}
-                  placeholder={t('objectiveDescriptionPlaceholder')}
-                  placeholderTextColor={theme.colors.textSecondary}
-                  multiline
-                />
-              </View>
-
-              <View style={styles.formRow}>
-                <View style={[styles.formSection, { flex: 1, marginRight: 8 }]}>
-                  <Text style={[styles.formLabel, { color: theme.colors.textPrimary }]}>
-                    {t('targetRequired')}
-                  </Text>
-                  <TextInput
-                    style={[styles.formInput, {
-                      backgroundColor: theme.colors.surfaceMuted,
-                      borderColor: theme.colors.border,
-                      color: theme.colors.textPrimary,
-                    }]}
-                    value={newObjective.target}
-                    onChangeText={(text) => setNewObjective(prev => ({ ...prev, target: text }))}
-                    keyboardType="number-pad"
-                    placeholder="100"
-                    placeholderTextColor={theme.colors.textSecondary}
-                  />
-                </View>
-
-                <View style={[styles.formSection, { flex: 1, marginLeft: 8 }]}>
-                  <Text style={[styles.formLabel, { color: theme.colors.textPrimary }]}>
-                    {t('unitLabel')}
-                  </Text>
-                  <View style={[styles.unitSelector, { backgroundColor: theme.colors.surfaceMuted }]}>
-                    {[
-                      { key: 'kg', label: 'kg' },
-                      { key: 'reps', label: 'reps' },
-                      { key: 'min', label: 'min' },
-                      { key: 'km', label: 'km' },
-                      { key: 'days', label: t('unitDays') },
-                    ].map((unitOption) => (
-                      <Pressable
-                        key={unitOption.key}
-                        style={[
-                          styles.unitOption,
-                          newObjective.unit === unitOption.key && { backgroundColor: theme.colors.accent }
-                        ]}
-                        onPress={() => setNewObjective(prev => ({ ...prev, unit: unitOption.key }))}
-                      >
-                        <Text style={[
-                          styles.unitText,
-                          { color: newObjective.unit === unitOption.key ? '#fff' : theme.colors.textPrimary }
-                        ]}>
-                          {unitOption.label}
-                        </Text>
-                      </Pressable>
-                    ))}
-                  </View>
-                </View>
-              </View>
-
-              <View style={styles.formSection}>
-                <Text style={[styles.formLabel, { color: theme.colors.textPrimary }]}>
-                  {t('colorLabelObj')}
-                </Text>
-                <View style={styles.colorSelector}>
-                  {['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#f97316', '#06b6d4', '#84cc16'].map((color) => (
+            {/* Objectif numérique + Unités */}
+            <View style={styles.goalRow}>
+              <TextInput
+                style={[styles.goalInput, {
+                  backgroundColor: theme.colors.surfaceMuted,
+                  borderColor: newObjective.color,
+                  color: newObjective.color,
+                }]}
+                value={newObjective.target}
+                onChangeText={(text) => setNewObjective(prev => ({ ...prev, target: text }))}
+                keyboardType="number-pad"
+                placeholder="0"
+                placeholderTextColor={theme.colors.textSecondary}
+              />
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.unitScroll}
+                contentContainerStyle={styles.unitScrollContent}
+              >
+                {[
+                  { key: 'kg', label: 'kg' },
+                  { key: 'reps', label: 'reps' },
+                  { key: 'min', label: 'min' },
+                  { key: 'km', label: 'km' },
+                  { key: 'days', label: t('unitDays') },
+                ].map((unitOption) => {
+                  const active = newObjective.unit === unitOption.key;
+                  return (
                     <Pressable
-                      key={color}
+                      key={unitOption.key}
                       style={[
-                        styles.colorOption,
-                        { backgroundColor: color },
-                        newObjective.color === color && styles.colorOptionSelected
+                        styles.unitPill,
+                        active
+                          ? { backgroundColor: newObjective.color }
+                          : { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border, borderWidth: 1 }
                       ]}
-                      onPress={() => setNewObjective(prev => ({ ...prev, color }))}
+                      onPress={() => setNewObjective(prev => ({ ...prev, unit: unitOption.key }))}
                     >
-                      {newObjective.color === color && (
-                        <Ionicons name="checkmark" size={16} color="#fff" />
-                      )}
+                      <Text style={[styles.unitPillText, { color: active ? '#fff' : theme.colors.textSecondary }]}>
+                        {unitOption.label}
+                      </Text>
                     </Pressable>
-                  ))}
-                </View>
-              </View>
+                  );
+                })}
+              </ScrollView>
+            </View>
 
-              <View style={styles.modalActions}>
-                <Pressable
-                  style={[styles.modalButton, styles.modalButtonSecondary, {
-                    backgroundColor: theme.colors.surfaceMuted,
-                    borderColor: theme.colors.border,
-                  }]}
-                  onPress={() => setAddModal(false)}
-                >
-                  <Text style={[styles.modalButtonText, { color: theme.colors.textPrimary }]}>
-                    {t('cancelLabel')}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.modalButton, {
-                    backgroundColor: theme.colors.accent,
-                    opacity: (!newObjective.title.trim() || !newObjective.target.trim()) ? 0.5 : 1
-                  }]}
-                  onPress={() => {
-                    console.log('Create button pressed');
-                    handleAddObjective();
-                  }}
-                  disabled={!newObjective.title.trim() || !newObjective.target.trim()}
-                >
-                  <Text style={[styles.modalButtonText, { color: '#FFFFFF' }]}>
-                    {t('createLabel')}
-                  </Text>
-                </Pressable>
-              </View>
+            {/* Couleurs */}
+            <View style={styles.colorRow}>
+              {['#6366f1', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#f97316', '#06b6d4', '#84cc16'].map((color) => {
+                const selected = newObjective.color === color;
+                return (
+                  <Pressable
+                    key={color}
+                    style={[
+                      styles.colorDot,
+                      { backgroundColor: color },
+                      selected && { transform: [{ scale: 1.2 }], shadowColor: color, shadowOpacity: 0.5, shadowRadius: 6, elevation: 6 }
+                    ]}
+                    onPress={() => setNewObjective(prev => ({ ...prev, color }))}
+                  >
+                    {selected && <Ionicons name="checkmark" size={13} color="#fff" />}
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {/* CTA */}
+            <Pressable
+              style={[
+                styles.sheetCta,
+                {
+                  backgroundColor: newObjective.color,
+                  opacity: (!newObjective.title.trim() || !newObjective.target.trim()) ? 0.4 : 1,
+                }
+              ]}
+              onPress={handleAddObjective}
+              disabled={!newObjective.title.trim() || !newObjective.target.trim()}
+            >
+              <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+              <Text style={styles.sheetCtaText}>{t('createLabel')}</Text>
             </Pressable>
-          </ScrollView>
-        </Pressable>
+
+            <Pressable style={styles.sheetCancel} onPress={() => setAddModal(false)}>
+              <Text style={[styles.sheetCancelText, { color: theme.colors.textSecondary }]}>
+                {t('cancelLabel')}
+              </Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -946,8 +907,8 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -958,39 +919,139 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  // Styles pour la modal d'ajout
-  addModalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
+  // Bottom sheet styles
+  sheetOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  addModalCard: {
-    borderRadius: 20,
-    padding: 24,
+  sheetWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  sheetCard: {
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  sheetHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  sheetIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetTitle: {
+    fontSize: 19,
+    fontWeight: '700',
+  },
+  sheetTitleInput: {
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 16,
     borderWidth: 1,
-    width: '100%',
-    maxWidth: 500,
-    maxHeight: '90%',
+    marginBottom: 14,
+  },
+  goalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  goalInput: {
+    width: 72,
+    borderRadius: 12,
+    borderWidth: 2,
+    paddingVertical: 10,
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  unitScroll: {
+    flex: 1,
+  },
+  unitScrollContent: {
+    gap: 6,
+    alignItems: 'center',
+    paddingRight: 4,
+  },
+  unitPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  unitPillText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  colorRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  colorDot: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderRadius: 14,
+    paddingVertical: 15,
+    marginBottom: 10,
+  },
+  sheetCtaText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  sheetCancel: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  sheetCancelText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   formSection: {
-    marginBottom: 20,
+    marginBottom: 12,
   },
   formRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
   },
   formLabel: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   formInput: {
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
+    borderRadius: 10,
+    padding: 10,
+    fontSize: 15,
     borderWidth: 1,
-    minHeight: 50,
+    minHeight: 42,
   },
   unitSelector: {
     flexDirection: 'row',
@@ -1014,9 +1075,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   colorOption: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },

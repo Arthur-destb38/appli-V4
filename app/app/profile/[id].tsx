@@ -39,8 +39,6 @@ export default function ProfileScreen() {
   const { t } = useTranslations();
   const isDark = mode === 'dark';
 
-  const CURRENT_USER_ID = currentUserProfile?.id || 'guest-user';
-
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +73,7 @@ export default function ProfileScreen() {
     if (!id) return;
     try {
       const [profileData, postsData] = await Promise.all([
-        getProfile(id, CURRENT_USER_ID),
+        getProfile(id),
         getUserPosts(id),
       ]);
       setProfile(profileData);
@@ -88,9 +86,10 @@ export default function ProfileScreen() {
     }
   };
 
+  // Reload when current user becomes available so is_following is correct
   useEffect(() => {
     loadProfile();
-  }, [id]);
+  }, [id, currentUserProfile?.id]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -105,19 +104,11 @@ export default function ProfileScreen() {
     
     try {
       if (profile.is_following) {
-        await unfollowUser(profile.id, CURRENT_USER_ID);
-        setProfile({
-          ...profile,
-          is_following: false,
-          followers_count: profile.followers_count - 1,
-        });
+        await unfollowUser(profile.id);
+        setProfile({ ...profile, is_following: false, followers_count: profile.followers_count - 1 });
       } else {
-        await followUser(profile.id, CURRENT_USER_ID);
-        setProfile({
-          ...profile,
-          is_following: true,
-          followers_count: profile.followers_count + 1,
-        });
+        await followUser(profile.id);
+        setProfile({ ...profile, is_following: true, followers_count: profile.followers_count + 1 });
       }
     } catch (error) {
       console.error('Failed to toggle follow:', error);
@@ -127,13 +118,14 @@ export default function ProfileScreen() {
   };
 
   const handleMessagePress = async () => {
-    if (!profile || !CURRENT_USER_ID || messageLoading) return;
-    
+    const currentUserId = currentUserProfile?.id;
+    if (!profile || !currentUserId || messageLoading) return;
+
     setMessageLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    
+
     try {
-      const response = await createOrGetConversation(CURRENT_USER_ID, profile.id);
+      const response = await createOrGetConversation(currentUserId, profile.id);
       router.push(`/messages/${response.conversation.id}?participantId=${profile.id}`);
     } catch (error) {
       console.error('Failed to create conversation:', error);

@@ -40,9 +40,8 @@ export interface FollowUser {
   avatar_url: string | null;
 }
 
-export async function getProfile(userId: string, currentUserId?: string): Promise<Profile> {
-  const params = currentUserId ? `?current_user_id=${currentUserId}` : '';
-  const response = await apiCall(`/profile/${userId}${params}`);
+export async function getProfile(userId: string): Promise<Profile> {
+  const response = await apiCall(`/profile/${userId}`);
   if (!response.ok) {
     throw new Error(`Failed to get profile: ${response.status}`);
   }
@@ -71,19 +70,15 @@ export async function getUserPosts(userId: string, limit = 20): Promise<UserPost
   return response.json();
 }
 
-export async function followUser(userId: string, followerId: string): Promise<void> {
-  const response = await apiCall(`/profile/${userId}/follow?follower_id=${followerId}`, {
-    method: 'POST',
-  });
+export async function followUser(userId: string): Promise<void> {
+  const response = await apiCall(`/profile/${userId}/follow`, { method: 'POST' });
   if (!response.ok) {
     throw new Error(`Failed to follow user: ${response.status}`);
   }
 }
 
-export async function unfollowUser(userId: string, followerId: string): Promise<void> {
-  const response = await apiCall(`/profile/${userId}/follow?follower_id=${followerId}`, {
-    method: 'DELETE',
-  });
+export async function unfollowUser(userId: string): Promise<void> {
+  const response = await apiCall(`/profile/${userId}/follow`, { method: 'DELETE' });
   if (!response.ok) {
     throw new Error(`Failed to unfollow user: ${response.status}`);
   }

@@ -2,7 +2,8 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { fetchFeed, followUser, unfollowUser, fetchSharedWorkout } from '@/services/feedApi';
+import { fetchFeed, fetchSharedWorkout } from '@/services/feedApi';
+import { followUser, unfollowUser } from '@/services/profileApi';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { useTranslations } from '@/hooks/usePreferences';
 
@@ -49,13 +50,13 @@ export const useFeed = () => {
   const toggleFollow = useCallback(
     async (targetId: string, shouldFollow: boolean) => {
       if (shouldFollow) {
-        await followUser(userId, targetId);
+        await followUser(targetId);
       } else {
-        await unfollowUser(userId, targetId);
+        await unfollowUser(targetId);
       }
       await load(true);
     },
-    [userId, load]
+    [load]
   );
 
   const duplicate = useCallback(

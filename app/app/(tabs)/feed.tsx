@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   FlatList,
+  Image,
   Modal,
   RefreshControl,
   StyleSheet,
@@ -33,6 +34,8 @@ import { useTranslations } from '@/hooks/usePreferences';
 import { useNotificationCount } from '@/hooks/useNotificationCount';
 import { getAvatarGradient } from '@/utils/colors';
 import { formatRelativeDate } from '@/utils/formatTime';
+import { getSuggestedUsers, searchUsers, SuggestedUser } from '@/services/exploreApi';
+import { followUser, unfollowUser } from '@/services/profileApi';
 
 // Composant pour afficher un commentaire avec like
 const CommentItem: React.FC<{
@@ -129,6 +132,15 @@ const FeedScreen: React.FC = () => {
   const { profile } = useUserProfile();
   const { unreadCount: notifCount } = useNotificationCount();
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'feed' | 'discover'>('feed');
+  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
+  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
+  const [loadingDiscover, setLoadingDiscover] = useState(false);
+  const [followingId, setFollowingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SuggestedUser[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerAnim = useRef(new Animated.Value(0)).current;
 
   // Priorité à user?.id (auth) pour commentaires/likes, puis profile (chargé après)
@@ -163,6 +175,52 @@ const FeedScreen: React.FC = () => {
   useEffect(() => {
     load(true).catch(() => undefined);
   }, [load]);
+
+  useEffect(() => {
+    if (activeTab === 'discover' && suggestedUsers.length === 0) {
+      setLoadingDiscover(true);
+      getSuggestedUsers(undefined, 20)
+        .then((users) => setSuggestedUsers(users))
+        .catch(() => {})
+        .finally(() => setLoadingDiscover(false));
+    }
+  }, [activeTab]);
+
+  const handleFollowToggle = async (userId: string) => {
+    if (followingId) return;
+    setFollowingId(userId);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    try {
+      if (followedIds.has(userId)) {
+        await unfollowUser(userId);
+        setFollowedIds((prev) => { const s = new Set(prev); s.delete(userId); return s; });
+      } else {
+        await followUser(userId);
+        setFollowedIds((prev) => new Set([...prev, userId]));
+      }
+    } catch {} finally {
+      setFollowingId(null);
+    }
+  };
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
+    searchTimer.current = setTimeout(async () => {
+      try {
+        const results = await searchUsers(query.trim(), 20);
+        setSearchResults(results);
+      } catch {} finally {
+        setIsSearching(false);
+      }
+    }, 350);
+  };
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -268,10 +326,7 @@ const FeedScreen: React.FC = () => {
         </View>
         <View style={styles.headerActions}>
           <Pressable
-            style={({ pressed }) => [
-              styles.headerButton,
-              { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 },
-            ]}
+            style={({ pressed }) => [styles.headerIconBtn, { opacity: pressed ? 0.7 : 1 }]}
             onPress={() => {
               Haptics.selectionAsync().catch(() => {});
               router.push('/leaderboard');
@@ -279,47 +334,212 @@ const FeedScreen: React.FC = () => {
           >
             <LinearGradient
               colors={['#f59e0b', '#d97706']}
-              style={styles.headerButtonGradient}
+              style={styles.headerIconBtnInner}
             >
-              <Ionicons name="trophy" size={18} color="#fff" />
+              <Ionicons name="trophy" size={17} color="#fff" />
             </LinearGradient>
           </Pressable>
           <Pressable
-            style={({ pressed }) => [
-              styles.headerButton,
-              { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 },
-            ]}
+            style={({ pressed }) => [styles.headerIconBtn, { opacity: pressed ? 0.7 : 1 }]}
             onPress={() => {
               Haptics.selectionAsync().catch(() => {});
               router.push('/notifications');
             }}
           >
-            <View style={styles.notificationWrapper}>
-              <Ionicons name="notifications" size={20} color="#8b5cf6" />
-              {notifCount > 0 && (
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.notificationBadgeText}>{notifCount > 99 ? '99+' : notifCount}</Text>
-                </View>
-              )}
-            </View>
+            <LinearGradient
+              colors={['#7c3aed', '#6d28d9']}
+              style={styles.headerIconBtnInner}
+            >
+              <View style={styles.notificationWrapper}>
+                <Ionicons name="notifications" size={17} color="#fff" />
+                {notifCount > 0 && (
+                  <View style={styles.notificationBadge}>
+                    <Text style={styles.notificationBadgeText}>{notifCount > 99 ? '99+' : notifCount}</Text>
+                  </View>
+                )}
+              </View>
+            </LinearGradient>
           </Pressable>
           <Pressable
-            style={({ pressed }) => [
-              styles.headerButton,
-              { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 },
-            ]}
+            style={({ pressed }) => [styles.headerIconBtn, { opacity: pressed ? 0.7 : 1 }]}
             onPress={() => {
               Haptics.selectionAsync().catch(() => {});
               router.push('/explore');
             }}
           >
-            <Ionicons name="search" size={20} color={theme.colors.textPrimary} />
+            <View style={[styles.headerIconBtnInner, { backgroundColor: theme.colors.surfaceMuted }]}>
+              <Ionicons name="search" size={17} color={theme.colors.textPrimary} />
+            </View>
           </Pressable>
         </View>
       </Animated.View>
 
+      {/* Tab bar */}
+      <View style={[styles.tabBar, { backgroundColor: theme.colors.background, borderBottomColor: theme.colors.border }]}>
+        <Pressable
+          style={[styles.tabItem, activeTab === 'feed' && styles.tabItemActive]}
+          onPress={() => { setActiveTab('feed'); Haptics.selectionAsync().catch(() => {}); }}
+        >
+          {activeTab === 'feed' && (
+            <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.tabActiveIndicator} />
+          )}
+          <Ionicons name="barbell" size={18} color={activeTab === 'feed' ? '#6366f1' : theme.colors.textSecondary} />
+          <Text style={[styles.tabLabel, { color: activeTab === 'feed' ? '#6366f1' : theme.colors.textSecondary }]}>
+            Séances
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.tabItem, activeTab === 'discover' && styles.tabItemActive]}
+          onPress={() => { setActiveTab('discover'); Haptics.selectionAsync().catch(() => {}); }}
+        >
+          {activeTab === 'discover' && (
+            <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.tabActiveIndicator} />
+          )}
+          <Ionicons name="people" size={18} color={activeTab === 'discover' ? '#6366f1' : theme.colors.textSecondary} />
+          <Text style={[styles.tabLabel, { color: activeTab === 'discover' ? '#6366f1' : theme.colors.textSecondary }]}>
+            Découvrir
+          </Text>
+        </Pressable>
+      </View>
+
       {/* Feed */}
-      {isLoading && !items.length ? (
+      {activeTab === 'discover' ? (
+        loadingDiscover ? (
+          <View style={styles.loadingContainer}>
+            <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.loadingGradient}>
+              <ActivityIndicator size="large" color="#fff" />
+            </LinearGradient>
+            <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Chargement…</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={searchQuery.trim() ? searchResults : suggestedUsers}
+            keyExtractor={(u) => u.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={[styles.discoverList, { paddingBottom: insets.bottom + 100 }]}
+            keyboardShouldPersistTaps="handled"
+            ListHeaderComponent={
+              <View>
+                {/* Barre de recherche */}
+                <View style={[styles.searchBar, { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border }]}>
+                  <Ionicons name="search" size={18} color={theme.colors.textSecondary} />
+                  <TextInput
+                    style={[styles.searchInput, { color: theme.colors.textPrimary }]}
+                    placeholder="Rechercher un utilisateur…"
+                    placeholderTextColor={theme.colors.textSecondary}
+                    value={searchQuery}
+                    onChangeText={handleSearchChange}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="search"
+                  />
+                  {isSearching && <ActivityIndicator size="small" color="#6366f1" />}
+                  {searchQuery.length > 0 && !isSearching && (
+                    <Pressable onPress={() => { setSearchQuery(''); setSearchResults([]); }}>
+                      <Ionicons name="close-circle" size={18} color={theme.colors.textSecondary} />
+                    </Pressable>
+                  )}
+                </View>
+                {!searchQuery.trim() && (
+                  <View style={styles.discoverHeader}>
+                    <Text style={[styles.discoverTitle, { color: theme.colors.textPrimary }]}>Athlètes à suivre</Text>
+                    <Text style={[styles.discoverSubtitle, { color: theme.colors.textSecondary }]}>
+                      Découvre des gens qui partagent leur entraînement
+                    </Text>
+                  </View>
+                )}
+              </View>
+            }
+            ListEmptyComponent={
+              !isSearching ? (
+                <View style={styles.emptyState}>
+                  <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.emptyIconGradient}>
+                    <Ionicons name={searchQuery.trim() ? 'search' : 'people'} size={40} color="#fff" />
+                  </LinearGradient>
+                  <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
+                    {searchQuery.trim() ? 'Aucun résultat' : 'Personne à suggérer'}
+                  </Text>
+                  <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
+                    {searchQuery.trim() ? `Aucun utilisateur trouvé pour "${searchQuery}"` : 'Reviens plus tard quand d\'autres utilisateurs s\'inscriront'}
+                  </Text>
+                </View>
+              ) : null
+            }
+            renderItem={({ item }) => {
+              const isFollowing = followedIds.has(item.id);
+              const isLoading = followingId === item.id;
+              const gradient = getAvatarGradient(item.username);
+              return (
+                <Pressable
+                  style={[styles.userCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+                  onPress={() => router.push(`/profile/${item.id}`)}
+                >
+                  {/* Avatar */}
+                  <Pressable onPress={() => router.push(`/profile/${item.id}`)}>
+                    {item.avatar_url ? (
+                      <Image source={{ uri: item.avatar_url }} style={styles.userAvatar} />
+                    ) : (
+                      <LinearGradient colors={gradient} style={styles.userAvatarGradient}>
+                        <Text style={styles.userAvatarText}>{item.username.slice(0, 2).toUpperCase()}</Text>
+                      </LinearGradient>
+                    )}
+                  </Pressable>
+
+                  {/* Info */}
+                  <View style={styles.userInfo}>
+                    <Text style={[styles.userName, { color: theme.colors.textPrimary }]} numberOfLines={1}>
+                      @{item.username}
+                    </Text>
+                    {item.objective ? (
+                      <View style={styles.userObjectiveBadge}>
+                        <Ionicons name="flag" size={10} color="#8b5cf6" />
+                        <Text style={[styles.userObjective, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+                          {item.objective}
+                        </Text>
+                      </View>
+                    ) : item.bio ? (
+                      <Text style={[styles.userBio, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+                        {item.bio}
+                      </Text>
+                    ) : null}
+                    <View style={styles.userStats}>
+                      <Ionicons name="people-outline" size={12} color={theme.colors.textSecondary} />
+                      <Text style={[styles.userStatText, { color: theme.colors.textSecondary }]}>
+                        {item.followers_count} abonnés
+                      </Text>
+                      <Text style={[styles.userStatDot, { color: theme.colors.textSecondary }]}>·</Text>
+                      <Ionicons name="barbell-outline" size={12} color={theme.colors.textSecondary} />
+                      <Text style={[styles.userStatText, { color: theme.colors.textSecondary }]}>
+                        {item.posts_count} posts
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Follow button */}
+                  <Pressable
+                    style={[
+                      styles.followBtn,
+                      isFollowing
+                        ? { backgroundColor: theme.colors.surfaceMuted, borderColor: theme.colors.border, borderWidth: 1 }
+                        : { backgroundColor: '#6366f1' },
+                    ]}
+                    onPress={() => handleFollowToggle(item.id)}
+                    disabled={!!followingId}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color={isFollowing ? theme.colors.textPrimary : '#fff'} />
+                    ) : (
+                      <Text style={[styles.followBtnText, { color: isFollowing ? theme.colors.textPrimary : '#fff' }]}>
+                        {isFollowing ? 'Suivi ✓' : 'Suivre'}
+                      </Text>
+                    )}
+                  </Pressable>
+                </Pressable>
+              );
+            }}
+          />
+        )
+      ) : isLoading && !items.length ? (
         <View style={styles.loadingContainer}>
           <LinearGradient
             colors={['#6366f1', '#8b5cf6']}
@@ -432,6 +652,8 @@ const FeedScreen: React.FC = () => {
           }
         />
       )}
+
+      ) /* end discover ternary */}
 
       {error ? (
         <View style={[styles.errorBanner, { backgroundColor: theme.colors.error + '20' }]}>
@@ -613,15 +835,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
-  headerButton: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+  headerIconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     overflow: 'hidden',
   },
-  headerButtonGradient: {
+  headerIconBtnInner: {
     width: '100%',
     height: '100%',
     alignItems: 'center',
@@ -959,5 +1179,133 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Tab bar
+  tabBar: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 4,
+  },
+  tabItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    position: 'relative',
+  },
+  tabItemActive: {},
+  tabActiveIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: '10%',
+    right: '10%',
+    height: 2,
+    borderRadius: 1,
+  },
+  tabLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  // Discover
+  discoverList: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 0,
+  },
+  discoverHeader: {
+    marginBottom: 16,
+  },
+  discoverTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  discoverSubtitle: {
+    fontSize: 13,
+  },
+  userCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  userAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  userAvatarGradient: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userAvatarText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  userInfo: {
+    flex: 1,
+    gap: 3,
+  },
+  userName: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  userObjectiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  userObjective: {
+    fontSize: 12,
+  },
+  userBio: {
+    fontSize: 12,
+  },
+  userStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  userStatText: {
+    fontSize: 11,
+  },
+  userStatDot: {
+    fontSize: 11,
+  },
+  followBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    minWidth: 72,
+    alignItems: 'center',
+  },
+  followBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
