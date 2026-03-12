@@ -29,6 +29,18 @@ export interface UserPost {
   created_at: string;
 }
 
+export interface SavedPost {
+  share_id: string;
+  owner_id: string;
+  owner_username: string;
+  workout_title: string;
+  exercise_count: number;
+  set_count: number;
+  like_count: number;
+  created_at: string;
+  saved_at: string;
+}
+
 export interface UserPostsResponse {
   posts: UserPost[];
   total: number;
@@ -118,4 +130,20 @@ export async function deleteAvatar(userId: string): Promise<void> {
   if (!response.ok) {
     throw new Error(`Failed to delete avatar: ${response.status}`);
   }
+}
+
+export async function savePost(shareId: string): Promise<void> {
+  const response = await apiCall(`/profile/bookmarks/${shareId}`, { method: 'POST' });
+  if (!response.ok) throw new Error(`Failed to save post: ${response.status}`);
+}
+
+export async function unsavePost(shareId: string): Promise<void> {
+  const response = await apiCall(`/profile/bookmarks/${shareId}`, { method: 'DELETE' });
+  if (!response.ok) throw new Error(`Failed to unsave post: ${response.status}`);
+}
+
+export async function getBookmarks(): Promise<SavedPost[]> {
+  const response = await apiCall('/profile/bookmarks');
+  if (!response.ok) throw new Error(`Failed to get bookmarks: ${response.status}`);
+  return response.json();
 }

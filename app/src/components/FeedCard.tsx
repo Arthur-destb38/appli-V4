@@ -22,6 +22,7 @@ import { useAppTheme } from '@/theme/ThemeProvider';
 import { useTranslations } from '@/hooks/usePreferences';
 import { LikeButton, DoubleTapHeart } from './LikeButton';
 import { toggleLike } from '@/services/likesApi';
+import { savePost, unsavePost } from '@/services/profileApi';
 import { apiCall } from '@/utils/api';
 import { AVATAR_COLORS, getAvatarGradient, getWorkoutGradient } from '@/utils/colors';
 
@@ -302,22 +303,23 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
     }).start();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    const wasSaved = saved;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    setSaved(!saved);
+    setSaved(!wasSaved);
     Animated.sequence([
-      Animated.timing(saveAnim, {
-        toValue: 1.3,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(saveAnim, {
-        toValue: 1,
-        duration: 150,
-        useNativeDriver: true,
-      }),
+      Animated.timing(saveAnim, { toValue: 1.3, duration: 150, useNativeDriver: true }),
+      Animated.timing(saveAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
     ]).start();
-    onDuplicate?.();
+    try {
+      if (wasSaved) {
+        await unsavePost(shareId);
+      } else {
+        await savePost(shareId);
+      }
+    } catch {
+      setSaved(wasSaved); // rollback on error
+    }
   };
 
   if (hidden) {

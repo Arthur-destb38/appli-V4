@@ -21,14 +21,17 @@ import { useAppTheme } from '@/theme/ThemeProvider';
 import {
   Profile,
   UserPost,
+  SavedPost,
   getProfile,
   getUserPosts,
   followUser,
   unfollowUser,
+  getBookmarks,
 } from '@/services/profileApi';
 import { createOrGetConversation } from '@/services/messagingApi';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useTranslations } from '@/hooks/usePreferences';
+import { useNotificationCount } from '@/hooks/useNotificationCount';
 
 export default function ProfileScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -37,10 +40,13 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { profile: currentUserProfile } = useUserProfile();
   const { t } = useTranslations();
+  const { unreadCount: notifCount } = useNotificationCount();
   const isDark = mode === 'dark';
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [posts, setPosts] = useState<UserPost[]>([]);
+  const [savedPosts, setSavedPosts] = useState<SavedPost[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
@@ -90,6 +96,17 @@ export default function ProfileScreen() {
   useEffect(() => {
     loadProfile();
   }, [id, currentUserProfile?.id]);
+
+  // Charger les bookmarks quand on ouvre le tab "saved" (seulement si c'est notre profil)
+  useEffect(() => {
+    if (activeTab === 'saved' && profile?.is_own_profile && savedPosts.length === 0) {
+      setLoadingSaved(true);
+      getBookmarks()
+        .then(setSavedPosts)
+        .catch(console.error)
+        .finally(() => setLoadingSaved(false));
+    }
+  }, [activeTab, profile?.is_own_profile]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -221,7 +238,17 @@ export default function ProfileScreen() {
                 <Ionicons name="arrow-back" size={22} color="#fff" />
               </Pressable>
               <Text style={styles.navTitle} numberOfLines={1}>{profile.username}</Text>
-              <View style={styles.navButton} />
+              <Pressable
+                onPress={() => router.push('/notifications')}
+                style={({ pressed }) => [styles.navButton, { opacity: pressed ? 0.8 : 1 }]}
+              >
+                <Ionicons name="notifications" size={20} color="#fff" />
+                {notifCount > 0 && (
+                  <View style={styles.profileNotifBadge}>
+                    <Text style={styles.profileNotifBadgeText}>{notifCount > 99 ? '99+' : notifCount}</Text>
+                  </View>
+                )}
+              </Pressable>
             </View>
 
             {/* Avatar centré */}
@@ -410,78 +437,111 @@ export default function ProfileScreen() {
           </View>
 
           {/* Contenu des onglets */}
-          {posts.length === 0 ? (
-            <View style={styles.emptyPosts}>
-              <LinearGradient
-                colors={isDark ? ['#312e81', '#1e1b4b'] : ['#6366f115', '#8b5cf608']}
-                style={styles.emptyIconCircle}
-              >
-                <Ionicons
-                  name={activeTab === 'posts' ? 'barbell-outline' : 'bookmark-outline'}
-                  size={44}
-                  color={theme.colors.accent}
-                />
-              </LinearGradient>
-              <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
-                {activeTab === 'posts' ? t('noSharedWorkout') : t('noSavedPost')}
-              </Text>
-              <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
-                {activeTab === 'posts'
-                  ? t('sharedWorkoutsWillAppear')
-                  : t('savedPostsWillAppear')}
-              </Text>
-              {activeTab === 'posts' && !profile.is_own_profile && (
-                <Text style={[styles.emptyHint, { color: theme.colors.textSecondary }]}>
-                  {t('profileNotSharedYet')}
-                </Text>
-              )}
-            </View>
-          ) : (
-            <View style={styles.postsGrid}>
-              {posts.map((post, index) => (
-                <Pressable
-                  key={post.share_id}
-                  style={({ pressed }) => [
-                    styles.postCard,
-                    { 
-                      backgroundColor: theme.colors.surface,
-                      borderColor: theme.colors.border,
-                      opacity: pressed ? 0.8 : 1,
-                    },
-                  ]}
-                  onPress={() => {
-                    Haptics.selectionAsync().catch(() => {});
-                  }}
+          {activeTab === 'posts' ? (
+            posts.length === 0 ? (
+              <View style={styles.emptyPosts}>
+                <LinearGradient
+                  colors={isDark ? ['#312e81', '#1e1b4b'] : ['#6366f115', '#8b5cf608']}
+                  style={styles.emptyIconCircle}
                 >
-                  <LinearGradient
-                    colors={['#6366f1', '#8b5cf6']}
-                    style={styles.postIconBg}
-                  >
-                    <Ionicons name="barbell" size={20} color="#fff" />
-                  </LinearGradient>
-                  <Text
-                    style={[styles.postTitle, { color: theme.colors.textPrimary }]}
-                    numberOfLines={2}
-                  >
-                    {post.workout_title}
+                  <Ionicons name="barbell-outline" size={44} color={theme.colors.accent} />
+                </LinearGradient>
+                <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
+                  {t('noSharedWorkout')}
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
+                  {t('sharedWorkoutsWillAppear')}
+                </Text>
+                {!profile.is_own_profile && (
+                  <Text style={[styles.emptyHint, { color: theme.colors.textSecondary }]}>
+                    {t('profileNotSharedYet')}
                   </Text>
-                  <View style={styles.postMeta}>
-                    <View style={styles.postMetaItem}>
-                      <Ionicons name="heart" size={12} color="#ef4444" />
-                      <Text style={[styles.postMetaText, { color: theme.colors.textSecondary }]}>
-                        {post.like_count}
-                      </Text>
+                )}
+              </View>
+            ) : (
+              <View style={styles.postsGrid}>
+                {posts.map((post) => (
+                  <Pressable
+                    key={post.share_id}
+                    style={({ pressed }) => [
+                      styles.postCard,
+                      { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, opacity: pressed ? 0.8 : 1 },
+                    ]}
+                    onPress={() => { Haptics.selectionAsync().catch(() => {}); }}
+                  >
+                    <LinearGradient colors={['#6366f1', '#8b5cf6']} style={styles.postIconBg}>
+                      <Ionicons name="barbell" size={20} color="#fff" />
+                    </LinearGradient>
+                    <Text style={[styles.postTitle, { color: theme.colors.textPrimary }]} numberOfLines={2}>
+                      {post.workout_title}
+                    </Text>
+                    <View style={styles.postMeta}>
+                      <View style={styles.postMetaItem}>
+                        <Ionicons name="heart" size={12} color="#ef4444" />
+                        <Text style={[styles.postMetaText, { color: theme.colors.textSecondary }]}>{post.like_count}</Text>
+                      </View>
+                      <View style={styles.postMetaItem}>
+                        <Ionicons name="fitness" size={12} color={theme.colors.accent} />
+                        <Text style={[styles.postMetaText, { color: theme.colors.textSecondary }]}>{post.exercise_count}</Text>
+                      </View>
                     </View>
-                    <View style={styles.postMetaItem}>
-                      <Ionicons name="fitness" size={12} color={theme.colors.accent} />
-                      <Text style={[styles.postMetaText, { color: theme.colors.textSecondary }]}>
-                        {post.exercise_count}
-                      </Text>
+                  </Pressable>
+                ))}
+              </View>
+            )
+          ) : (
+            /* Tab Sauvegardés */
+            loadingSaved ? (
+              <ActivityIndicator style={{ marginTop: 40 }} color={theme.colors.accent} />
+            ) : savedPosts.length === 0 ? (
+              <View style={styles.emptyPosts}>
+                <LinearGradient
+                  colors={isDark ? ['#312e81', '#1e1b4b'] : ['#6366f115', '#8b5cf608']}
+                  style={styles.emptyIconCircle}
+                >
+                  <Ionicons name="bookmark-outline" size={44} color={theme.colors.accent} />
+                </LinearGradient>
+                <Text style={[styles.emptyTitle, { color: theme.colors.textPrimary }]}>
+                  {t('noSavedPost')}
+                </Text>
+                <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
+                  {t('savedPostsWillAppear')}
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.postsGrid}>
+                {savedPosts.map((post) => (
+                  <Pressable
+                    key={post.share_id}
+                    style={({ pressed }) => [
+                      styles.postCard,
+                      { backgroundColor: theme.colors.surface, borderColor: theme.colors.border, opacity: pressed ? 0.8 : 1 },
+                    ]}
+                    onPress={() => { Haptics.selectionAsync().catch(() => {}); }}
+                  >
+                    <LinearGradient colors={['#f59e0b', '#d97706']} style={styles.postIconBg}>
+                      <Ionicons name="bookmark" size={20} color="#fff" />
+                    </LinearGradient>
+                    <Text style={[styles.postTitle, { color: theme.colors.textPrimary }]} numberOfLines={2}>
+                      {post.workout_title}
+                    </Text>
+                    <Text style={[styles.postOwner, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+                      @{post.owner_username}
+                    </Text>
+                    <View style={styles.postMeta}>
+                      <View style={styles.postMetaItem}>
+                        <Ionicons name="heart" size={12} color="#ef4444" />
+                        <Text style={[styles.postMetaText, { color: theme.colors.textSecondary }]}>{post.like_count}</Text>
+                      </View>
+                      <View style={styles.postMetaItem}>
+                        <Ionicons name="fitness" size={12} color={theme.colors.accent} />
+                        <Text style={[styles.postMetaText, { color: theme.colors.textSecondary }]}>{post.exercise_count}</Text>
+                      </View>
                     </View>
-                  </View>
-                </Pressable>
-              ))}
-            </View>
+                  </Pressable>
+                ))}
+              </View>
+            )
           )}
         </Animated.View>
       </ScrollView>
@@ -583,6 +643,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  profileNotifBadge: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: '#ef4444',
+    minWidth: 14,
+    height: 14,
+    borderRadius: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 2,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.6)',
+  },
+  profileNotifBadgeText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: '700',
   },
   navTitle: {
     fontSize: 18,
@@ -860,6 +939,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  postOwner: {
+    fontSize: 10,
+    textAlign: 'center',
+    marginBottom: 2,
   },
   postMeta: {
     flexDirection: 'row',

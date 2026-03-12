@@ -7,7 +7,7 @@ from sqlmodel import Session, select, func
 from typing import Optional
 
 from ..db import get_session
-from ..models import User, Share, Follower, Like, Notification
+from ..models import User, Share, Follower, Like, Notification, SavedPost
 from ..utils.dependencies import get_current_user as _get_current_user, get_current_user_optional as _get_current_user_optional
 
 router = APIRouter(prefix="/profile", tags=["profile"])
@@ -364,11 +364,96 @@ def delete_avatar(
     current_user: User = Depends(_get_current_user),
 ):
     """Supprimer l'avatar d'un utilisateur."""
-    
+
     if current_user.id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="can_only_delete_own_avatar")
-    
+
     current_user.avatar_url = None
     session.add(current_user)
     session.commit()
+
+
+# --- Bookmarks (posts sauvegardés) ---
+
+@router.post("/bookmarks/{share_id}", status_code=201)
+def save_post(
+    share_id: str,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user),
+):
+    """Sauvegarder un post."""
+    share = session.get(Share, share_id)
+    if not share:
+        raise HTTPException(status_code=404, detail="share_not_found")
+    existing = session.exec(
+        select(SavedPost)
+        .where(SavedPost.user_id == current_user.id)
+        .where(SavedPost.share_id == share_id)
+    ).first()
+    if not existing:
+        session.add(SavedPost(user_id=current_user.id, share_id=share_id))
+        session.commit()
+    return {"saved": True}
+
+
+@router.delete("/bookmarks/{share_id}", status_code=200)
+def unsave_post(
+    share_id: str,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user),
+):
+    """Retirer un post des sauvegardes."""
+    saved = session.exec(
+        select(SavedPost)
+        .where(SavedPost.user_id == current_user.id)
+        .where(SavedPost.share_id == share_id)
+    ).first()
+    if saved:
+        session.delete(saved)
+        session.commit()
+    return {"saved": False}
+
+
+@router.get("/bookmarks", response_model=list[dict])
+def get_bookmarks(
+    session: Session = Depends(get_session),
+    current_user: User = Depends(_get_current_user),
+):
+    """Récupérer les posts sauvegardés de l'utilisateur courant."""
+    saved_entries = session.exec(
+        select(SavedPost)
+        .where(SavedPost.user_id == current_user.id)
+        .order_by(SavedPost.saved_at.desc())
+    ).all()
+
+    if not saved_entries:
+        return []
+
+    share_ids = [s.share_id for s in saved_entries]
+    shares = session.exec(select(Share).where(Share.share_id.in_(share_ids))).all()
+    shares_map = {s.share_id: s for s in shares}
+
+    likes_counts = session.exec(
+        select(Like.share_id, func.count(Like.id).label("count"))
+        .where(Like.share_id.in_(share_ids))
+        .group_by(Like.share_id)
+    ).all()
+    likes_map = {row[0]: row[1] for row in likes_counts}
+
+    result = []
+    for entry in saved_entries:
+        share = shares_map.get(entry.share_id)
+        if share:
+            result.append({
+                "share_id": share.share_id,
+                "owner_id": share.owner_id,
+                "owner_username": share.owner_username,
+                "workout_title": share.workout_title,
+                "exercise_count": share.exercise_count,
+                "set_count": share.set_count,
+                "like_count": likes_map.get(share.share_id, 0),
+                "created_at": share.created_at.isoformat(),
+                "saved_at": entry.saved_at.isoformat(),
+            })
+    return result
 

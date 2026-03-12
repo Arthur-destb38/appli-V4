@@ -193,6 +193,17 @@ class CommentLike(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow)
 
 
+class SavedPost(SQLModel, table=True):
+    """Post sauvegardé par un utilisateur."""
+    __table_args__ = (
+        Index("ix_savedpost_pair", "user_id", "share_id", unique=True),
+    )
+    id: str = Field(default_factory=generate_uuid, primary_key=True)
+    user_id: str = Field(index=True)
+    share_id: str = Field(index=True)
+    saved_at: datetime = Field(default_factory=utcnow)
+
+
 class Follower(SQLModel, table=True):
     """Relation de suivi entre utilisateurs."""
     __table_args__ = (

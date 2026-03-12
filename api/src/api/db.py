@@ -66,6 +66,7 @@ def init_db() -> None:
         RefreshToken, LoginAttempt, SyncEvent, PassToken, SalleAuditLog,
         Conversation, Message, CommentLike, ProgramWorkout,
         SubscriptionEvent, CoachProfile, ProgramTemplate, ProgramPurchase,
+        SavedPost,
     )
 
     url = _database_url()
