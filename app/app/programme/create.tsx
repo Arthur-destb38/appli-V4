@@ -26,7 +26,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { AppButton } from '@/components/AppButton';
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 
 // ─── SessionCard ──────────────────────────────────────────────────────────────
 const SessionCard: React.FC<{
@@ -397,37 +397,17 @@ export default function CreateProgramScreen() {
     { id: 'ppl', label: t('pplMethod'), icon: 'layers-outline' as const, color: '#ef4444', desc: 'Push/Pull/Legs — idéal 5-6x/sem' },
   ];
 
-  // ─── Step why-text map ───────────────────────────────────────────────────
+  // ─── Step config (1 question per step) ──────────────────────────────────
   const stepConfig = [
     null, // index 0 unused
-    {
-      q: 'Quel est ton objectif principal ?',
-      why: 'Ton objectif définit les volumes d\'entraînement, les intensités et la sélection des exercices pour l\'ensemble du programme.',
-    },
-    {
-      q: 'Combien de séances par semaine ?',
-      why: 'La fréquence détermine le volume hebdomadaire et le temps de récupération musculaire. 3-4 séances est optimal pour la plupart des objectifs.',
-    },
-    {
-      q: 'Quel est ton niveau ?',
-      why: 'Ton niveau influence la complexité des exercices, les charges recommandées et la progression attendue dans ton programme.',
-    },
-    {
-      q: 'Quel équipement as-tu à disposition ?',
-      why: 'Seuls les exercices réalisables avec ton équipement seront inclus. Coche tout ce qui est accessible pour toi.',
-    },
-    {
-      q: 'Combien de temps par séance ?',
-      why: 'La durée détermine le nombre d\'exercices et de séries possibles. Elle influence aussi l\'organisation des temps de repos.',
-    },
-    {
-      q: 'Comment organiser tes séances ?',
-      why: 'La méthode détermine quels groupes musculaires sont travaillés ensemble. Le bon choix dépend de ta fréquence d\'entraînement.',
-    },
-    {
-      q: 'As-tu des blessures ou limitations ?',
-      why: 'Ces informations permettent d\'exclure les exercices contre-indiqués et d\'adapter le programme pour préserver tes articulations.',
-    },
+    { q: 'Quel est ton objectif ?',           why: 'Définit les volumes, les intensités et les exercices de tout ton programme.' },
+    { q: 'Combien de séances par semaine ?',  why: 'La fréquence détermine le volume et le temps de récupération musculaire.' },
+    { q: 'Quel est ton niveau ?',             why: 'Adapte la complexité des exercices et la progression attendue.' },
+    { q: 'Quel équipement as-tu ?',           why: 'Seuls les exercices réalisables avec ton matériel seront inclus.' },
+    { q: 'Combien de temps par séance ?',     why: 'Détermine le nombre d\'exercices et l\'organisation des temps de repos.' },
+    { q: 'Sur combien de semaines ?',         why: '4 semaines = cycle court. 8-12 semaines = progression solide sur la durée.' },
+    { q: 'Comment organiser tes séances ?',   why: 'La méthode détermine quels muscles sont travaillés ensemble à chaque séance.' },
+    { q: 'As-tu des blessures ou limitations ?', why: 'Permet d\'exclure les exercices contre-indiqués et d\'adapter le programme.' },
   ];
 
   // ─── Freemium Gate ─────────────────────────────────────────────────────────
@@ -494,7 +474,7 @@ export default function CreateProgramScreen() {
         {/* Header */}
         <View style={[styles.resultsHeader, { paddingTop: insets.top + 8, borderBottomColor: theme.colors.border }]}>
           <Pressable
-            style={[styles.headerBackBtn, { backgroundColor: theme.colors.surfaceMuted }]}
+            style={[styles.backBtn, { backgroundColor: theme.colors.surfaceMuted, width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }]}
             onPress={() => { animateStep(TOTAL_STEPS, -1); setProgram(null); setError(null); }}
           >
             <Ionicons name="arrow-back" size={20} color={theme.colors.textPrimary} />
@@ -594,26 +574,23 @@ export default function CreateProgramScreen() {
     );
   }
 
-  // ─── Wizard Steps 1-7 ─────────────────────────────────────────────────────
+  // ─── Wizard (1 question = 1 full page) ────────────────────────────────────
   const config = stepConfig[step];
   const isLastStep = step === TOTAL_STEPS;
 
-  // Auto-advance on tap for single-choice steps (1, 3, 6)
   const selectAndAdvance = (setter: (v: any) => void, value: any) => {
     Haptics.selectionAsync().catch(() => {});
     setter(value);
-    setTimeout(() => animateStep(step + 1, 1), 380);
+    setTimeout(() => animateStep(step + 1, 1), 350);
   };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* ── Header: dots progress ── */}
-      <View style={[styles.wizardHeader, { paddingTop: insets.top + 12 }]}>
-        <Pressable
-          style={[styles.headerBackBtn, { backgroundColor: theme.colors.surfaceMuted }]}
-          onPress={goBack}
-        >
-          <Ionicons name="arrow-back" size={20} color={theme.colors.textPrimary} />
+
+      {/* ── Top bar: back + dots ── */}
+      <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
+        <Pressable style={styles.backBtn} onPress={goBack} hitSlop={8}>
+          <Ionicons name="chevron-back" size={26} color={theme.colors.textPrimary} />
         </Pressable>
 
         <View style={styles.dotsRow}>
@@ -624,286 +601,270 @@ export default function CreateProgramScreen() {
                 styles.dot,
                 {
                   backgroundColor: i < step ? theme.colors.accent : theme.colors.border,
-                  width: i === step - 1 ? 20 : 8,
+                  width: i === step - 1 ? 22 : 8,
                 },
               ]}
             />
           ))}
         </View>
 
-        {step === 7 ? (
-          <Pressable onPress={goNext} style={styles.skipBtn}>
+        {step === TOTAL_STEPS ? (
+          <Pressable onPress={goNext} hitSlop={8}>
             <Text style={[styles.skipText, { color: theme.colors.textSecondary }]}>Passer</Text>
           </Pressable>
         ) : (
-          <View style={{ width: 52 }} />
+          <View style={{ width: 44 }} />
         )}
       </View>
 
-      {/* ── Animated step content ── */}
+      {/* ── Full-page animated content ── */}
       <Animated.View
-        style={[styles.stepWrapper, { opacity: fadeAnim, transform: [{ translateX: slideAnim }] }]}
+        style={[styles.pageContent, { opacity: fadeAnim, transform: [{ translateX: slideAnim }] }]}
       >
-        {/* Question + Why */}
+        {/* Question */}
         <View style={styles.questionBlock}>
-          <Text style={[styles.stepQuestion, { color: theme.colors.textPrimary }]}>
-            {config?.q}
-          </Text>
-          <Text style={[styles.whyText, { color: theme.colors.textSecondary }]}>
-            {config?.why}
-          </Text>
+          <Text style={[styles.stepQuestion, { color: theme.colors.textPrimary }]}>{config?.q}</Text>
+          <Text style={[styles.whyText, { color: theme.colors.textSecondary }]}>{config?.why}</Text>
         </View>
 
-        {/* ── Step 1: Objectif ── */}
-        {step === 1 && (
-          <View style={styles.verticalList}>
-            {objectiveOptions.map(opt => (
-              <Pressable
-                key={opt.id}
-                style={({ pressed }) => [
-                  styles.choiceRow,
-                  {
-                    backgroundColor: theme.colors.surface,
-                    borderColor: objective === opt.id ? opt.color : theme.colors.border,
-                    borderWidth: objective === opt.id ? 2 : 1,
-                    opacity: pressed ? 0.85 : 1,
-                  },
-                ]}
-                onPress={() => selectAndAdvance(setObjective, opt.id)}
-              >
-                <View style={[styles.choiceIcon, { backgroundColor: opt.color + '20' }]}>
-                  <Ionicons name={opt.icon} size={22} color={opt.color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.choiceLabel, { color: theme.colors.textPrimary }]}>{opt.label}</Text>
-                  <Text style={[styles.choiceDesc, { color: theme.colors.textSecondary }]}>{opt.desc}</Text>
-                </View>
-                {objective === opt.id && (
-                  <Ionicons name="checkmark-circle" size={22} color={opt.color} />
-                )}
-              </Pressable>
-            ))}
-          </View>
-        )}
+        {/* Options fill all remaining height */}
+        <View style={styles.optionsArea}>
 
-        {/* ── Step 2: Fréquence ── */}
-        {step === 2 && (
-          <View style={styles.counterBlock}>
-            <View style={[styles.bigCounter, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-              <Pressable
-                style={({ pressed }) => [styles.bigCounterBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
-                onPress={() => { Haptics.selectionAsync().catch(() => {}); setFrequency(f => Math.max(2, f - 1)); }}
-              >
-                <Ionicons name="remove" size={28} color={theme.colors.textPrimary} />
-              </Pressable>
-              <View style={styles.bigCounterValue}>
-                <Text style={[styles.bigCounterNumber, { color: theme.colors.accent }]}>{frequency}</Text>
-                <Text style={[styles.bigCounterUnit, { color: theme.colors.textSecondary }]}>séances/semaine</Text>
-              </View>
-              <Pressable
-                style={({ pressed }) => [styles.bigCounterBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
-                onPress={() => { Haptics.selectionAsync().catch(() => {}); setFrequency(f => Math.min(6, f + 1)); }}
-              >
-                <Ionicons name="add" size={28} color={theme.colors.textPrimary} />
-              </Pressable>
-            </View>
-            <View style={styles.frequencyHints}>
-              {[
-                { range: '2-3', label: 'Débutant / Entretien', active: frequency <= 3, val: 3 },
-                { range: '4', label: 'Optimal pour la masse', active: frequency === 4, val: 4 },
-                { range: '5-6', label: 'Avancé / Haute fréquence', active: frequency >= 5, val: 5 },
-              ].map(h => (
-                <Pressable
-                  key={h.range}
-                  style={[
-                    styles.frequencyHint,
-                    {
-                      backgroundColor: h.active ? theme.colors.accent + '15' : theme.colors.surfaceMuted,
-                      borderColor: h.active ? theme.colors.accent + '40' : 'transparent',
-                    },
-                  ]}
-                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setFrequency(h.val); }}
-                >
-                  <Text style={[styles.frequencyHintRange, { color: h.active ? theme.colors.accent : theme.colors.textSecondary }]}>
-                    {h.range}×
-                  </Text>
-                  <Text style={[styles.frequencyHintLabel, { color: h.active ? theme.colors.textPrimary : theme.colors.textSecondary }]}>
-                    {h.label}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* ── Step 3: Niveau ── */}
-        {step === 3 && (
-          <View style={styles.verticalList}>
-            {niveauOptions.map(opt => (
-              <Pressable
-                key={opt.id}
-                style={({ pressed }) => [
-                  styles.choiceRow,
-                  {
-                    backgroundColor: theme.colors.surface,
-                    borderColor: niveau === opt.id ? opt.color : theme.colors.border,
-                    borderWidth: niveau === opt.id ? 2 : 1,
-                    opacity: pressed ? 0.85 : 1,
-                  },
-                ]}
-                onPress={() => selectAndAdvance(setNiveau, opt.id)}
-              >
-                <View style={[styles.choiceIcon, { backgroundColor: opt.color + '20' }]}>
-                  <Ionicons name={opt.icon} size={22} color={opt.color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.choiceLabel, { color: theme.colors.textPrimary }]}>{opt.label}</Text>
-                  <Text style={[styles.choiceDesc, { color: theme.colors.textSecondary }]}>{opt.desc}</Text>
-                </View>
-                {niveau === opt.id && (
-                  <Ionicons name="checkmark-circle" size={22} color={opt.color} />
-                )}
-              </Pressable>
-            ))}
-          </View>
-        )}
-
-        {/* ── Step 4: Équipement ── */}
-        {step === 4 && (
-          <View style={styles.equipmentGrid}>
-            {equipmentOptions.map(opt => {
-              const selected = equipmentAvailable.includes(opt.id);
-              return (
-                <Pressable
-                  key={opt.id}
-                  style={({ pressed }) => [
-                    styles.equipmentChip,
-                    {
-                      backgroundColor: selected ? theme.colors.accent + '20' : theme.colors.surface,
-                      borderColor: selected ? theme.colors.accent : theme.colors.border,
-                      borderWidth: selected ? 2 : 1,
-                      opacity: pressed ? 0.8 : 1,
-                    },
-                  ]}
-                  onPress={() => toggleEquipment(opt.id)}
-                >
-                  <Ionicons name={opt.icon} size={24} color={selected ? theme.colors.accent : theme.colors.textSecondary} />
-                  <Text style={[styles.equipmentLabel, { color: selected ? theme.colors.accent : theme.colors.textPrimary }]}>
-                    {opt.label}
-                  </Text>
-                  {selected && <Ionicons name="checkmark-circle" size={16} color={theme.colors.accent} style={styles.equipmentCheck} />}
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
-
-        {/* ── Step 5: Durée ── */}
-        {step === 5 && (
-          <View style={styles.durationBlock}>
-            <Text style={[styles.durationSectionLabel, { color: theme.colors.textSecondary }]}>Par séance</Text>
-            <View style={[styles.bigCounter, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-              <Pressable
-                style={({ pressed }) => [styles.bigCounterBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
-                onPress={() => { Haptics.selectionAsync().catch(() => {}); setDureeSeance(d => Math.max(30, d - 15)); }}
-              >
-                <Ionicons name="remove" size={28} color={theme.colors.textPrimary} />
-              </Pressable>
-              <View style={styles.bigCounterValue}>
-                <Text style={[styles.bigCounterNumber, { color: theme.colors.accent }]}>{dureeSeance}</Text>
-                <Text style={[styles.bigCounterUnit, { color: theme.colors.textSecondary }]}>minutes</Text>
-              </View>
-              <Pressable
-                style={({ pressed }) => [styles.bigCounterBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
-                onPress={() => { Haptics.selectionAsync().catch(() => {}); setDureeSeance(d => Math.min(120, d + 15)); }}
-              >
-                <Ionicons name="add" size={28} color={theme.colors.textPrimary} />
-              </Pressable>
-            </View>
-
-            <Text style={[styles.durationSectionLabel, { color: theme.colors.textSecondary, marginTop: 20 }]}>Durée du programme</Text>
-            <View style={[styles.bigCounter, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-              <Pressable
-                style={({ pressed }) => [styles.bigCounterBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
-                onPress={() => { Haptics.selectionAsync().catch(() => {}); setDurationWeeks(w => Math.max(2, w - 1)); }}
-              >
-                <Ionicons name="remove" size={28} color={theme.colors.textPrimary} />
-              </Pressable>
-              <View style={styles.bigCounterValue}>
-                <Text style={[styles.bigCounterNumber, { color: theme.colors.accent }]}>{durationWeeks}</Text>
-                <Text style={[styles.bigCounterUnit, { color: theme.colors.textSecondary }]}>semaines</Text>
-              </View>
-              <Pressable
-                style={({ pressed }) => [styles.bigCounterBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
-                onPress={() => { Haptics.selectionAsync().catch(() => {}); setDurationWeeks(w => Math.min(16, w + 1)); }}
-              >
-                <Ionicons name="add" size={28} color={theme.colors.textPrimary} />
-              </Pressable>
-            </View>
-          </View>
-        )}
-
-        {/* ── Step 6: Méthode ── */}
-        {step === 6 && (
-          <View style={styles.verticalList}>
-            {methodeOptions.map(opt => (
-              <Pressable
-                key={opt.id}
-                style={({ pressed }) => [
-                  styles.choiceRow,
-                  {
-                    backgroundColor: theme.colors.surface,
-                    borderColor: methodePreferee === opt.id ? opt.color : theme.colors.border,
-                    borderWidth: methodePreferee === opt.id ? 2 : 1,
-                    opacity: pressed ? 0.85 : 1,
-                  },
-                ]}
-                onPress={() => selectAndAdvance(setMethodePreferee, opt.id)}
-              >
-                <View style={[styles.choiceIcon, { backgroundColor: opt.color + '20' }]}>
-                  <Ionicons name={opt.icon} size={22} color={opt.color} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.choiceLabel, { color: theme.colors.textPrimary }]}>{opt.label}</Text>
-                  <Text style={[styles.choiceDesc, { color: theme.colors.textSecondary }]}>{opt.desc}</Text>
-                </View>
-                {methodePreferee === opt.id && (
-                  <Ionicons name="checkmark-circle" size={22} color={opt.color} />
-                )}
-              </Pressable>
-            ))}
-          </View>
-        )}
-
-        {/* ── Step 7: Contraintes ── */}
-        {step === 7 && (
-          <View style={styles.constraintsBlock}>
-            <TextInput
-              style={[
-                styles.constraintsInput,
+          {/* Step 1 — Objectif: 4 full-height cards */}
+          {step === 1 && objectiveOptions.map(opt => (
+            <Pressable
+              key={opt.id}
+              style={({ pressed }) => [
+                styles.fullCard,
                 {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                  color: theme.colors.textPrimary,
+                  backgroundColor: objective === opt.id ? opt.color + '18' : theme.colors.surface,
+                  borderColor: objective === opt.id ? opt.color : theme.colors.border,
+                  borderWidth: objective === opt.id ? 2 : 1,
+                  opacity: pressed ? 0.85 : 1,
                 },
               ]}
-              placeholder="Ex: douleur au genou gauche, épaule fragile, pas de sauts..."
-              placeholderTextColor={theme.colors.textSecondary}
-              value={blessures}
-              onChangeText={setBlessures}
-              multiline
-              numberOfLines={5}
-              textAlignVertical="top"
-            />
-            <Text style={[styles.constraintsHint, { color: theme.colors.textSecondary }]}>
-              Optionnel · Passe cette étape si tu n'as aucune limitation.
-            </Text>
-          </View>
-        )}
+              onPress={() => selectAndAdvance(setObjective, opt.id)}
+            >
+              <View style={[styles.cardIcon, { backgroundColor: opt.color + '20' }]}>
+                <Ionicons name={opt.icon} size={22} color={opt.color} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardLabel, { color: theme.colors.textPrimary }]}>{opt.label}</Text>
+                <Text style={[styles.cardDesc, { color: theme.colors.textSecondary }]}>{opt.desc}</Text>
+              </View>
+              {objective === opt.id && <Ionicons name="checkmark-circle" size={24} color={opt.color} />}
+            </Pressable>
+          ))}
+
+          {/* Step 2 — Fréquence: counter centered */}
+          {step === 2 && (
+            <View style={styles.centeredBlock}>
+              <View style={[styles.bigCounter, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+                <Pressable
+                  style={({ pressed }) => [styles.cntBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setFrequency(f => Math.max(2, f - 1)); }}
+                >
+                  <Ionicons name="remove" size={32} color={theme.colors.textPrimary} />
+                </Pressable>
+                <View style={styles.cntValue}>
+                  <Text style={[styles.cntNumber, { color: theme.colors.accent }]}>{frequency}</Text>
+                  <Text style={[styles.cntUnit, { color: theme.colors.textSecondary }]}>séances / semaine</Text>
+                </View>
+                <Pressable
+                  style={({ pressed }) => [styles.cntBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setFrequency(f => Math.min(6, f + 1)); }}
+                >
+                  <Ionicons name="add" size={32} color={theme.colors.textPrimary} />
+                </Pressable>
+              </View>
+              <View style={{ gap: 10, marginTop: 8 }}>
+                {[
+                  { range: '2-3', label: 'Débutant · Entretien', active: frequency <= 3, val: 3 },
+                  { range: '4',   label: 'Optimal pour la masse', active: frequency === 4, val: 4 },
+                  { range: '5-6', label: 'Avancé · Haute fréquence', active: frequency >= 5, val: 5 },
+                ].map(h => (
+                  <Pressable
+                    key={h.range}
+                    style={[
+                      styles.hintRow,
+                      {
+                        backgroundColor: h.active ? theme.colors.accent + '15' : theme.colors.surface,
+                        borderColor: h.active ? theme.colors.accent + '50' : theme.colors.border,
+                      },
+                    ]}
+                    onPress={() => { Haptics.selectionAsync().catch(() => {}); setFrequency(h.val); }}
+                  >
+                    <Text style={[styles.hintRange, { color: h.active ? theme.colors.accent : theme.colors.textSecondary }]}>{h.range}×</Text>
+                    <Text style={[styles.hintLabel, { color: h.active ? theme.colors.textPrimary : theme.colors.textSecondary }]}>{h.label}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Step 3 — Niveau: 3 full-height cards */}
+          {step === 3 && niveauOptions.map(opt => (
+            <Pressable
+              key={opt.id}
+              style={({ pressed }) => [
+                styles.fullCard,
+                {
+                  backgroundColor: niveau === opt.id ? opt.color + '18' : theme.colors.surface,
+                  borderColor: niveau === opt.id ? opt.color : theme.colors.border,
+                  borderWidth: niveau === opt.id ? 2 : 1,
+                  opacity: pressed ? 0.85 : 1,
+                },
+              ]}
+              onPress={() => selectAndAdvance(setNiveau, opt.id)}
+            >
+              <View style={[styles.cardIcon, { backgroundColor: opt.color + '20' }]}>
+                <Ionicons name={opt.icon} size={22} color={opt.color} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardLabel, { color: theme.colors.textPrimary }]}>{opt.label}</Text>
+                <Text style={[styles.cardDesc, { color: theme.colors.textSecondary }]}>{opt.desc}</Text>
+              </View>
+              {niveau === opt.id && <Ionicons name="checkmark-circle" size={24} color={opt.color} />}
+            </Pressable>
+          ))}
+
+          {/* Step 4 — Équipement: 2-col grid, rows fill height */}
+          {step === 4 && (
+            <View style={styles.equipGrid}>
+              {Array.from({ length: Math.ceil(equipmentOptions.length / 2) }, (_, row) => (
+                <View key={row} style={styles.equipRow}>
+                  {equipmentOptions.slice(row * 2, row * 2 + 2).map(opt => {
+                    const selected = equipmentAvailable.includes(opt.id);
+                    return (
+                      <Pressable
+                        key={opt.id}
+                        style={({ pressed }) => [
+                          styles.equipTile,
+                          {
+                            backgroundColor: selected ? theme.colors.accent + '18' : theme.colors.surface,
+                            borderColor: selected ? theme.colors.accent : theme.colors.border,
+                            borderWidth: selected ? 2 : 1,
+                            opacity: pressed ? 0.8 : 1,
+                          },
+                        ]}
+                        onPress={() => toggleEquipment(opt.id)}
+                      >
+                        <Ionicons name={opt.icon} size={28} color={selected ? theme.colors.accent : theme.colors.textSecondary} />
+                        <Text style={[styles.equipLabel, { color: selected ? theme.colors.accent : theme.colors.textPrimary }]}>{opt.label}</Text>
+                        {selected && <Ionicons name="checkmark-circle" size={18} color={theme.colors.accent} />}
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Step 5 — Durée séance: counter centered */}
+          {step === 5 && (
+            <View style={styles.centeredBlock}>
+              <View style={[styles.bigCounter, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+                <Pressable
+                  style={({ pressed }) => [styles.cntBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setDureeSeance(d => Math.max(30, d - 15)); }}
+                >
+                  <Ionicons name="remove" size={32} color={theme.colors.textPrimary} />
+                </Pressable>
+                <View style={styles.cntValue}>
+                  <Text style={[styles.cntNumber, { color: theme.colors.accent }]}>{dureeSeance}</Text>
+                  <Text style={[styles.cntUnit, { color: theme.colors.textSecondary }]}>minutes</Text>
+                </View>
+                <Pressable
+                  style={({ pressed }) => [styles.cntBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setDureeSeance(d => Math.min(120, d + 15)); }}
+                >
+                  <Ionicons name="add" size={32} color={theme.colors.textPrimary} />
+                </Pressable>
+              </View>
+            </View>
+          )}
+
+          {/* Step 6 — Durée programme: counter centered */}
+          {step === 6 && (
+            <View style={styles.centeredBlock}>
+              <View style={[styles.bigCounter, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+                <Pressable
+                  style={({ pressed }) => [styles.cntBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setDurationWeeks(w => Math.max(2, w - 1)); }}
+                >
+                  <Ionicons name="remove" size={32} color={theme.colors.textPrimary} />
+                </Pressable>
+                <View style={styles.cntValue}>
+                  <Text style={[styles.cntNumber, { color: theme.colors.accent }]}>{durationWeeks}</Text>
+                  <Text style={[styles.cntUnit, { color: theme.colors.textSecondary }]}>semaines</Text>
+                </View>
+                <Pressable
+                  style={({ pressed }) => [styles.cntBtn, { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 }]}
+                  onPress={() => { Haptics.selectionAsync().catch(() => {}); setDurationWeeks(w => Math.min(16, w + 1)); }}
+                >
+                  <Ionicons name="add" size={32} color={theme.colors.textPrimary} />
+                </Pressable>
+              </View>
+            </View>
+          )}
+
+          {/* Step 7 — Méthode: 4 full-height cards */}
+          {step === 7 && methodeOptions.map(opt => (
+            <Pressable
+              key={opt.id}
+              style={({ pressed }) => [
+                styles.fullCard,
+                {
+                  backgroundColor: methodePreferee === opt.id ? opt.color + '18' : theme.colors.surface,
+                  borderColor: methodePreferee === opt.id ? opt.color : theme.colors.border,
+                  borderWidth: methodePreferee === opt.id ? 2 : 1,
+                  opacity: pressed ? 0.85 : 1,
+                },
+              ]}
+              onPress={() => selectAndAdvance(setMethodePreferee, opt.id)}
+            >
+              <View style={[styles.cardIcon, { backgroundColor: opt.color + '20' }]}>
+                <Ionicons name={opt.icon} size={22} color={opt.color} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.cardLabel, { color: theme.colors.textPrimary }]}>{opt.label}</Text>
+                <Text style={[styles.cardDesc, { color: theme.colors.textSecondary }]}>{opt.desc}</Text>
+              </View>
+              {methodePreferee === opt.id && <Ionicons name="checkmark-circle" size={24} color={opt.color} />}
+            </Pressable>
+          ))}
+
+          {/* Step 8 — Contraintes */}
+          {step === 8 && (
+            <View style={{ flex: 1, gap: 12 }}>
+              <TextInput
+                style={[
+                  styles.constraintsInput,
+                  {
+                    backgroundColor: theme.colors.surface,
+                    borderColor: theme.colors.border,
+                    color: theme.colors.textPrimary,
+                    flex: 1,
+                  },
+                ]}
+                placeholder="Ex: douleur au genou gauche, épaule fragile, pas de sauts..."
+                placeholderTextColor={theme.colors.textSecondary}
+                value={blessures}
+                onChangeText={setBlessures}
+                multiline
+                textAlignVertical="top"
+              />
+              <Text style={[styles.constraintsHint, { color: theme.colors.textSecondary }]}>
+                Optionnel · Passe cette étape si tu n'as aucune limitation.
+              </Text>
+            </View>
+          )}
+
+        </View>
       </Animated.View>
 
-      {/* ── Bottom bar ── */}
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16, borderTopColor: theme.colors.border, backgroundColor: theme.colors.background }]}>
+      {/* ── Bottom: Suivant button ── */}
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 16 }]}>
         <Pressable
           style={({ pressed }) => [styles.nextBtn, { opacity: pressed ? 0.9 : 1 }]}
           onPress={goNext}
@@ -912,17 +873,10 @@ export default function CreateProgramScreen() {
             colors={isLastStep ? ['#10b981', '#0d9488'] : [theme.colors.accent, theme.colors.accent]}
             style={styles.nextBtnGradient}
           >
-            <Text style={styles.nextBtnText}>
-              {isLastStep ? 'Générer mon programme' : 'Suivant'}
-            </Text>
-            <Ionicons
-              name={isLastStep ? 'sparkles' : 'arrow-forward'}
-              size={20}
-              color="#fff"
-            />
+            <Text style={styles.nextBtnText}>{isLastStep ? 'Générer mon programme' : 'Suivant'}</Text>
+            <Ionicons name={isLastStep ? 'sparkles' : 'arrow-forward'} size={20} color="#fff" />
           </LinearGradient>
         </Pressable>
-
         {!isPremium && (
           <Text style={[styles.remainingText, { color: theme.colors.textSecondary }]}>
             {aiProgramsRemaining > 0
@@ -956,21 +910,15 @@ const styles = StyleSheet.create({
   gatePrimaryBtnText: { fontSize: 17, fontWeight: '700', color: '#fff' },
   gateReset: { fontSize: 13, textAlign: 'center' },
 
-  // Wizard header
-  wizardHeader: {
+  // Top bar
+  topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingHorizontal: 20,
+    paddingBottom: 8,
     gap: 12,
   },
-  headerBackBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  backBtn: { padding: 4 },
   dotsRow: {
     flex: 1,
     flexDirection: 'row',
@@ -979,94 +927,85 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   dot: { height: 8, borderRadius: 4 },
-  skipBtn: { paddingHorizontal: 4 },
   skipText: { fontSize: 14, fontWeight: '600' },
 
-  // Step layout
-  stepWrapper: { flex: 1, paddingHorizontal: 20 },
-  questionBlock: { paddingTop: 4, marginBottom: 24 },
-  stepQuestion: { fontSize: 26, fontWeight: '800', lineHeight: 34, marginBottom: 8 },
+  // Full-page layout
+  pageContent: { flex: 1, paddingHorizontal: 20 },
+  questionBlock: { paddingTop: 16, marginBottom: 20 },
+  stepQuestion: { fontSize: 28, fontWeight: '800', lineHeight: 36, marginBottom: 6 },
   whyText: { fontSize: 13, lineHeight: 19 },
 
-  // Shared choice row (steps 1, 3, 6)
-  verticalList: { gap: 10 },
-  choiceRow: {
+  // Options area fills all remaining height
+  optionsArea: { flex: 1, gap: 10, paddingBottom: 8 },
+
+  // Full-height cards (steps 1, 3, 7)
+  fullCard: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 16,
-    gap: 14,
+    paddingHorizontal: 18,
+    borderRadius: 18,
+    gap: 16,
   },
-  choiceIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  choiceLabel: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
-  choiceDesc: { fontSize: 12, lineHeight: 17 },
+  cardIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  cardLabel: { fontSize: 16, fontWeight: '700', marginBottom: 3 },
+  cardDesc: { fontSize: 12, lineHeight: 17 },
 
-  // Counter (steps 2, 5)
-  counterBlock: { gap: 16 },
-  durationBlock: { gap: 8 },
-  durationSectionLabel: { fontSize: 13, fontWeight: '600', marginBottom: 4 },
+  // Counter (steps 2, 5, 6)
+  centeredBlock: { flex: 1, justifyContent: 'center', gap: 20 },
   bigCounter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 20,
+    padding: 16,
+    borderRadius: 24,
     borderWidth: 1,
   },
-  bigCounterBtn: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  bigCounterValue: { alignItems: 'center' },
-  bigCounterNumber: { fontSize: 48, fontWeight: '800', lineHeight: 56 },
-  bigCounterUnit: { fontSize: 13, fontWeight: '500' },
-  frequencyHints: { gap: 8 },
-  frequencyHint: {
+  cntBtn: { width: 60, height: 60, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  cntValue: { alignItems: 'center' },
+  cntNumber: { fontSize: 56, fontWeight: '800', lineHeight: 64 },
+  cntUnit: { fontSize: 14, fontWeight: '500' },
+  hintRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 12,
+    padding: 14,
+    borderRadius: 14,
     borderWidth: 1,
-    gap: 12,
+    gap: 14,
   },
-  frequencyHintRange: { fontSize: 18, fontWeight: '800', width: 36 },
-  frequencyHintLabel: { fontSize: 14, fontWeight: '500' },
+  hintRange: { fontSize: 18, fontWeight: '800', width: 42 },
+  hintLabel: { fontSize: 14, fontWeight: '500' },
 
-  // Equipment (step 4)
-  equipmentGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  equipmentChip: {
-    width: '47%',
-    padding: 16,
-    borderRadius: 16,
+  // Equipment grid (step 4): 2 cols, rows fill height
+  equipGrid: { flex: 1, gap: 10 },
+  equipRow: { flex: 1, flexDirection: 'row', gap: 10 },
+  equipTile: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 18,
     gap: 8,
-    position: 'relative',
   },
-  equipmentLabel: { fontSize: 14, fontWeight: '600', textAlign: 'center' },
-  equipmentCheck: { position: 'absolute', top: 8, right: 8 },
+  equipLabel: { fontSize: 14, fontWeight: '600', textAlign: 'center' },
 
-  // Constraints (step 7)
-  constraintsBlock: { gap: 12 },
+  // Constraints (step 8)
   constraintsInput: {
     borderWidth: 1,
     borderRadius: 16,
     padding: 16,
     fontSize: 15,
     lineHeight: 22,
-    minHeight: 130,
   },
   constraintsHint: { fontSize: 13, lineHeight: 20 },
 
   // Bottom bar
-  bottomBar: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    gap: 8,
-  },
-  nextBtn: { borderRadius: 16, overflow: 'hidden' },
+  bottomBar: { paddingHorizontal: 20, paddingTop: 12, gap: 8 },
+  nextBtn: { borderRadius: 18, overflow: 'hidden' },
   nextBtnGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 17,
     gap: 10,
   },
   nextBtnText: { fontSize: 17, fontWeight: '700', color: '#fff' },
