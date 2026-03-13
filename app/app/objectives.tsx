@@ -210,18 +210,13 @@ export default function ObjectivesScreen() {
 
           case 'weekly_volume':
             current = workouts
-              .filter(w => w.workout.updated_at >= weekStart)
+              .filter(w => w.workout.status === 'completed' && w.workout.updated_at >= weekStart)
               .reduce((sum, w) => {
-                const volume = w.exercises.reduce((exSum, ex) => {
-                  const sets = (ex as any).sets || [];
-                  return exSum + sets.reduce((setSum: number, set: any) => {
-                    if (!set) return setSum;
-                    const weight = typeof set.weight === 'number' ? set.weight : 0;
-                    const reps = typeof set.reps === 'number' ? set.reps : 0;
-                    return setSum + (weight * reps);
-                  }, 0);
+                return sum + w.sets.reduce((setSum, set) => {
+                  const weight = typeof set.weight === 'number' ? set.weight : 0;
+                  const reps = typeof set.reps === 'number' ? set.reps : 0;
+                  return setSum + (weight * reps);
                 }, 0);
-                return sum + volume;
               }, 0);
             break;
 
