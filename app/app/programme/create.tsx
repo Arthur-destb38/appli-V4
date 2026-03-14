@@ -168,6 +168,7 @@ export default function CreateProgramScreen() {
   // Wizard step: -1 = paywall gate, 1-7 = questions, 8 = results
   const [step, setStep] = useState(1);
   const [showGate, setShowGate] = useState(false);
+  const [statusRefreshed, setStatusRefreshed] = useState(false);
 
   // Form state
   const [objective, setObjective] = useState('Hypertrophie');
@@ -192,17 +193,22 @@ export default function CreateProgramScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  // Refresh status on mount to get up-to-date remaining count
+  // Refresh status on mount to get up-to-date remaining count before showing gate
   useEffect(() => {
-    refreshStatus();
+    refreshStatus()
+      .catch(() => {})
+      .finally(() => setStatusRefreshed(true));
   }, []);
 
-  // Check freemium gate
+  // Check freemium gate (only after fresh status is loaded)
   useEffect(() => {
+    if (!statusRefreshed) return;
     if (!isPremium && aiProgramsRemaining <= 0) {
       setShowGate(true);
+    } else {
+      setShowGate(false);
     }
-  }, [isPremium, aiProgramsRemaining]);
+  }, [isPremium, aiProgramsRemaining, statusRefreshed]);
 
   const animateStep = (nextStep: number, direction: 1 | -1 = 1) => {
     Animated.parallel([
