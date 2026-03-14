@@ -27,6 +27,7 @@ import { useAppTheme } from '@/theme/ThemeProvider';
 import { useAuth } from '@/hooks/useAuth';
 import { useWorkouts } from '@/hooks/useWorkouts';
 import { apiCall } from '@/utils/api';
+import { uploadAvatar } from '@/services/profileApi';
 import { useTranslations } from '@/hooks/usePreferences';
 import { useNotificationCount } from '@/hooks/useNotificationCount';
 
@@ -44,6 +45,7 @@ export default function ProfileScreen() {
   const [editBio, setEditBio] = useState('');
   const [editObjective, setEditObjective] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const headerAnim = useRef(new Animated.Value(0)).current;
   const cardsAnim = useRef(new Animated.Value(0)).current;
@@ -141,12 +143,21 @@ export default function ProfileScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.7,
+      quality: 0.5,
+      base64: true,
     });
 
-    if (!result.canceled) {
-      // Pour l'instant, on simule juste le changement d'avatar
-      Alert.alert(t('info'), t('avatarUploadComingSoon'));
+    if (!result.canceled && result.assets[0]?.base64 && user?.id) {
+      setUploadingAvatar(true);
+      try {
+        await uploadAvatar(user.id, result.assets[0].base64);
+        await updateProfile();
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      } catch {
+        Alert.alert(t('error'), t('cannotSaveProfile'));
+      } finally {
+        setUploadingAvatar(false);
+      }
     }
   };
 
@@ -217,7 +228,10 @@ export default function ProfileScreen() {
                 )}
               </View>
               <View style={styles.editAvatarBadge}>
-                <Ionicons name="camera" size={14} color="#fff" />
+                {uploadingAvatar
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Ionicons name="camera" size={14} color="#fff" />
+                }
               </View>
             </TouchableOpacity>
 
