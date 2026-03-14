@@ -50,7 +50,7 @@ export const generateProgram = async (payload: GenerateProgramPayload): Promise<
       user_id: payload.user_id,
       exercises_per_session: payload.exercises_per_session ?? 4,
       niveau: payload.niveau,
-      duree_seance: payload.duree_seance,
+      duree_seance: payload.duree_seance != null ? String(payload.duree_seance) : undefined,
       priorite: payload.priorite,
       priorite_first: payload.priorite_first,
       priorite_second: payload.priorite_second,
