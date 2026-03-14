@@ -15,7 +15,7 @@ from ..utils.dependencies import get_current_user
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
 
-FREE_AI_PROGRAM_LIMIT = 1
+FREE_AI_PROGRAM_LIMIT = 10
 WEBHOOK_SECRET = os.getenv("REVENUECAT_WEBHOOK_SECRET", "")
 
 
