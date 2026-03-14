@@ -192,6 +192,11 @@ export default function CreateProgramScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const slideAnim = useRef(new Animated.Value(0)).current;
 
+  // Refresh status on mount to get up-to-date remaining count
+  useEffect(() => {
+    refreshStatus();
+  }, []);
+
   // Check freemium gate
   useEffect(() => {
     if (!isPremium && aiProgramsRemaining <= 0) {

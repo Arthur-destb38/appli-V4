@@ -77,7 +77,7 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
           const userTier = (user as any).subscription_tier;
           const generated = (user as any).ai_programs_generated ?? 0;
           setTier(userTier === 'premium' ? 'premium' : 'free');
-          setAiProgramsRemaining(userTier === 'premium' ? -1 : Math.max(0, 1 - generated));
+          setAiProgramsRemaining(userTier === 'premium' ? -1 : Math.max(0, 10 - generated));
         }
       } finally {
         if (!cancelled) setIsLoading(false);
