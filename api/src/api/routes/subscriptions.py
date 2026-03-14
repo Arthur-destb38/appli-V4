@@ -51,13 +51,17 @@ def revenuecat_webhook(
 
     Authentification par header Authorization: Bearer <REVENUECAT_WEBHOOK_SECRET>.
     """
-    # Vérifier le secret
-    if WEBHOOK_SECRET:
-        token = ""
-        if authorization and authorization.lower().startswith("bearer "):
-            token = authorization.split(" ", 1)[1]
-        if token != WEBHOOK_SECRET:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_webhook_secret")
+    # Vérifier le secret — toujours requis
+    if not WEBHOOK_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="webhook_not_configured"
+        )
+    token = ""
+    if authorization and authorization.lower().startswith("bearer ") and len(authorization) > 7:
+        token = authorization.split(" ", 1)[1]
+    if token != WEBHOOK_SECRET:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_webhook_secret")
 
     event = body.get("event", {})
     event_type = event.get("type", "")

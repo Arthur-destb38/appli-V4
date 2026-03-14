@@ -156,7 +156,9 @@ app.include_router(marketplace.router)
 
 if not _IS_PRODUCTION:
     app.include_router(seed.router)
-    app.include_router(admin.router)
+
+# Admin routes sont disponibles partout mais protégées par X-Admin-Key
+app.include_router(admin.router)
 
 
 @app.get("/privacy", response_class=HTMLResponse, include_in_schema=False)
