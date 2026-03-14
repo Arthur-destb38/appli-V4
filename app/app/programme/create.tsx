@@ -477,8 +477,8 @@ export default function CreateProgramScreen() {
     );
   }
 
-  // ─── Results Screen (step 8) ───────────────────────────────────────────────
-  if (step === 8) {
+  // ─── Results Screen (step 8) — only shown once generation is started ───────
+  if (step === 8 && (loading || program !== null || error !== null)) {
     return (
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {/* Header */}
