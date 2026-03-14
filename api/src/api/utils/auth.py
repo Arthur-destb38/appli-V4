@@ -49,6 +49,9 @@ def _decode(token: str) -> dict[str, Any]:
 
 _PBKDF2_ITERATIONS = 600_000
 
+# Hash factice pré-calculé pour garantir un temps constant même si le user n'existe pas
+_DUMMY_HASH = f"00000000${_PBKDF2_ITERATIONS}$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
 
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(8)
@@ -74,13 +77,17 @@ def verify_password(password: str, hashed: Optional[str]) -> bool:
     return hmac.compare_digest(base64.b64encode(dk).decode(), b64)
 
 
-def create_access_token(user_id: str, minutes: int = 30) -> str:
+def create_access_token(user_id: str, minutes: int | None = None) -> str:
+    if minutes is None:
+        minutes = int(os.getenv("ACCESS_TOKEN_MINUTES", "30"))
     now = datetime.now(timezone.utc)
     payload = {"sub": user_id, "type": "access", "exp": (now + timedelta(minutes=minutes)).timestamp()}
     return _encode(payload)
 
 
-def create_refresh_token(user_id: str, days: int = 14) -> tuple[str, datetime]:
+def create_refresh_token(user_id: str, days: int | None = None) -> tuple[str, datetime]:
+    if days is None:
+        days = int(os.getenv("REFRESH_TOKEN_DAYS", "14"))
     now = datetime.now(timezone.utc)
     exp = now + timedelta(days=days)
     payload = {"sub": user_id, "type": "refresh", "exp": exp.timestamp()}

@@ -250,8 +250,10 @@ def login(payload: LoginRequest, request: Request, session: Session = Depends(ge
         from ..main import ensure_demo_user
         ensure_demo_user()
 
+    from ..utils.auth import _DUMMY_HASH
     user = session.exec(select(User).where(User.username == username)).first()
-    if not user or not verify_password(payload.password, user.password_hash):
+    password_ok = verify_password(payload.password, user.password_hash if user else _DUMMY_HASH)
+    if not user or not password_ok:
         record_login_attempt(session, username, client_ip, success=False)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_credentials")
     
