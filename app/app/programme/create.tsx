@@ -268,8 +268,7 @@ export default function CreateProgramScreen() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : t('generationImpossible');
       if (msg.includes('ai_program_limit_reached') || msg.includes('403')) {
-        showPaywall();
-        animateStep(1, -1);
+        setShowGate(true);
         setLoading(false);
         return;
       }

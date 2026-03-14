@@ -74,10 +74,10 @@ def require_premium(
 def check_ai_program_limit(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    """Allow 1 free AI program, then require premium."""
+    """Allow 10 free AI programs, then require premium."""
     if current_user.subscription_tier in ("premium",):
         return current_user
-    if current_user.ai_programs_generated >= 1:
+    if current_user.ai_programs_generated >= 10:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="ai_program_limit_reached")
     return current_user
 

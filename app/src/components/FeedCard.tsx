@@ -133,7 +133,7 @@ const FeedCardInner: React.FC<FeedCardProps> = ({
     const days = Math.floor(diff / 86400000);
     if (minutes < 60) return `${minutes}min`;
     if (hours < 24) return `${hours}h`;
-    if (days < 7) return `${days}${t('daysAgo')}`;
+    if (days < 7) return t('daysAgo', { days: String(days) });
     return formattedDate;
   };
 

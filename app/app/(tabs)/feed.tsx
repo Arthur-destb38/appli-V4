@@ -324,54 +324,25 @@ const FeedScreen: React.FC = () => {
             </Text>
           </View>
         </View>
-        <View style={styles.headerActions}>
-          <Pressable
-            style={({ pressed }) => [styles.headerIconBtn, { opacity: pressed ? 0.7 : 1 }]}
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              router.push('/leaderboard');
-            }}
+        <Pressable
+          style={({ pressed }) => [styles.notifBtn, { opacity: pressed ? 0.8 : 1 }]}
+          onPress={() => {
+            Haptics.selectionAsync().catch(() => {});
+            router.push('/notifications');
+          }}
+        >
+          <LinearGradient
+            colors={['#7c3aed', '#6d28d9']}
+            style={styles.notifBtnInner}
           >
-            <LinearGradient
-              colors={['#f59e0b', '#d97706']}
-              style={styles.headerIconBtnInner}
-            >
-              <Ionicons name="trophy" size={17} color="#fff" />
-            </LinearGradient>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.headerIconBtn, { opacity: pressed ? 0.7 : 1 }]}
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              router.push('/notifications');
-            }}
-          >
-            <LinearGradient
-              colors={['#7c3aed', '#6d28d9']}
-              style={styles.headerIconBtnInner}
-            >
-              <View style={styles.notificationWrapper}>
-                <Ionicons name="notifications" size={17} color="#fff" />
-                {notifCount > 0 && (
-                  <View style={styles.notificationBadge}>
-                    <Text style={styles.notificationBadgeText}>{notifCount > 99 ? '99+' : notifCount}</Text>
-                  </View>
-                )}
+            <Ionicons name="notifications" size={20} color="#fff" />
+            {notifCount > 0 && (
+              <View style={styles.notifBadge}>
+                <Text style={styles.notifBadgeText}>{notifCount > 99 ? '99+' : notifCount}</Text>
               </View>
-            </LinearGradient>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.headerIconBtn, { opacity: pressed ? 0.7 : 1 }]}
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              router.push('/explore');
-            }}
-          >
-            <View style={[styles.headerIconBtnInner, { backgroundColor: theme.colors.surfaceMuted }]}>
-              <Ionicons name="search" size={17} color={theme.colors.textPrimary} />
-            </View>
-          </Pressable>
-        </View>
+            )}
+          </LinearGradient>
+        </Pressable>
       </Animated.View>
 
       {/* Tab bar */}
@@ -614,26 +585,12 @@ const FeedScreen: React.FC = () => {
               tintColor="#6366f1"
             />
           }
+          onEndReached={() => { if (nextCursor && !isLoading) load(false); }}
+          onEndReachedThreshold={0.4}
           ListFooterComponent={
-            nextCursor ? (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.loadMore,
-                  { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.7 : 1 },
-                ]}
-                onPress={() => load(false)}
-              >
-                <LinearGradient
-                  colors={['#6366f1', '#8b5cf6']}
-                  style={styles.loadMoreIcon}
-                >
-                  <Ionicons name="chevron-down" size={16} color="#fff" />
-                </LinearGradient>
-                <Text style={[styles.loadMoreText, { color: theme.colors.textPrimary }]}>
-                  {t('loadMorePosts')}
-                </Text>
-              </Pressable>
-            ) : (
+            isLoading && items.length > 0 ? (
+              <ActivityIndicator style={{ marginVertical: 20 }} color="#6366f1" />
+            ) : !nextCursor && items.length > 0 ? (
               <View style={styles.endOfFeed}>
                 <LinearGradient
                   colors={isDark ? ['transparent', '#6366f120', 'transparent'] : ['transparent', '#6366f110', 'transparent']}
@@ -648,7 +605,7 @@ const FeedScreen: React.FC = () => {
                   </Text>
                 </View>
               </View>
-            )
+            ) : null
           }
         />
       )}
@@ -659,6 +616,9 @@ const FeedScreen: React.FC = () => {
         <View style={[styles.errorBanner, { backgroundColor: theme.colors.error + '20' }]}>
           <Ionicons name="warning" size={18} color={theme.colors.error} />
           <Text style={[styles.errorText, { color: theme.colors.error }]}>{error}</Text>
+          <Pressable onPress={() => load(true)} style={styles.errorRetry}>
+            <Text style={[styles.errorRetryText, { color: theme.colors.error }]}>{t('retryLabel')}</Text>
+          </Pressable>
         </View>
       ) : null}
 
@@ -831,40 +791,33 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginTop: -2,
   },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  headerIconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  notifBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     overflow: 'hidden',
   },
-  headerIconBtnInner: {
+  notifBtnInner: {
     width: '100%',
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  notificationWrapper: {
-    position: 'relative',
-  },
-  notificationBadge: {
+  notifBadge: {
     position: 'absolute',
-    top: -6,
-    right: -8,
+    top: 6,
+    right: 6,
     backgroundColor: '#ef4444',
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: '#fff',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: '#6d28d9',
   },
-  notificationBadgeText: {
+  notifBadgeText: {
     color: '#fff',
     fontSize: 9,
     fontWeight: '700',
@@ -1010,6 +963,17 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     fontWeight: '500',
+    flex: 1,
+  },
+  errorRetry: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  errorRetryText: {
+    fontSize: 13,
+    fontWeight: '700',
   },
   // Comments Modal
   commentsOverlay: {

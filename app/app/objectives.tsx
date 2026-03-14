@@ -10,6 +10,7 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -108,6 +109,7 @@ export default function ObjectivesScreen() {
   const { t } = useTranslations();
 
   const [objectives, setObjectives] = useState<Objective[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [addModal, setAddModal] = useState(false);
   const [selectedObjective, setSelectedObjective] = useState<Objective | null>(null);
@@ -445,6 +447,21 @@ export default function ObjectivesScreen() {
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={async () => {
+              setRefreshing(true);
+              try {
+                await loadObjectives();
+              } finally {
+                setRefreshing(false);
+              }
+            }}
+            tintColor="#6366f1"
+            colors={['#6366f1']}
+          />
+        }
       >
         <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
           {t('defineGoalsAndTrack')}
