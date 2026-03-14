@@ -107,16 +107,20 @@ def share_workout(
     if workout.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="not_your_workout")
 
-    # Compter les exercices et sets
-    workout_exercises = session.exec(
-        select(WorkoutExercise).where(WorkoutExercise.workout_id == workout_id)
+    # Compter les exercices et sets (2 requêtes au lieu de N+1)
+    from sqlalchemy import func as sa_func
+    exercise_count = session.exec(
+        select(sa_func.count()).select_from(WorkoutExercise).where(WorkoutExercise.workout_id == workout_id)
+    ).one()
+
+    workout_exercise_ids = session.exec(
+        select(WorkoutExercise.id).where(WorkoutExercise.workout_id == workout_id)
     ).all()
-    
-    exercise_count = len(workout_exercises)
     set_count = 0
-    for we in workout_exercises:
-        sets = session.exec(select(Set).where(Set.workout_exercise_id == we.id)).all()
-        set_count += len(sets)
+    if workout_exercise_ids:
+        set_count = session.exec(
+            select(sa_func.count()).select_from(Set).where(Set.workout_exercise_id.in_(workout_exercise_ids))
+        ).one()
 
     image_url: Optional[str] = None
     if payload.image_base64:

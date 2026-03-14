@@ -2,7 +2,7 @@
 import base64
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlmodel import Session, select, func
 from typing import Optional
 
@@ -385,7 +385,7 @@ def get_following(
 
 class AvatarUploadRequest(BaseModel):
     """Requête d'upload d'avatar (image en base64)."""
-    image_base64: str  # Format: "data:image/jpeg;base64,..." ou juste le base64
+    image_base64: str = Field(..., max_length=7_340_032)  # ~5MB in base64
 
 
 class AvatarUploadResponse(BaseModel):

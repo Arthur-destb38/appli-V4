@@ -243,7 +243,7 @@ class ShareRequest(BaseModel):
     user_id: str
     caption: Optional[str] = None
     color: Optional[str] = None
-    image_base64: Optional[str] = None
+    image_base64: Optional[str] = Field(None, max_length=7_340_032)  # ~5MB in base64
 
 
 class FollowRequest(BaseModel):

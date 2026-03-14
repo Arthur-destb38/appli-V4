@@ -47,17 +47,30 @@ def _decode(token: str) -> dict[str, Any]:
     return payload
 
 
+_PBKDF2_ITERATIONS = 600_000
+
+
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(8)
-    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
-    return f"{salt}${base64.b64encode(dk).decode()}"
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), _PBKDF2_ITERATIONS)
+    return f"{salt}${_PBKDF2_ITERATIONS}${base64.b64encode(dk).decode()}"
 
 
 def verify_password(password: str, hashed: Optional[str]) -> bool:
     if not hashed or "$" not in hashed:
         return False
-    salt, b64 = hashed.split("$", 1)
-    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
+    parts = hashed.split("$", 2)
+    if len(parts) == 3:
+        salt, iterations_str, b64 = parts
+        try:
+            iterations = int(iterations_str)
+        except ValueError:
+            return False
+    else:
+        # Legacy format: {salt}${b64} — hashed with 100_000 iterations
+        salt, b64 = parts
+        iterations = 100_000
+    dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), iterations)
     return hmac.compare_digest(base64.b64encode(dk).decode(), b64)
 
 
